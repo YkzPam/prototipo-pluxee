@@ -1,0 +1,254 @@
+from datetime import timedelta
+from time import perf_counter
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.core.paginator import Paginator, EmptyPage
+from django.db import transaction
+from django.db.models import Count
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from .events import record
+from .forms import LoginForm, MovementFilterForm, ServiceStateForm
+from .models import AuditEvent, BenefitAccount, ServiceState
+from .responses import UpdatedResponseCreator, PendingResponseCreator, RejectedResponseCreator
+from .security import protected, login_blocked, login_failed, clear_login_failures
+from .services import MockDataServiceAdapter, SourceUnavailable
+
+
+@require_http_methods(['GET', 'POST'])
+def ingresar(request):
+    if request.user.is_authenticated:
+        return redirect('inicio')
+    form = LoginForm(request.POST or None)
+    next_url = request.POST.get('next', request.GET.get('next', ''))
+    if request.method == 'POST' and form.is_valid():
+        username = form.cleaned_data['username']
+        blocked = login_blocked(request, username)
+        user = None if blocked else authenticate(request, username=username, password=form.cleaned_data['password'])
+        if user is None:
+            if not blocked:
+                login_failed(request, username)
+            record(request, 'login', 'denied', 'Ingreso rechazado por credenciales o límite de intentos.')
+            form.add_error(None, 'No fue posible ingresar con esas credenciales. Se deben revisar los datos o intentar más tarde.')
+        else:
+            login(request, user)
+            now = timezone.now()
+            request.session['auth_started_at'] = now.timestamp()
+            request.session['last_activity_at'] = now.timestamp()
+            request.session.set_expiry(now + timedelta(seconds=settings.SESSION_MAX_SECONDS))
+            clear_login_failures(request, username)
+            record(request, 'login', 'success', 'Ingreso correcto mediante cuenta de prueba.')
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+                return redirect(next_url)
+            return redirect('inicio')
+    return render(request, 'login.html', {'form': form, 'next': next_url, 'active_page': 'ingresar'})
+
+
+@require_POST
+@protected()
+def salir(request):
+    record(request, 'logout', 'success', 'Sesión finalizada voluntariamente.')
+    logout(request)
+    messages.success(request, 'La sesión se cerró correctamente.')
+    return redirect('ingresar')
+
+
+def _account(request):
+    return BenefitAccount.objects.filter(user=request.user).first()
+
+
+def _benefit_page(request, template, active_page):
+    if request.user.is_staff:
+        return redirect('seguimiento')
+    account = _account(request)
+    if account is None:
+        return render(request, 'error.html', {'title': 'Cuenta no disponible', 'status': 404,
+            'message': 'El usuario de prueba no tiene una cuenta de beneficios asociada.'}, status=404)
+    return render(request, template, {'account': account, 'active_page': active_page})
+
+
+@require_GET
+@protected()
+def inicio(request):
+    return _benefit_page(request, 'dashboard.html', 'inicio')
+
+
+@require_GET
+@protected()
+def saldo(request):
+    return _benefit_page(request, 'balance.html', 'saldo')
+
+
+@require_GET
+@protected()
+def movimientos(request):
+    return _benefit_page(request, 'movements.html', 'movimientos')
+
+
+def _authorized_account(request, account_id):
+    account = BenefitAccount.objects.filter(pk=account_id, user=request.user).first()
+    if account is None:
+        record(request, 'access', 'denied', 'Consulta de una cuenta ajena o no disponible rechazada.')
+    return account
+
+
+def _retry_limit(request, code):
+    now = timezone.now().timestamp()
+    key = f'pending_retry_{code}'
+    last = request.session.get(key, 0)
+    if now - last < settings.QUERY_RETRY_SECONDS:
+        response = RejectedResponseCreator().create_response(
+            request, f'Se debe esperar {settings.QUERY_RETRY_SECONDS} segundos antes de reintentar.', http_status=429)
+        response['Retry-After'] = str(settings.QUERY_RETRY_SECONDS)
+        return response
+    return None
+
+
+def _query(request, account_id, code, operation):
+    start = perf_counter()
+    account = _authorized_account(request, account_id)
+    if account is None:
+        return RejectedResponseCreator().create_response(request)
+    limited = _retry_limit(request, code)
+    if limited:
+        return limited
+    try:
+        data = operation(account)
+    except SourceUnavailable:
+        request.session[f'pending_retry_{code}'] = timezone.now().timestamp()
+        logged = record(request, code, 'pending', 'Fuente académica interrumpida; consulta pendiente sin modificar registros.',
+                        int((perf_counter() - start) * 1000))
+        # Django no guarda automáticamente sesiones en respuestas 5xx. En esta
+        # interrupción controlada se conservan la actividad y el límite de reintento.
+        request.session.save()
+        return PendingResponseCreator().create_response(request, audit_recorded=logged)
+    request.session.pop(f'pending_retry_{code}', None)
+    logged = record(request, code, 'success', 'Consulta autorizada de datos ficticios completada.',
+                    int((perf_counter() - start) * 1000))
+    return UpdatedResponseCreator().create_response(request, data=data, updated_at=timezone.now().isoformat(), audit_recorded=logged)
+
+
+@require_GET
+@protected(api=True)
+def api_saldo(request, account_id):
+    return _query(request, account_id, 'balance', MockDataServiceAdapter().balance)
+
+
+@require_GET
+@protected(api=True)
+def api_movimientos(request, account_id):
+    form = MovementFilterForm(request.GET)
+    if not form.is_valid():
+        return RejectedResponseCreator().create_response(
+            request, 'Los filtros no son válidos. Se deben revisar las fechas, el tipo y la página.', http_status=400)
+
+    def operation(account):
+        query = MockDataServiceAdapter().movements(account, form.cleaned_data)
+        paginator = Paginator(query, 20)
+        try:
+            page = paginator.page(form.cleaned_data.get('page') or 1)
+        except EmptyPage:
+            return {'items': [], 'page': form.cleaned_data.get('page') or 1,
+                    'pages': paginator.num_pages, 'total': paginator.count}
+        return {'items': [{'id': item.pk, 'date': timezone.localtime(item.occurred_at).isoformat(),
+                           'description': item.description, 'kind': item.kind, 'amount': item.amount}
+                          for item in page], 'page': page.number, 'pages': paginator.num_pages, 'total': paginator.count}
+
+    return _query(request, account_id, 'movements', operation)
+
+
+@require_POST
+@protected(api=True)
+def actividad(request):
+    return UpdatedResponseCreator().create_response(request, 'La sesión permanece vigente.',
+        expires_at=request.session.get_expiry_date().isoformat(), idle_seconds=settings.SESSION_IDLE_SECONDS)
+
+
+@require_http_methods(['GET', 'POST'])
+@protected()
+def cambiar_clave(request):
+    form = PasswordChangeForm(request.user, request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        record(request, 'password', 'success', 'Contraseña actualizada con la política de validación.')
+        messages.success(request, 'La contraseña se actualizó correctamente.')
+        return redirect('inicio')
+    return render(request, 'change_password.html', {'form': form, 'active_page': 'clave'})
+
+
+@require_GET
+@protected(administrator=True)
+def seguimiento(request):
+    events = AuditEvent.objects.select_related('actor').all()
+    event_type = request.GET.get('event_type', '')
+    outcome = request.GET.get('outcome', '')
+    if event_type in AuditEvent.Type.values:
+        events = events.filter(event_type=event_type)
+    if outcome in AuditEvent.Outcome.values:
+        events = events.filter(outcome=outcome)
+    dates = MovementFilterForm({'desde': request.GET.get('from_date', ''), 'hasta': request.GET.get('to_date', '')})
+    if dates.is_valid():
+        if dates.cleaned_data.get('desde'):
+            events = events.filter(created_at__date__gte=dates.cleaned_data['desde'])
+        if dates.cleaned_data.get('hasta'):
+            events = events.filter(created_at__date__lte=dates.cleaned_data['hasta'])
+    elif request.GET.get('from_date') or request.GET.get('to_date'):
+        messages.error(request, 'El rango de fechas no es válido. Se muestran los registros sin ese filtro.')
+    day_events = AuditEvent.objects.filter(created_at__gte=timezone.now() - timedelta(hours=24))
+    counts = {row['outcome']: row['total'] for row in day_events.values('outcome').annotate(total=Count('id'))}
+    stats = {'total': sum(counts.values()), 'success': counts.get('success', 0),
+             'interrupted': counts.get('pending', 0), 'denied': counts.get('denied', 0)}
+    return render(request, 'seguimiento.html', {
+        'events': Paginator(events, 25).get_page(request.GET.get('page')),
+        'stats': stats, 'services': ServiceState.objects.order_by('code'), 'active_page': 'seguimiento',
+        'event_type': event_type, 'outcome': outcome,
+        'from_date': request.GET.get('from_date', ''), 'to_date': request.GET.get('to_date', ''),
+        'filters': {'event_type': event_type, 'outcome': outcome,
+                    'from_date': request.GET.get('from_date', ''), 'to_date': request.GET.get('to_date', '')},
+        'event_types': AuditEvent.Type.choices, 'outcomes': AuditEvent.Outcome.choices,
+    })
+
+
+@require_POST
+@protected(administrator=True)
+@transaction.atomic
+def servicios(request):
+    form = ServiceStateForm(request.POST)
+    if form.is_valid():
+        service = ServiceState.objects.filter(code=form.cleaned_data['service']).first()
+        if service:
+            service.available = form.cleaned_data['state'] == 'available'
+            service.save(update_fields=['available', 'changed_at'])
+            record(request, 'service', 'success', f'Servicio de prueba {service.label}: ' + ('disponible.' if service.available else 'interrumpido.'))
+            messages.success(request, 'El escenario de prueba se actualizó. Los saldos y movimientos permanecen intactos.')
+        else:
+            messages.error(request, 'El servicio de prueba no existe.')
+    else:
+        messages.error(request, 'La configuración enviada no es válida.')
+    return redirect('seguimiento')
+
+
+def csrf_failure(request, reason=''):
+    return render(request, 'error.html', {'title': 'La solicitud necesita actualizarse', 'status': 403,
+        'message': 'La protección del formulario rechazó la solicitud. Se debe recargar la página e intentar nuevamente.'}, status=403)
+
+
+def permission_error(request, exception=None):
+    return render(request, 'error.html', {'title': 'Acceso restringido', 'status': 403,
+        'message': 'La cuenta no tiene permiso para realizar esta acción.'}, status=403)
+
+
+def not_found(request, exception=None):
+    return render(request, 'error.html', {'title': 'Página no encontrada', 'status': 404,
+        'message': 'La dirección solicitada no está disponible.'}, status=404)
+
+
+def server_error(request):
+    return render(request, 'error.html', {'title': 'No fue posible completar la solicitud', 'status': 500,
+        'message': 'Se produjo una dificultad en el prototipo. Se puede volver al inicio e intentar nuevamente.'}, status=500)

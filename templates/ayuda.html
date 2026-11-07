@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Ayuda{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">CENTRO DE AYUDA · PROTOTIPO</span><h1>¿En qué se puede ayudar?</h1><p>Respuestas sobre las funciones y los mensajes de esta demostración.</p></div></div>
+<div class="help-overview"><section class="surface help-topic"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg></span><h2>Saldo y movimientos</h2><p>Consulta los registros de la cuenta y distingue una respuesta válida de una interrupción.</p><a class="text-link" href="{% url 'movimientos' %}">Ir a los movimientos →</a></section><section class="surface help-topic"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg></span><h2>Tarjeta de prueba</h2><p>El estado de la tarjeta permite habilitar o impedir nuevas compras ficticias.</p><a class="text-link" href="{% url 'tarjeta' %}">Administrar tarjeta →</a></section></div>
+<section class="surface faq-section"><div class="section-heading"><div><h2>Preguntas frecuentes</h2><p class="muted">Información del prototipo académico, sin conexión con la operación real de Pluxee.</p></div></div><div class="faq-list">{% for faq in faqs %}<details class="faq-item"><summary>{{ faq.question }}<span aria-hidden="true">+</span></summary><p>{{ faq.answer }}</p></details>{% empty %}<p class="muted">No hay preguntas registradas.</p>{% endfor %}</div></section>
+<div class="account-note"><span aria-hidden="true">i</span><p>Este espacio contiene ayuda local del proyecto. No crea solicitudes de soporte ni envía mensajes a Pluxee Chile.</p></div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% load static %}
+<!doctype html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{% block title %}Mi cuenta{% endblock %} · Prototipo Pluxee</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'js/common.js' %}" defer></script>
+  {% block scripts %}{% endblock %}
+</head>
+<body class="{% if request.user.is_authenticated %}{% if request.user.is_staff %}app-admin{% else %}app-beneficiary{% endif %}{% else %}app-public{% endif %}" data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
+  <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></symbol>
+    <symbol id="icon-pay" viewBox="0 0 24 24"><path d="M3 8V4h4M17 4h4v4M21 16v4h-4M7 20H3v-4M8 8h3v3H8zM15 8h2M15 11h2M8 15h3M8 18h2M15 15h3v3h-3z"/></symbol>
+    <symbol id="icon-shop" viewBox="0 0 24 24"><path d="M3 10h18L19 4H5Zm1 0v10h16V10M8 20v-6h4v6M3 10c0 3 4 3 4 0 0 3 5 3 5 0 0 3 5 3 5 0 0 3 4 3 4 0"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+    <symbol id="icon-card" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M2 9h20M6 15h5"/></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><path d="M8 5h12M8 12h12M8 19h12M3 5h1M3 12h1M3 19h1"/></symbol>
+    <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1.5 1-1.5 1-1.5 3M12 17h.01"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 15v2"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.5a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </defs></svg>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  {% if request.user.is_authenticated %}
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Menú principal">
+      <a class="brand" href="{% if request.user.is_staff %}{% url 'seguimiento' %}{% else %}{% url 'inicio' %}{% endif %}" aria-label="Prototipo Pluxee, inicio">
+        <span class="brand-mark" aria-hidden="true">p<span></span></span>
+        <span>pluxee<small>PROTOTIPO ACADÉMICO</small></span>
+      </a>
+      <div class="sidebar-label">{% if request.user.is_staff %}ADMINISTRACIÓN{% else %}MI BENEFICIO{% endif %}</div>
+      <nav class="nav-links desktop-nav" aria-label="Secciones">
+        {% if request.user.is_staff %}
+        <a href="{% url 'seguimiento' %}" class="{% if active_page == 'seguimiento' %}active{% endif %}" {% if active_page == 'seguimiento' %}aria-current="page"{% endif %}>
+          <span class="nav-icon" aria-hidden="true">▦</span> Seguimiento
+        </a>
+        {% else %}
+        <a href="{% url 'inicio' %}" class="{% if active_page == 'inicio' %}active{% endif %}" {% if active_page == 'inicio' %}aria-current="page"{% endif %}>
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-home"/></svg> Inicio
+        </a>
+        <a href="{% url 'pagar' %}" class="{% if active_page == 'pagar' %}active{% endif %}" {% if active_page == 'pagar' %}aria-current="page"{% endif %}>
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-pay"/></svg> Pagar
+        </a>
+        <a href="{% url 'comercios' %}" class="{% if active_page == 'comercios' %}active{% endif %}" {% if active_page == 'comercios' %}aria-current="page"{% endif %}>
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-shop"/></svg> Comercios
+        </a>
+        <a href="{% url 'perfil' %}" class="{% if active_page == 'perfil' %}active{% endif %}" {% if active_page == 'perfil' %}aria-current="page"{% endif %}>
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-user"/></svg> Mi perfil
+        </a>
+        <div class="nav-divider"></div>
+        <a href="{% url 'movimientos' %}" class="{% if active_page == 'movimientos' %}active{% endif %}" {% if active_page == 'movimientos' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg> Mis movimientos</a>
+        <a href="{% url 'saldo' %}" class="{% if active_page == 'saldo' %}active{% endif %}" {% if active_page == 'saldo' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">$</span> Consultar saldo</a>
+        <a href="{% url 'tarjeta' %}" class="{% if active_page == 'tarjeta' %}active{% endif %}" {% if active_page == 'tarjeta' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg> Mi tarjeta</a>
+        <a href="{% url 'ayuda' %}" class="{% if active_page == 'ayuda' %}active{% endif %}" {% if active_page == 'ayuda' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg> Ayuda</a>
+        {% endif %}
+        {% if request.user.is_staff %}
+        <a href="{% url 'cambiar_clave' %}" class="{% if active_page == 'clave' %}active{% endif %}" {% if active_page == 'clave' %}aria-current="page"{% endif %}>
+          <span class="nav-icon" aria-hidden="true">◇</span> Cambiar contraseña
+        </a>
+        {% endif %}
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="profile">
+          <span class="avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
+          <div><strong>{{ request.user.get_short_name|default:request.user.username }}</strong><small>{% if request.user.is_staff %}Administrador de prueba{% else %}Beneficiario de prueba{% endif %}</small></div>
+        </div>
+        <form action="{% url 'salir' %}" method="post">{% csrf_token %}<button class="logout-button" type="submit"><span aria-hidden="true">↪</span> Cerrar sesión</button></form>
+      </div>
+    </aside>
+    <div class="app-main">
+      <header class="topbar"><span class="context-label">{% if request.user.is_staff %}Panel de seguimiento{% else %}Beneficio de alimentación{% endif %}</span><span class="academic-pill"><span aria-hidden="true"></span> Prototipo académico · Datos ficticios</span></header>
+      <main id="contenido" class="page-content" tabindex="-1">
+        <div class="session-alert notice notice-error" data-session-alert role="alert" hidden><div><strong>La sesión ha finalizado</strong><p data-session-message>Es necesario ingresar nuevamente para continuar.</p></div><a class="button button-small" href="{% url 'ingresar' %}">Volver a ingresar</a></div>
+        {% if messages %}<div class="messages">{% for message in messages %}<div class="notice {% if message.tags == 'error' %}notice-error{% else %}notice-success{% endif %}" role="status">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="app-footer">Proyecto de Ingeniería de Software · Entorno académico independiente de Pluxee Chile.</footer>
+    </div>
+  </div>
+  {% if not request.user.is_staff %}
+  <nav class="bottom-nav" aria-label="Navegación principal móvil">
+    <a href="{% url 'inicio' %}" class="{% if active_page == 'inicio' or active_page == 'saldo' or active_page == 'movimientos' %}active{% endif %}" {% if active_page == 'inicio' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-home"/></svg><span>Inicio</span></a>
+    <a href="{% url 'pagar' %}" class="{% if active_page == 'pagar' %}active{% endif %}" {% if active_page == 'pagar' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-pay"/></svg><span>Pagar</span></a>
+    <a href="{% url 'comercios' %}" class="{% if active_page == 'comercios' %}active{% endif %}" {% if active_page == 'comercios' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-shop"/></svg><span>Comercios</span></a>
+    <a href="{% url 'perfil' %}" class="{% if active_page == 'perfil' or active_page == 'tarjeta' or active_page == 'ayuda' or active_page == 'clave' %}active{% endif %}" {% if active_page == 'perfil' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-user"/></svg><span>Mi perfil</span></a>
+  </nav>
+  {% endif %}
+  {% else %}
+    {% block public_content %}{% endblock %}
+  {% endif %}
+</body>
+</html>

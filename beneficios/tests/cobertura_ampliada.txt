@@ -1,0 +1,18 @@
+Name                               Stmts   Miss  Cover   Missing
+----------------------------------------------------------------
+beneficios\context_processors.py       3      0   100%
+beneficios\events.py                  31      0   100%
+beneficios\forms.py                   17      0   100%
+beneficios\forms_extra.py             34      0   100%
+beneficios\middleware.py              45      0   100%
+beneficios\models.py                 115      2    98%   121, 125
+beneficios\policies.py                12      0   100%
+beneficios\responses.py               14      0   100%
+beneficios\security.py                47      3    94%   33-34, 59
+beneficios\services.py                27      0   100%
+beneficios\urls.py                     5      0   100%
+beneficios\validators.py               8      0   100%
+beneficios\views.py                  185     11    94%   26, 70, 192, 194, 198, 200-202, 231, 243, 253
+beneficios\views_extra.py            197     19    90%   26, 37, 71, 99, 154, 159, 168-169, 192, 206, 226, 237-239, 245-256
+----------------------------------------------------------------
+TOTAL                                740     35    95%

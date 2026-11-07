@@ -1,0 +1,116 @@
+Verificación local UTC: 2026-11-06T23:02:48.981622+00:00
+
+$ python manage.py check --settings=config.settings.testing
+System check identified no issues (0 silenced).
+Código de salida: 0
+
+$ python -m coverage run manage.py test --settings=config.settings.testing
+Creating test database for alias 'default'...
+
+Conflict: /pagar/
+.Service Unavailable: /pagar/
+..Bad Request: /pagar/
+Bad Request: /pagar/
+.Bad Request: /pagar/
+.Bad Request: /pagar/
+.Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+..Bad Request: /comercios/
+Bad Request: /comercios/
+Bad Request: /comercios/
+Bad Request: /comercios/
+Not Found: /comercios/3/favorito/
+Method Not Allowed (GET): /comercios/1/favorito/
+..Forbidden (CSRF cookie not set.): /pagar/
+Forbidden (CSRF token missing.): /tarjeta/
+Forbidden (CSRF token missing.): /perfil/
+Forbidden (CSRF token missing.): /comercios/1/favorito/
+..Not Found: /pagar/comprobante/be6b1800-6d3b-4403-80b5-5f3cfc8de34a/
+Not Found: /pagar/comprobante/9a9fba10-af0e-437e-a88b-b6657d224759/
+.Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Too Many Requests: /pagar/
+.Bad Request: /perfil/
+Bad Request: /perfil/
+Bad Request: /perfil/
+Bad Request: /perfil/
+.Conflict: /pagar/
+Conflict: /pagar/
+...Service Unavailable: /pagar/
+Service Unavailable: /pagar/
+..Unauthorized: /api/cuentas/1/saldo/
+.Forbidden: /api/cuentas/2/saldo/
+Forbidden: /api/cuentas/2/movimientos/
+Forbidden: /api/cuentas/999999/saldo/
+...Forbidden: /api/cuentas/1/saldo/
+.Method Not Allowed (GET): /seguimiento/servicios/
+...Forbidden: /seguimiento/
+Forbidden: /seguimiento/servicios/
+......Unauthorized: /api/cuentas/1/saldo/
+Unauthorized: /api/cuentas/1/movimientos/
+..Unauthorized: /api/cuentas/1/saldo/
+Unauthorized: /api/cuentas/1/saldo/
+...Service Unavailable: /api/cuentas/1/saldo/
+Too Many Requests: /api/cuentas/1/saldo/
+.Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+...Method Not Allowed (GET): /salir/
+Unauthorized: /api/cuentas/1/saldo/
+.Service Unavailable: /api/cuentas/1/movimientos/
+....Forbidden (CSRF cookie not set.): /ingresar/
+Forbidden (CSRF cookie not set.): /seguimiento/servicios/
+Forbidden (CSRF token missing.): /salir/
+.....
+----------------------------------------------------------------------
+Ran 53 tests in 16.282s
+
+OK
+Destroying test database for alias 'default'...
+
+Found 53 test(s).
+System check identified no issues (0 silenced).
+Código de salida: 0
+
+$ python -m coverage report --fail-under=80
+Name                                Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------
+beneficios\context_processors.py        3      0   100%
+beneficios\events.py                   31      0   100%
+beneficios\forms.py                    17      0   100%
+beneficios\forms_extra.py              34      0   100%
+beneficios\middleware.py               45      0   100%
+beneficios\models.py                  115      2    98%   121, 125
+beneficios\policies.py                 12      0   100%
+beneficios\responses.py                14      0   100%
+beneficios\security.py                 47      3    94%   33-34, 59
+beneficios\services.py                 27      0   100%
+beneficios\templatetags\moneda.py      10      2    80%   13-14
+beneficios\urls.py                      5      0   100%
+beneficios\validators.py                8      0   100%
+beneficios\views.py                   185     11    94%   26, 70, 192, 194, 198, 200-202, 231, 243, 253
+beneficios\views_extra.py             197     19    90%   26, 37, 71, 99, 154, 159, 168-169, 192, 206, 226, 237-239, 245-256
+-----------------------------------------------------------------
+TOTAL                                 750     37    95%
+Código de salida: 0
+
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+Código de salida: 0
+
+$ python manage.py collectstatic --noinput
+
+5 static files copied to 'prototipo_pluxee\.static'.
+Código de salida: 0
+
+Paquete generado correctamente: Prototipo_Pluxee_Chile.zip

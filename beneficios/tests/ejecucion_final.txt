@@ -1,0 +1,92 @@
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+
+Found 33 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: messages, staticfiles
+  Apply all migrations: auth, beneficios, contenttypes, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying beneficios.0001_initial... OK
+test_absolute_timeout_applies_even_with_recent_activity (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_absolute_timeout_applies_even_with_recent_activity) ... Unauthorized: /api/cuentas/1/saldo/
+ok
+test_account_id_changes_do_not_change_authorization (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_account_id_changes_do_not_change_authorization) ... Forbidden: /api/cuentas/2/saldo/
+Forbidden: /api/cuentas/2/movimientos/
+Forbidden: /api/cuentas/999999/saldo/
+ok
+test_account_owner_reads_balance_computed_from_persisted_movements (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_account_owner_reads_balance_computed_from_persisted_movements) ... ok
+test_active_heartbeat_updates_activity_without_resetting_absolute_limit (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_active_heartbeat_updates_activity_without_resetting_absolute_limit) ... ok
+test_administrator_can_read_actual_events_but_not_other_accounts_balance (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_administrator_can_read_actual_events_but_not_other_accounts_balance) ... Forbidden: /api/cuentas/1/saldo/
+ok
+test_administrator_can_switch_only_valid_service_states_without_modifying_ledger (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_administrator_can_switch_only_valid_service_states_without_modifying_ledger) ... Method Not Allowed (GET): /seguimiento/servicios/
+ok
+test_audit_failure_is_explicit_without_falsifying_balance_result (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_audit_failure_is_explicit_without_falsifying_balance_result) ... ok
+test_audit_rows_have_trace_and_do_not_include_password_or_reusable_session (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_audit_rows_have_trace_and_do_not_include_password_or_reusable_session) ... ok
+test_beneficiary_cannot_read_or_change_admin_services (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_beneficiary_cannot_read_or_change_admin_services) ... Forbidden: /seguimiento/
+Forbidden: /seguimiento/servicios/
+ok
+test_disabled_account_cannot_login (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_disabled_account_cannot_login) ... ok
+test_expired_html_redirects_with_reason_and_security_headers (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_expired_html_redirects_with_reason_and_security_headers) ... ok
+test_external_next_url_cannot_redirect_credentials_off_site (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_external_next_url_cannot_redirect_credentials_off_site) ... ok
+test_failure_of_one_observer_does_not_block_other_observers (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_failure_of_one_observer_does_not_block_other_observers) ... ok
+test_filters_constrain_date_kind_and_pagination (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_filters_constrain_date_kind_and_pagination) ... ok
+test_guest_cannot_read_json_or_protected_page (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_guest_cannot_read_json_or_protected_page) ... Unauthorized: /api/cuentas/1/saldo/
+Unauthorized: /api/cuentas/1/movimientos/
+ok
+test_html_escapes_stored_account_text_and_pages_have_defensive_headers (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_html_escapes_stored_account_text_and_pages_have_defensive_headers) ... ok
+test_idle_timeout_invalidates_old_session_and_logs_reason (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_idle_timeout_invalidates_old_session_and_logs_reason) ... Unauthorized: /api/cuentas/1/saldo/
+Unauthorized: /api/cuentas/1/saldo/
+ok
+test_input_validation_rejects_missing_oversized_and_injection_inputs (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_input_validation_rejects_missing_oversized_and_injection_inputs) ... ok
+test_internal_next_url_is_preserved (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_internal_next_url_is_preserved) ... ok
+test_interrupted_balance_is_pending_without_zero_and_recovers_after_retry (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_interrupted_balance_is_pending_without_zero_and_recovers_after_retry) ... Service Unavailable: /api/cuentas/1/saldo/
+Too Many Requests: /api/cuentas/1/saldo/
+ok
+test_invalid_filters_are_rejected_without_query_result (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_invalid_filters_are_rejected_without_query_result) ... Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+ok
+test_ledger_rejects_zero_amount_at_database_boundary (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_ledger_rejects_zero_amount_at_database_boundary) ... ok
+test_lockout_rejects_even_correct_password_until_timeout (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_lockout_rejects_even_correct_password_until_timeout) ... ok
+test_logout_invalidates_cookie_and_cannot_be_triggered_with_get (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_logout_invalidates_cookie_and_cannot_be_triggered_with_get) ... Method Not Allowed (GET): /salir/
+Unauthorized: /api/cuentas/1/saldo/
+ok
+test_movements_interruption_and_empty_history_are_distinct (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_movements_interruption_and_empty_history_are_distinct) ... Service Unavailable: /api/cuentas/1/movimientos/
+ok
+test_navigation_refresh_keeps_session_without_extending_absolute_start (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_navigation_refresh_keeps_session_without_extending_absolute_start) ... ok
+test_password_change_requires_current_secret_and_keeps_authorized_session (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_password_change_requires_current_secret_and_keeps_authorized_session) ... ok
+test_password_is_hashed_and_strength_policy_rejects_weak_values (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_password_is_hashed_and_strength_policy_rejects_weak_values) ... ok
+test_post_requires_csrf_token_even_for_authenticated_administrator (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_post_requires_csrf_token_even_for_authenticated_administrator) ... Forbidden (CSRF cookie not set.): /ingresar/
+Forbidden (CSRF cookie not set.): /seguimiento/servicios/
+Forbidden (CSRF token missing.): /salir/
+ok
+test_reading_movements_returns_only_own_data_in_descending_date_order (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_reading_movements_returns_only_own_data_in_descending_date_order) ... ok
+test_valid_csrf_form_token_allows_authorized_request (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_valid_csrf_form_token_allows_authorized_request) ... ok
+test_valid_login_establishes_server_session_and_audit (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_valid_login_establishes_server_session_and_audit) ... ok
+test_wrong_and_unknown_accounts_receive_same_generic_error (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_wrong_and_unknown_accounts_receive_same_generic_error) ... ok
+
+----------------------------------------------------------------------
+Ran 33 tests in 8.383s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).

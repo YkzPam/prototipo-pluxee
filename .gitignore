@@ -1,0 +1,15 @@
+.venv/
+.runtime/
+.static/
+__pycache__/
+*.py[cod]
+*.sqlite3*
+.env
+.coverage
+htmlcov/
+coverage.xml
+*.key
+*.pem
+evidencias/
+.evidencias/
+dist/
