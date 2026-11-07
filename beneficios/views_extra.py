@@ -98,8 +98,8 @@ def _payment_result(request, values, account, card):
         if not Merchant.objects.filter(pk=values['merchant'].pk, active=True).exists():
             return None, 'El comercio de prueba ya no está disponible.', 400
         try:
-            MockDataServiceAdapter.check_service('movements')
-            balance = MockDataServiceAdapter().balance(account)['balance']
+            MockDataServiceAdapter.check_service('movements', database='default')
+            balance = MockDataServiceAdapter(use_primary=True).balance(account)['balance']
         except SourceUnavailable:
             record(request, 'payment', 'pending', 'Pago académico sin procesar por interrupción de la fuente de datos.')
             return None, 'El servicio de consulta está interrumpido. No se realizó ningún cargo. Se puede reintentar cuando vuelva a estar disponible.', 503

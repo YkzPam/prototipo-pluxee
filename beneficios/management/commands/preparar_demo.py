@@ -29,7 +29,8 @@ class Command(BaseCommand):
             if created:
                 # Clave pública de ejercicio; no se reutiliza para ningún sistema real.
                 user.set_password('Prototipo2026!')
-                user.save(update_fields=['password'])
+                user.must_change_password = True
+                user.save(update_fields=['password', 'must_change_password'])
                 created_count += 1
             if label:
                 account, account_created = BenefitAccount.objects.get_or_create(

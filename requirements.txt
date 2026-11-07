@@ -1,6 +1,9 @@
 asgiref==3.13.0
+cheroot==11.1.2
 coverage==7.17.2
+cryptography==50.0.2
 Django==5.2.19
+mysqlclient==2.3.0
 sqlparse==0.6.1
 tzdata==2026.6
 waitress==3.0.2

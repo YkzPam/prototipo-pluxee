@@ -1,23 +1,21 @@
-"""Perfil HTTPS para una demostración desplegada, no una integración empresarial."""
+"""Demostración HTTPS con las conexiones MySQL limitadas."""
 from .base import *
-from django.core.exceptions import ImproperlyConfigured
+from .database_secure import build_databases
+from config.vault import load_vault, require_application_secrets
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
-if len(SECRET_KEY) < 50:
-    raise ImproperlyConfigured('DJANGO_SECRET_KEY requiere una clave externa de al menos 50 caracteres.')
-ALLOWED_HOSTS = [x.strip() for x in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if x.strip()]
-if not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS:
-    raise ImproperlyConfigured('Definir DJANGO_ALLOWED_HOSTS con los hosts exactos de la demostración.')
+_vault = load_vault()
+SECRET_KEY, DATA_ENCRYPTION_KEY = require_application_secrets(_vault)
+DATABASES = build_databases(_vault)
+del _vault
 DEBUG = False
-DATABASES['default']['NAME'] = os.environ.get('PLUXEE_DB', str(RUNTIME_DIR / 'demonstration.sqlite3'))
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_NAME = 'pluxee_demo_segura_session'
+CSRF_COOKIE_NAME = 'pluxee_demo_segura_csrf'
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 3600
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
 SECURE_REFERRER_POLICY = 'same-origin'
-ENVIRONMENT_LABEL = 'Demostración HTTPS'
-# Activar solo si el proxy local de confianza elimina el encabezado recibido del cliente.
-if os.environ.get('TRUST_LOCAL_HTTPS_PROXY') == '1':
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+ENVIRONMENT_LABEL = 'Demostración local HTTPS'

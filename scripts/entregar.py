@@ -16,8 +16,8 @@ steps = [
     [sys.executable, 'manage.py', 'check', '--settings=config.settings.testing'],
     [sys.executable, '-m', 'coverage', 'run', 'manage.py', 'test', '--settings=config.settings.testing'],
     [sys.executable, '-m', 'coverage', 'report', '--fail-under=80'],
-    [sys.executable, 'manage.py', 'makemigrations', '--check', '--dry-run'],
-    [sys.executable, 'manage.py', 'collectstatic', '--noinput'],
+    [sys.executable, 'manage.py', 'makemigrations', '--check', '--dry-run', '--settings=config.settings.testing'],
+    [sys.executable, 'manage.py', 'collectstatic', '--noinput', '--settings=config.settings.testing'],
 ]
 for command in steps:
     result = subprocess.run(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -29,9 +29,9 @@ for command in steps:
         (DIST / 'verificacion_local.txt').write_text(''.join(log), encoding='utf-8')
         raise SystemExit(result.returncode)
 
-allowed_folders = {'beneficios', 'config', 'static', 'templates', 'scripts', '.github'}
+allowed_folders = {'beneficios', 'config', 'identidad', 'static', 'templates', 'scripts', '.github'}
 allowed_files = {'README.md', 'requirements.txt', 'manage.py', 'servidor.py',
-                 'iniciar.cmd', 'preparar.cmd', 'verificar.cmd', '.coveragerc', '.gitignore'}
+                 'servidor_seguro.py', 'iniciar.cmd', 'preparar.cmd', 'verificar.cmd', '.coveragerc', '.gitignore'}
 ignored = {'__pycache__', '.venv', '.runtime', '.git', '.static', 'dist', 'evidencias', '.evidencias'}
 archive = DIST / 'Prototipo_Pluxee_Chile.zip'
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:

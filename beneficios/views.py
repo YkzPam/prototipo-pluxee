@@ -2,7 +2,7 @@ from datetime import timedelta
 from time import perf_counter
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth import authenticate, get_user_model, login, logout, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.paginator import Paginator, EmptyPage
 from django.db import transaction
@@ -23,6 +23,8 @@ from .services import MockDataServiceAdapter, SourceUnavailable
 @require_http_methods(['GET', 'POST'])
 def ingresar(request):
     if request.user.is_authenticated:
+        if request.user.must_change_password:
+            return redirect('cambiar_clave')
         return redirect('inicio')
     form = LoginForm(request.POST or None)
     next_url = request.POST.get('next', request.GET.get('next', ''))
@@ -43,6 +45,8 @@ def ingresar(request):
             request.session.set_expiry(now + timedelta(seconds=settings.SESSION_MAX_SECONDS))
             clear_login_failures(request, username)
             record(request, 'login', 'success', 'Ingreso correcto mediante cuenta de prueba.')
+            if user.must_change_password:
+                return redirect('cambiar_clave')
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
                 return redirect(next_url)
             return redirect('inicio')
@@ -172,13 +176,23 @@ def actividad(request):
 @require_http_methods(['GET', 'POST'])
 @protected()
 def cambiar_clave(request):
-    form = PasswordChangeForm(request.user, request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        user = form.save()
-        update_session_auth_hash(request, user)
-        record(request, 'password', 'success', 'Contraseña actualizada con la política de validación.')
-        messages.success(request, 'La contraseña se actualizó correctamente.')
-        return redirect('inicio')
+    if request.method == 'POST':
+        with transaction.atomic():
+            user = get_user_model().objects.select_for_update().get(pk=request.user.pk)
+            form = PasswordChangeForm(user, request.POST)
+            if form.is_valid() and form.cleaned_data['old_password'] == form.cleaned_data['new_password1']:
+                form.add_error('new_password2', 'La nueva contraseña debe ser distinta de la contraseña actual.')
+            if not form.errors:
+                form.save(commit=False)
+                user.must_change_password = False
+                user.save(update_fields=['password', 'must_change_password'])
+                record(request, 'password', 'success', 'Contraseña actualizada con la política de validación.')
+        if not form.errors:
+            update_session_auth_hash(request, user)
+            messages.success(request, 'La contraseña se actualizó correctamente.')
+            return redirect('inicio')
+    else:
+        form = PasswordChangeForm(request.user)
     return render(request, 'change_password.html', {'form': form, 'active_page': 'clave'})
 
 

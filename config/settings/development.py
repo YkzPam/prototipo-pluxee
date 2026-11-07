@@ -1,12 +1,8 @@
 """Demostración local: solo loopback, cuentas ficticias, sin TLS acreditado."""
 from .base import *
-from django.core.management.utils import get_random_secret_key
+from config.vault import prepare_application_secrets, require_application_secrets
 
-SECRET_FILE = RUNTIME_DIR / 'development.key'
-if not SECRET_FILE.exists():
-    SECRET_FILE.write_text(get_random_secret_key(), encoding='utf-8')
-    SECRET_FILE.chmod(0o600)
-SECRET_KEY = SECRET_FILE.read_text(encoding='utf-8').strip()
+SECRET_KEY, DATA_ENCRYPTION_KEY = require_application_secrets(prepare_application_secrets())
 DEBUG = False
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '[::1]']
 SESSION_COOKIE_SECURE = False

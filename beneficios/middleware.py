@@ -3,6 +3,7 @@ from datetime import datetime, timezone as dt_timezone
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
 from .events import record
 from .policies import session_policy
@@ -30,6 +31,16 @@ class SessionPolicyMiddleware:
                     return RejectedResponseCreator().create_response(request, reason, status='expired', http_status=401)
                 messages.warning(request, reason)
                 return redirect('ingresar')
+            if request.user.must_change_password:
+                change_password_url = reverse('cambiar_clave')
+                if request.path_info.startswith('/api/'):
+                    return RejectedResponseCreator().create_response(
+                        request, 'Se debe cambiar la contraseña temporal antes de continuar.',
+                        status='password_change_required', change_password_url=change_password_url,
+                    )
+                allowed_paths = (change_password_url, reverse('ingresar'), reverse('salir'))
+                if request.path not in allowed_paths and not request.path_info.startswith('/static/'):
+                    return redirect(change_password_url)
             request.session['auth_started_at'] = created
             request.session['last_activity_at'] = now
             # El vencimiento absoluto no se extiende con navegación ni heartbeat.

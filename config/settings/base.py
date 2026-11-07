@@ -7,8 +7,9 @@ RUNTIME_DIR = BASE_DIR / '.runtime'
 RUNTIME_DIR.mkdir(exist_ok=True)
 INSTALLED_APPS = [
     'django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.sessions',
-    'django.contrib.messages', 'django.contrib.staticfiles', 'beneficios',
+    'django.contrib.messages', 'django.contrib.staticfiles', 'identidad', 'beneficios',
 ]
+AUTH_USER_MODEL = 'identidad.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -35,7 +36,7 @@ TEMPLATES = [{
 WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {'default': {
     'ENGINE': 'django.db.backends.sqlite3',
-    'NAME': os.environ.get('PLUXEE_DB', str(RUNTIME_DIR / 'development.sqlite3')),
+    'NAME': os.environ.get('PLUXEE_DB', str(RUNTIME_DIR / 'development_v2.sqlite3')),
     'OPTIONS': {'timeout': 20, 'transaction_mode': 'IMMEDIATE'},
 }}
 AUTH_PASSWORD_VALIDATORS = [

@@ -5,10 +5,12 @@ Aplicación web funcional de la evaluación 3 de Ingeniería de Software. La eva
 ## 1. Inicio en este equipo
 
 1. Ejecutar `iniciar.cmd` dentro de esta carpeta.
-2. Abrir **http://127.0.0.1:8765** en el navegador.
+2. Abrir **https://127.0.0.1:8443** en el navegador después de configurar la confianza del certificado local.
 3. Mantener abierta la ventana del servidor durante la demostración. `Ctrl+C` lo detiene.
 
-El entorno de este equipo ya está preparado. En otro equipo con Python 3.12 o superior, primero se debe ejecutar `preparar.cmd`; ese paso descarga las dependencias indicadas en `requirements.txt`. Los archivos de la base de datos y las claves se generan localmente; no se incluyen en el código compartido.
+El inicio está preparado para Windows con Python 3.12 o superior. `preparar.cmd` instala las dependencias de Python. En el primer inicio se descarga y comprueba el archivo oficial de MySQL Community 8.4.13. La instancia queda en este equipo, sin instalar un servicio de Windows y sin aceptar tráfico de la red. Los archivos de la base de datos y las claves se generan localmente y quedan fuera del ZIP.
+
+El certificado público se genera en `.runtime/security/web_tls/Pluxee_Prototipo_Local.crt`, válido para `127.0.0.1` y `localhost`. El inicio no modifica la confianza de Windows ni del navegador. Para verificar la conexión sin cambiar esa configuración, se puede usar `curl.exe --cacert .runtime/security/web_tls/Pluxee_Prototipo_Local.crt https://127.0.0.1:8443/ingresar/` con un cliente compatible, o el cliente de Python indicado en la verificación. Para detener también MySQL al terminar, ejecutar `python scripts/mysql_local.py detener` con el Python del entorno virtual.
 
 | Usuario de prueba | Función |
 |---|---|
@@ -17,11 +19,11 @@ El entorno de este equipo ya está preparado. En otro equipo con Python 3.12 o s
 | `sinmovimientos` | Cuenta sin operaciones; muestra un resultado vacío válido. |
 | `administrador` | Bitácora y escenarios controlados de disponibilidad. |
 
-La contraseña inicial de todas las cuentas es **`Prototipo2026!`**. El PIN de pago ficticio es **`4826`**. Son credenciales públicas del ejercicio, sin relación con servicios reales. Si se cambia una contraseña dentro de la demostración, volver a ejecutar la preparación conserva el cambio; no sobrescribe cuentas existentes.
+La contraseña inicial de las cuentas nuevas es **`Prototipo2026!`**. Debe cambiarse en el primer ingreso para poder usar el prototipo. El PIN de pago ficticio es **`4826`**. Son credenciales públicas del ejercicio. Si se cambia una contraseña, ejecutar la preparación otra vez conserva el cambio.
 
 ## 2. Funciones disponibles
 
-La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo y los movimientos provienen de SQLite. Los filtros se comprueban en el servidor y las operaciones del beneficiario se limitan a su propia cuenta.
+La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo y los movimientos provienen de MySQL. Los filtros se comprueban en el servidor y las operaciones del beneficiario se limitan a su propia cuenta.
 
 - **Acceso y sesión:** ingreso, rechazo genérico de credenciales, bloqueo temporal, continuidad al navegar, vencimiento y cierre que invalida la sesión anterior.
 - **Saldo y movimientos:** consulta actualizada, filtros, historial vacío, interrupción diferenciada y reintento. Una falla no sustituye el saldo por cero.
@@ -43,7 +45,9 @@ La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo 
 
 El modelo es incremental: acceso y sesión, consultas, seguimiento y funciones adicionales comparten usuarios, permisos y persistencia. Django controla autenticación, sesiones, formularios, ORM y CSRF. Las vistas coordinan el recorrido; `services.py` adapta los datos académicos; `responses.py` construye respuestas diferenciadas; `events.py` notifica el registro de eventos. `policies.py` conserva únicamente configuración inmutable por proceso, sin un usuario compartido.
 
-El saldo se calcula como abonos menos cargos. El pago confirma el movimiento y el comprobante en una transacción, serializa la consulta del saldo y utiliza una referencia única por usuario. Una falla de auditoría obligatoria revierte el cargo. SQLite utiliza transacciones `IMMEDIATE`; esta decisión sirve para la demostración local y no acredita capacidad empresarial.
+El saldo se calcula como abonos menos cargos. MySQL confirma el movimiento y el comprobante en una transacción que bloquea la cuenta durante el pago y utiliza una referencia única por usuario. Una falla de auditoría obligatoria revierte el cargo. La cuenta SQL de consulta solo puede leer las tablas de saldo, movimientos y disponibilidad que necesita ese recorrido. La cuenta de la aplicación escribe en las tablas y columnas que necesita para operar. El aprovisionamiento de esquemas utiliza una credencial distinta.
+
+El informe de la evaluación 2 dejó la estructura física sujeta al gestor académico que se eligiera (p. 64). El borrador posterior consideró SQLite. En la implementación se seleccionó MySQL para demostrar permisos diferenciados en el propio motor; SQLite se conserva para desarrollo y pruebas aisladas.
 
 ## 5. Verificación y entornos
 
@@ -51,15 +55,15 @@ El saldo se calcula como abonos menos cargos. El pago confirma el movimiento y e
 
 | Perfil | Configuración y alcance |
 |---|---|
-| Desarrollo local | `config.settings.development`; servidor ligado exclusivamente a `127.0.0.1`, datos sintéticos y HTTP local. |
-| Pruebas | `config.settings.testing`; base de pruebas separada y descartable, mismas reglas de negocio. |
-| Demostración HTTPS | `config.settings.production`; requiere clave externa de al menos 50 caracteres, hosts exactos y un servidor TLS con certificado válido. |
+| Desarrollo local | `config.settings.development`; SQLite separado, servidor ligado a `127.0.0.1` y HTTP local. |
+| Pruebas | `config.settings.testing`; SQLite descartable en memoria, mismas reglas de negocio. |
+| Demostración HTTPS | `config.settings.production`; MySQL local, conexión de consulta de solo lectura, certificado TLS y cookies Secure. |
 
-El perfil HTTPS activa cookies Secure, redirección a HTTPS y HSTS. La versión local abierta en este equipo utiliza HTTP de loopback: **no acredita todavía una presentación por HTTPS ni autorización de Pluxee**. Tampoco acredita la evaluación de comprensión con cinco participantes. SQLite no ofrece usuarios y roles propios del motor; los permisos de la aplicación no se presentan como sustituto de esa condición empresarial.
+El perfil de demostración usa HTTPS, HSTS y cookies Secure. Las cuentas de MySQL verifican el certificado del motor y solo aceptan conexiones cifradas. La comprobación automatizada del sitio usa el certificado local de forma explícita, sin desactivar su validación. La prueba de comprensión con cinco participantes y la exposición se realizan por separado.
 
-La verificación del paquete completó 53 pruebas con 95 % de cobertura del código Python seleccionado. El intento de carga de veinte usuarios quedó interrumpido: sus eventos persistidos y las condiciones de la interrupción están en `beneficios/tests/perfil_carga_parcial.json`. No se presenta ese intento como una prueba completa de diez minutos ni como medición del percentil 95 de latencia HTTP.
+La salida de `scripts/entregar.py` registra el número de pruebas y la cobertura de la versión empaquetada. El intento anterior de carga en SQLite quedó interrumpido: sus eventos persistidos y las condiciones de la interrupción están en `beneficios/tests/perfil_carga_parcial.json`. Ese resultado no se atribuye a la versión MySQL ni sirve para afirmar que se completaron diez minutos de prueba.
 
-Los secretos no se guardan en el repositorio. Las contraseñas y el PIN se almacenan mediante hash. La sesión permanece en el servidor; no se utiliza almacenamiento web para credenciales. Los formularios conservan CSRF y las plantillas y el JavaScript tratan las salidas como texto. La bitácora excluye contraseñas, PIN e identificadores de sesión reutilizables.
+Los campos sensibles se cifran con AES-256-GCM. Las contraseñas y el PIN se someten a hash antes de cifrar ese resultado. Las claves quedan fuera del repositorio, protegidas mediante DPAPI para el usuario de Windows. La separación de permisos SQL no equivale a aislar procesos ejecutados por ese mismo usuario. Las sesiones anteriores a la migración se descartan. Los formularios conservan CSRF y la bitácora excluye contraseñas, PIN e identificadores de sesión reutilizables.
 
 ## 6. Referencias del diseño y la implementación
 
@@ -69,6 +73,9 @@ La organización visual toma como referencia las funciones públicas de la aplic
 - Pluxee Chile. (2026). [Manual guía usuario Junaeb](https://lp.pluxee.cl/hubfs/JUNAEB%202026/ARCHIVOS/2026_MANUAL%20GU%C3%8DA%20USUARIO.pdf).
 - Django Software Foundation. (s. f.). [Security in Django](https://docs.djangoproject.com/en/5.2/topics/security/).
 - Django Software Foundation. (s. f.). [How to use sessions](https://docs.djangoproject.com/en/5.2/topics/http/sessions/).
-- Django Software Foundation. (s. f.). [SQLite: transactions behavior](https://docs.djangoproject.com/en/5.2/ref/databases/#transactions-behavior).
+- Django Software Foundation. (s. f.). [MySQL notes](https://docs.djangoproject.com/en/5.2/ref/databases/#mysql-notes).
+- Microsoft. (s. f.). [CryptProtectData function](https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata).
+- Oracle. (s. f.). [Installing MySQL on Microsoft Windows using a noinstall ZIP archive](https://dev.mysql.com/doc/refman/8.4/en/windows-install-archive.html).
+- Python Cryptographic Authority. (s. f.). [Authenticated encryption: AESGCM](https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM).
 
 La fuente Raleway se distribuye localmente bajo SIL Open Font License; su licencia está en `static/fonts/OFL-Raleway.txt`.

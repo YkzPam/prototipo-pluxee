@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -368,10 +368,12 @@ class PrototypeWorkflowsTests(TestCase):
         self.assertEqual(response['X-Content-Type-Options'], 'nosniff')
         self.assertEqual(response['Cache-Control'], 'no-store, private')
 
-    def test_ledger_rejects_zero_amount_at_database_boundary(self):
-        with self.assertRaises(IntegrityError), transaction.atomic():
+    def test_ledger_rejects_zero_amount_before_encryption(self):
+        count_before = self.account_a.movements.count()
+        with self.assertRaises(ValidationError), transaction.atomic():
             Movement.objects.create(account=self.account_a, kind='cargo', amount=0,
                 description='Dato inválido', occurred_at=timezone.now())
+        self.assertEqual(self.account_a.movements.count(), count_before)
 
     def test_failure_of_one_observer_does_not_block_other_observers(self):
         received = []

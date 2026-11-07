@@ -1,14 +1,14 @@
 import uuid
 from django.conf import settings
-from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q
+
+from config.encrypted_fields import EncryptedCharField, EncryptedIntegerField
 
 
 class BenefitAccount(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='benefit_account')
     public_label = models.CharField(max_length=80, default='Beneficio de alimentación')
-    number_suffix = models.CharField(max_length=4)
+    number_suffix = EncryptedCharField(max_length=4)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -19,13 +19,12 @@ class Movement(models.Model):
 
     account = models.ForeignKey(BenefitAccount, on_delete=models.PROTECT, related_name='movements')
     kind = models.CharField(max_length=8, choices=Kind.choices)
-    amount = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    description = models.CharField(max_length=120)
+    amount = EncryptedIntegerField(min_value=1)
+    description = EncryptedCharField(max_length=120)
     occurred_at = models.DateTimeField()
 
     class Meta:
         ordering = ['-occurred_at', '-pk']
-        constraints = [models.CheckConstraint(condition=Q(amount__gte=1), name='movement_amount_positive')]
 
 
 class ServiceState(models.Model):
@@ -109,7 +108,7 @@ class DemoCard(models.Model):
 
     account = models.OneToOneField(BenefitAccount, on_delete=models.PROTECT, related_name='demo_card')
     status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE)
-    pin_hash = models.CharField(max_length=128)
+    pin_hash = EncryptedCharField(max_length=128)
     changed_at = models.DateTimeField(auto_now=True)
 
     @property
@@ -136,8 +135,8 @@ class Payment(models.Model):
     account = models.ForeignKey(BenefitAccount, on_delete=models.PROTECT, related_name='payments')
     merchant = models.ForeignKey(Merchant, on_delete=models.PROTECT, related_name='payments')
     movement = models.OneToOneField(Movement, on_delete=models.PROTECT, related_name='payment')
-    amount = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    balance_after = models.PositiveIntegerField()
+    amount = EncryptedIntegerField(min_value=1)
+    balance_after = EncryptedIntegerField()
     idempotency_key = models.UUIDField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -145,7 +144,6 @@ class Payment(models.Model):
         ordering = ['-created_at']
         constraints = [
             models.UniqueConstraint(fields=['user', 'idempotency_key'], name='payment_user_key_unique'),
-            models.CheckConstraint(condition=Q(amount__gte=1), name='payment_amount_positive'),
         ]
 
 
