@@ -35,8 +35,6 @@ def checked_hash(value):
             identify_hasher(value)
         except ValueError:
             raise CommandError('El origen contiene un formato de credencial incompatible.') from None
-        return True
-    return False
 
 
 def copy_rows(source, source_table, model, *, user_table=False):
@@ -55,7 +53,7 @@ def copy_rows(source, source_table, model, *, user_table=False):
                 value = value.replace(tzinfo=timezone.utc)
             values[field.attname] = value
         if user_table:
-            values['must_change_password'] = checked_hash(values['password'])
+            checked_hash(values['password'])
         if model is DemoCard:
             checked_hash(values['pin_hash'])
         # La inserción cruda del ORM conserva fechas automáticas y aplica el cifrado de campos.

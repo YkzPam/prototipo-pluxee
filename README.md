@@ -19,7 +19,7 @@ El certificado público se genera en `.runtime/security/web_tls/Pluxee_Prototipo
 | `sinmovimientos` | Cuenta sin operaciones; muestra un resultado vacío válido. |
 | `administrador` | Bitácora y escenarios controlados de disponibilidad. |
 
-La contraseña inicial de las cuentas nuevas es **`Prototipo2026!`**. Debe cambiarse en el primer ingreso para poder usar el prototipo. El PIN de pago ficticio es **`4826`**. Son credenciales públicas del ejercicio. Si se cambia una contraseña, ejecutar la preparación otra vez conserva el cambio.
+Las cuentas de demostración permiten ingresar directamente con su usuario y contraseña. La clave de las cuentas recién creadas es **`Prototipo2026!`** y el PIN de pago ficticio es **`4826`**. Son credenciales públicas del ejercicio. El cambio de contraseña es voluntario desde **Mi perfil**. Si una cuenta ya cambió su clave, se usa la vigente. Ejecutar nuevamente la preparación conserva ese cambio.
 
 ## 2. Funciones disponibles
 

@@ -8,7 +8,8 @@ if errorlevel 1 call preparar.cmd
 if errorlevel 1 goto error
 echo.
 echo Abrir https://127.0.0.1:8443 en Chrome despues de configurar el certificado local.
-echo Usuario: beneficiario / Clave temporal: Prototipo2026!
+echo Cuentas de demostracion: beneficiario y administrador.
+echo Clave inicial: Prototipo2026! Si ya se cambio, usar la clave vigente.
 echo Mantener esta ventana abierta mientras se utiliza el prototipo.
 echo.
 ".venv\Scripts\python.exe" scripts\arranque_seguro.py
