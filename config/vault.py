@@ -11,8 +11,9 @@ import subprocess
 import tempfile
 import time
 
-ROOT = Path(__file__).resolve().parents[1]
-SECURITY_DIR = ROOT / '.runtime' / 'security'
+from config.runtime import RUNTIME_DIR
+
+SECURITY_DIR = RUNTIME_DIR / 'security'
 VAULT = SECURITY_DIR / 'vault.dpapi'
 
 
@@ -52,7 +53,7 @@ def unprotect_bytes(data):
 
 def restrict_directory(path):
     path = Path(path)
-    runtime = ROOT / '.runtime'
+    runtime = RUNTIME_DIR
     if runtime.resolve() != runtime or runtime not in path.resolve().parents or path.resolve() != path:
         raise ValueError('El directorio de seguridad debe estar dentro del proyecto.')
     path.mkdir(parents=True, exist_ok=True)

@@ -4,18 +4,10 @@
 {% block content %}
 <div data-account="{{ account.pk }}" data-view="dashboard">
   <div class="page-heading"><div><span class="eyebrow">MI BENEFICIO JUNAEB · DEMO</span><h1>Hola, {{ request.user.get_short_name|default:request.user.username }}<span class="greeting-dot">.</span></h1><p>¿Qué necesitas hacer hoy?</p></div><a class="help-shortcut" href="{% url 'ayuda' %}" aria-label="Abrir ayuda"><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg></a></div>
-  <div class="overview-grid">
-    <section class="balance-card" aria-labelledby="balance-heading">
-      <div class="card-topline"><span id="balance-heading" data-balance-heading>Consultando saldo…</span><span class="card-brand" aria-hidden="true">p.</span></div>
-      <div class="balance-amount" data-balance>—</div><p class="balance-caption">Pesos chilenos · Monto ficticio</p><p class="updated-time" data-balance-reference hidden></p>
-      <div class="balance-card-bottom"><span>{{ account.public_label }}<small>Cuenta terminada en {{ account.number_suffix }}</small></span><a href="{% url 'saldo' %}">Ver detalle <span aria-hidden="true">↗</span></a></div>
-    </section>
-    <section class="surface status-card" aria-labelledby="query-heading"><div class="section-icon" aria-hidden="true">↻</div><h2 id="query-heading">Estado de la consulta</h2><div role="status" aria-atomic="true"><p class="state-line" data-state-label>Consultando información…</p><p class="muted" data-state-detail>Se recuperarán los datos asociados a esta cuenta de prueba.</p><p class="updated-time" data-updated></p></div><button class="button button-secondary button-small" type="button" data-refresh-balance>Actualizar saldo</button></section>
-  </div>
-  <div class="notice notice-error query-error" data-balance-error role="alert" hidden><div><strong>La consulta está pendiente</strong><p data-error-message>No fue posible obtener un saldo actualizado.</p></div><button class="button button-small" type="button" data-retry-balance>Reintentar consulta</button></div>
+  {% include "includes/balance_card.html" with show_balance_link=True %}
   <nav class="home-actions" aria-label="Acciones del beneficio">
+    <a href="{% url 'movimientos' %}" class="home-action home-action-movements"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg></span><span>Mis movimientos<span class="action-caption">Ver el historial</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
     <a href="{% url 'pagar' %}" class="home-action home-action-pay"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-pay"/></svg></span><span>Pagar<span class="action-caption">Compra de prueba</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
-    <a href="{% url 'movimientos' %}" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg></span><span>Mis movimientos<span class="action-caption">Ver el historial</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
     <a href="{% url 'comercios' %}" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-shop"/></svg></span><span>Comercios<span class="action-caption">Buscar un local</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
     <a href="{% url 'tarjeta' %}" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg></span><span>Mi tarjeta<span class="action-caption">Administrar estado</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
   </nav>

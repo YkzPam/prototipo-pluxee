@@ -5,16 +5,17 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.paginator import Paginator, EmptyPage
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models import Case, Count, When
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .balance_snapshot import last_confirmed_balance, remember_balance, snapshot_key
+from .database_access import read_alias
 from .events import record
 from .forms import LoginForm, MovementFilterForm, ServiceStateForm
-from .models import AuditEvent, BenefitAccount, ServiceInterruption, ServiceState
+from .models import AuditEvent, BenefitAccount, Movement, ServiceInterruption, ServiceState
 from .policies import session_return_path
 from .responses import UpdatedResponseCreator, PendingResponseCreator, RejectedResponseCreator
 from .security import protected, login_blocked, login_failed, clear_login_failures
@@ -65,14 +66,17 @@ def _account(request):
     return BenefitAccount.objects.filter(user=request.user).first()
 
 
-def _benefit_page(request, template, active_page):
+def _benefit_page(request, template, active_page, *, account_context=None):
     if request.user.is_staff:
         return redirect('seguimiento')
     account = _account(request)
     if account is None:
         return render(request, 'error.html', {'title': 'Cuenta no disponible', 'status': 404,
             'message': 'El usuario de prueba no tiene una cuenta de beneficios asociada.'}, status=404)
-    return render(request, template, {'account': account, 'active_page': active_page})
+    context = {'account': account, 'active_page': active_page}
+    if account_context:
+        context.update(account_context(account))
+    return render(request, template, context)
 
 
 @require_GET
@@ -90,7 +94,19 @@ def saldo(request):
 @require_GET
 @protected()
 def movimientos(request):
-    return _benefit_page(request, 'movements.html', 'movimientos')
+    def account_context(account):
+        filters = MovementFilterForm(request.GET)
+        current = filters.cleaned_data.get('tipo') if filters.is_valid() else None
+        try:
+            kinds = set(Movement.objects.using(read_alias()).filter(account_id=account.pk)
+                        .order_by().values_list('kind', flat=True).distinct())
+        except DatabaseError:
+            # La pantalla permanece disponible si la consulta de movimientos no responde.
+            kinds = set()
+        return {'movement_kinds': [(value, label) for value, label in Movement.Kind.choices
+                                   if value in kinds or value == current]}
+
+    return _benefit_page(request, 'movements.html', 'movimientos', account_context=account_context)
 
 
 def _authorized_account(request, account_id):
@@ -218,7 +234,8 @@ def _interruption_summary():
 @require_GET
 @protected(administrator=True)
 def seguimiento(request):
-    events = AuditEvent.objects.select_related('actor').all()
+    audit = AuditEvent.objects.all()
+    events = audit.select_related('actor')
     event_type = request.GET.get('event_type', '')
     outcome = request.GET.get('outcome', '')
     if event_type in AuditEvent.Type.values:
@@ -237,6 +254,8 @@ def seguimiento(request):
     counts = {row['outcome']: row['total'] for row in day_events.values('outcome').annotate(total=Count('id'))}
     stats = {'total': sum(counts.values()), 'success': counts.get('success', 0),
              'interrupted': counts.get('pending', 0), 'denied': counts.get('denied', 0)}
+    event_types = set(audit.order_by().values_list('event_type', flat=True).distinct())
+    outcomes = set(audit.order_by().values_list('outcome', flat=True).distinct())
     return render(request, 'seguimiento.html', {
         'events': Paginator(events, 25).get_page(request.GET.get('page')),
         'stats': stats, 'services': ServiceState.objects.order_by('code'), 'active_page': 'seguimiento',
@@ -245,7 +264,10 @@ def seguimiento(request):
         'from_date': request.GET.get('from_date', ''), 'to_date': request.GET.get('to_date', ''),
         'filters': {'event_type': event_type, 'outcome': outcome,
                     'from_date': request.GET.get('from_date', ''), 'to_date': request.GET.get('to_date', '')},
-        'event_types': AuditEvent.Type.choices, 'outcomes': AuditEvent.Outcome.choices,
+        'event_types': [(value, label) for value, label in AuditEvent.Type.choices
+                        if value in event_types or value == event_type],
+        'outcomes': [(value, label) for value, label in AuditEvent.Outcome.choices
+                     if value in outcomes or value == outcome],
     })
 
 

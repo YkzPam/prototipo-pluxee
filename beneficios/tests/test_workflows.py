@@ -167,8 +167,15 @@ class PrototypeWorkflowsTests(TestCase):
         response = self.client.get(reverse('seguimiento'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['stats']['total'], AuditEvent.objects.count())
+        self.assertEqual(response.context['event_types'], [])
+        self.assertEqual(response.context['outcomes'], [])
         self.assertEqual(self.client.get(self.balance_url()).status_code, 403)
         self.assertRedirects(self.client.get(reverse('inicio')), reverse('seguimiento'), fetch_redirect_response=False)
+        filtered = self.client.get(reverse('seguimiento'), {'event_type': 'password', 'outcome': 'success'})
+        self.assertContains(filtered, '<option value="access">Control de acceso</option>', html=True)
+        self.assertContains(filtered, '<option value="password" selected>Cambio de contraseña</option>', html=True)
+        self.assertContains(filtered, '<option value="success" selected>Correcto</option>', html=True)
+        self.assertNotContains(filtered, '<option value="login">Inicio de sesión</option>', html=True)
 
     def test_administrator_can_switch_only_valid_service_states_without_modifying_ledger(self):
         self.authenticate_client(self.admin)
@@ -226,6 +233,17 @@ class PrototypeWorkflowsTests(TestCase):
         past_end = self.client.get(self.movements_url(), {'page': 200})
         self.assertEqual(past_end.json()['data']['items'], [])
         self.assertEqual(past_end.json()['data']['total'], 2)
+
+    def test_movement_filter_offers_own_stored_kinds_and_keeps_a_valid_deep_link(self):
+        self.authenticate_client(self.bob)
+        movement_page = reverse('movimientos')
+        response = self.client.get(movement_page)
+        self.assertContains(response, '<option value="abono">Abono</option>', html=True)
+        self.assertNotContains(response, '<option value="cargo">Compra</option>', html=True)
+        deep_link = self.client.get(movement_page, {'tipo': 'cargo'})
+        self.assertContains(deep_link, '<option value="cargo">Compra</option>', html=True)
+        invalid = self.client.get(movement_page, {'tipo': 'desconocido'})
+        self.assertNotContains(invalid, '<option value="desconocido">', html=False)
 
     def test_invalid_filters_are_rejected_without_query_result(self):
         self.authenticate_client()

@@ -5,7 +5,19 @@
 <div data-account="{{ account.pk }}" data-view="movements">
   <div class="page-heading"><div><span class="eyebrow">MI BENEFICIO</span><h1>Movimientos</h1><p>Historial de operaciones de {{ account.public_label }}.</p></div><span class="tag">Datos ficticios</span></div>
   <section class="surface movements-section"><div class="section-heading"><div><h2>Historial de la cuenta</h2><p class="muted">El filtro se aplica solo a los registros de esta cuenta.</p></div><button class="button button-secondary button-small" type="button" data-retry-movements>Actualizar</button></div>
-    <form class="filters" data-movement-filters><div class="field"><label for="desde">Desde</label><input type="date" name="desde" id="desde"></div><div class="field"><label for="hasta">Hasta</label><input type="date" name="hasta" id="hasta"></div><div class="field"><label for="tipo">Tipo de movimiento</label><select id="tipo" name="tipo"><option value="todos">Todos</option><option value="cargo">Cargos</option><option value="abono">Abonos</option></select></div><button class="button button-small" type="submit">Aplicar filtros</button><button class="button button-quiet button-small" type="reset">Limpiar</button></form>
+    <form class="filters" data-movement-filters>
+      <div class="field"><label for="desde">Desde</label><input type="date" name="desde" id="desde"></div>
+      <div class="field"><label for="hasta">Hasta</label><input type="date" name="hasta" id="hasta"></div>
+      <div class="field">
+        <label for="tipo">Tipo de movimiento</label>
+        <select id="tipo" name="tipo">
+          <option value="todos">Todos</option>
+          {% for value,label in movement_kinds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="button button-small" type="submit">Aplicar filtros</button>
+      <button class="button button-quiet button-small" type="reset">Limpiar</button>
+    </form>
     <div class="table-caption"><span data-movement-count role="status">Consultando movimientos…</span><span class="muted" data-movements-updated></span></div>
     <div class="notice notice-error" data-movements-error role="alert" hidden><div><strong>La consulta no se completó</strong><p data-error-message>No fue posible consultar el historial.</p></div><button class="button button-small" type="button" data-retry-movements>Reintentar</button></div>
     <div class="table-wrap"><table class="data-table movement-table"><caption class="sr-only">Movimientos de la cuenta de prueba</caption><thead><tr><th scope="col">Movimiento</th><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col" class="amount-cell">Monto</th></tr></thead><tbody data-movement-rows><tr><td colspan="4"><div class="empty-state">Consultando los registros…</div></td></tr></tbody></table></div>

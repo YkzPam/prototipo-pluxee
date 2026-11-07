@@ -32,6 +32,7 @@ from config.settings.database_secure import (
     mysql_parameters, mysql_tls_options,
 )
 from config.vault import load_vault, restrict_directory, update_vault
+from config.runtime import RUNTIME_DIR
 
 
 VERSION = '8.4.13'
@@ -42,7 +43,7 @@ ZIP_SHA256 = 'e9cd98b1d23f122987b1afca26ad942efec5891481103d48ae3cde237fa3ea54'
 TZ_ARCHIVE = 'timezone_2026f_posix_sql'
 TZ_URL = f'https://downloads.mysql.com/general/{TZ_ARCHIVE}.zip'
 TZ_SHA256 = '24c99cb5660e659634311aa015a22e8a7d3f25caec2111b275289b07df7c1948'
-RUNTIME = PROJECT / '.runtime'
+RUNTIME = RUNTIME_DIR
 BIN_ROOT = RUNTIME / 'mysql_bin'
 BASE = BIN_ROOT / DISTRIBUTION
 DATA = RUNTIME / 'mysql_data'

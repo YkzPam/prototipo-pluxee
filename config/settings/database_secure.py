@@ -1,10 +1,9 @@
 """Conexiones MySQL de la demostración local y del aprovisionamiento."""
 import re
-from pathlib import Path
+from config.runtime import RUNTIME_DIR
 
 
-PROJECT = Path(__file__).resolve().parents[2]
-MYSQL_CA = PROJECT / '.runtime' / 'mysql_tls' / 'ca.pem'
+MYSQL_CA = RUNTIME_DIR / 'mysql_tls' / 'ca.pem'
 MYSQL_HOST = '127.0.0.1'
 MYSQL_DATABASE = 'pluxee_demo'
 APP_USER = 'pluxee_app'

@@ -21,3 +21,33 @@ h1,h2,h3,.brand,.nav-links,.bottom-nav,.eyebrow,.button{font-family:Raleway,Aria
 
 @media(max-width:400px){.merchant-filters .field,.merchant-filters .merchant-query,.merchant-filters .field:nth-child(3){flex:1 1 100%}}
 [data-session-warning]{position:sticky;top:12px;z-index:3}
+
+/* Tarjeta de consulta compartida por Inicio y Saldo. */
+.balance-card-unified{min-height:0;gap:1rem}
+.balance-card-unified .card-topline{align-items:flex-start}
+.balance-card-unified h2{margin:0;color:var(--purple);font-size:1.15rem;line-height:1.35}
+.balance-card-body{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.balance-reading{flex:1 1 16rem;min-width:0}
+.balance-status{display:inline-block;margin:0 0 .45rem;padding:.3rem .6rem;border-radius:.5rem;background:#f2edf8;color:#472a65;font-size:.82rem;font-weight:750;line-height:1.45}
+[data-balance-state="current"] .balance-status{background:#eaf5ec;color:#235437}
+[data-balance-state="stale"] .balance-status,[data-balance-state="unavailable"] .balance-status{background:#fff1db;color:#784416}
+[data-balance-state="expired"] .balance-status,[data-balance-state="denied"] .balance-status{background:#fbe8ec;color:#812e41}
+.balance-card-unified .balance-amount{font-size:clamp(2rem,7vw,3.5rem);margin:0;min-height:0;line-height:1.1;overflow-wrap:anywhere}
+.balance-card-unified .balance-caption{margin:.25rem 0 0;color:#514364}
+.balance-reference,.balance-detail{margin:.45rem 0 0;color:#514364;font-size:.85rem;line-height:1.5;overflow-wrap:anywhere}
+.balance-reference time{font-weight:700}
+.balance-refresh{min-height:44px;max-width:100%}
+.balance-refresh[aria-disabled="true"]{cursor:wait;opacity:.75}
+.balance-refresh:focus-visible,.balance-card-unified .balance-card-bottom a:focus-visible{outline:3px solid var(--purple);outline-offset:3px}
+.balance-card-unified .balance-card-bottom{flex-wrap:wrap;align-items:center;gap:.6rem;margin-top:0;padding-top:.8rem}
+.balance-card-unified .balance-card-bottom>a{white-space:normal;text-decoration:underline;text-underline-offset:.18em}
+@media(max-width:700px){
+  .balance-card-unified{padding:1.1rem}
+  .balance-card-body{align-items:stretch;flex-direction:column;gap:.8rem}
+  .balance-reading{flex:auto}
+  .balance-refresh{width:100%}
+  .home-action-movements{background:var(--lime);border-color:var(--lime)}
+  .home-action-movements .action-icon{background:#ffffff66}
+  .home-action-pay{background:#fff;border-color:#ddd6e7}
+  .home-action-pay .action-icon{background:#f2edf8}
+}

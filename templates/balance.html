@@ -4,21 +4,8 @@
 {% block content %}
 <div data-account="{{ account.pk }}" data-view="balance">
   <div class="page-heading"><div><span class="eyebrow">MI BENEFICIO</span><h1>Consulta de saldo</h1><p>Información de la cuenta {{ account.public_label }}.</p></div><span class="tag">Cuenta de prueba</span></div>
-  <div class="overview-grid">
-    <section class="balance-card" aria-labelledby="balance-heading">
-      <div class="card-topline"><span id="balance-heading" data-balance-heading>Consultando saldo…</span><span class="card-brand" aria-hidden="true">p.</span></div>
-      <div class="balance-amount" data-balance>—</div><p class="balance-caption">Pesos chilenos · Monto ficticio</p><p class="updated-time" data-balance-reference hidden></p>
-      <div class="balance-card-bottom"><span>{{ account.public_label }}<small>Cuenta terminada en {{ account.number_suffix }}</small></span><span class="card-small-label">ALIMENTACIÓN</span></div>
-    </section>
-    <section class="surface status-card" aria-labelledby="query-heading">
-      <div class="section-icon" aria-hidden="true">↻</div><h2 id="query-heading">Estado de la consulta</h2>
-      <div role="status" aria-atomic="true"><p class="state-line" data-state-label>Consultando información…</p><p class="muted" data-state-detail>La información se obtiene desde los registros de prueba.</p><p class="updated-time" data-updated></p></div>
-      <button class="button button-secondary button-small" type="button" data-refresh-balance>Actualizar saldo</button>
-    </section>
-  </div>
-  <div class="notice notice-error query-error" data-balance-error role="alert" hidden><div><strong>La consulta está pendiente</strong><p data-error-message>No fue posible obtener un saldo actualizado.</p></div><button class="button button-small" type="button" data-retry-balance>Reintentar consulta</button></div>
+  {% include "includes/balance_card.html" %}
   <section class="surface summary-card"><div class="section-heading"><div><h2>Resumen de registros</h2><p class="muted">Abonos y cargos de la consulta actual.</p></div></div><div class="summary-values"><div><span>Abonos registrados</span><strong data-credited>—</strong></div><span class="summary-operator" aria-hidden="true">−</span><div><span>Cargos registrados</span><strong data-spent>—</strong></div><span class="summary-operator" aria-hidden="true">=</span><div><span>Saldo de esta consulta</span><strong data-current-balance>—</strong></div></div></section>
   <div class="account-note"><span aria-hidden="true">i</span><p>Si una consulta se interrumpe, la tarjeta muestra el último saldo confirmado en esta sesión con su fecha. El resumen solo se completa cuando la consulta actual termina correctamente.</p></div>
-  <a class="text-link" href="{% url 'movimientos' %}">Revisar los movimientos de la cuenta <span aria-hidden="true">→</span></a>
 </div>
 {% endblock %}

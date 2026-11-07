@@ -1,9 +1,9 @@
 """Configuración común. La información del ejercicio es completamente sintética."""
 import os
 from pathlib import Path
+from config.runtime import RUNTIME_DIR
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-RUNTIME_DIR = BASE_DIR / '.runtime'
 RUNTIME_DIR.mkdir(exist_ok=True)
 INSTALLED_APPS = [
     'django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.sessions',

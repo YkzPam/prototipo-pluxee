@@ -11,11 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from config.tls_local import prepare_certificate
+from config.runtime import RUNTIME_DIR
 from config.vault import (SECURITY_DIR, prepare_application_secrets, protect_bytes,
                           unprotect_bytes)
 
 PROVISION = '--settings=config.settings.provisioning'
-LEGACY = ROOT / '.runtime' / 'development.sqlite3'
+LEGACY = RUNTIME_DIR / 'development.sqlite3'
 BACKUP = SECURITY_DIR / 'demostracion_sqlite_anterior.dpapi'
 
 
@@ -71,4 +72,4 @@ def prepare():
 if __name__ == '__main__':
     prepare()
     if sys.argv[1:] != ['--solo-preparar']:
-        run('servidor_seguro.py')
+        run('-X', 'utf8', str(ROOT / 'servidor_seguro.py'))

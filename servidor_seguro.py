@@ -5,6 +5,7 @@ import ssl
 from cheroot.ssl.builtin import BuiltinSSLAdapter
 from cheroot.wsgi import Server
 
+from config.runtime import RUNTIME_DIR
 from config.tls_local import CERTIFICATE, PRIVATE_KEY, prepare_certificate
 from config.vault import load_vault
 
@@ -21,9 +22,13 @@ def main():
         str(CERTIFICATE), str(PRIVATE_KEY), private_key_password=vault['TLS_KEY_PASSWORD'])
     server.ssl_adapter.context.minimum_version = ssl.TLSVersion.TLSv1_2
     del vault
-    print(f'Prototipo académico Pluxee Chile: https://127.0.0.1:{port}/', flush=True)
     try:
-        server.start()
+        server.prepare()
+        if port == 8443:
+            # Solo se registra el proceso después de que pudo abrir el puerto.
+            (RUNTIME_DIR / 'https.pid').write_text(f'{os.getpid()}\n', encoding='utf-8')
+        print(f'Prototipo académico Pluxee Chile: https://127.0.0.1:{port}/', flush=True)
+        server.serve()
     except KeyboardInterrupt:
         pass
     finally:

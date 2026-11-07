@@ -1,0 +1,24 @@
+<section class="balance-card balance-card-unified" aria-labelledby="balance-heading" data-balance-card data-balance-state="loading">
+  <div class="card-topline">
+    <h2 id="balance-heading">Mi saldo</h2>
+    <span class="card-brand" aria-hidden="true">p.</span>
+  </div>
+  <div class="balance-card-body">
+    <div class="balance-reading" role="status" aria-atomic="true">
+      <p class="balance-status" data-balance-heading>Consultando saldo…</p>
+      <p class="balance-amount" data-balance>—</p>
+      <p class="balance-caption">Pesos chilenos · Monto ficticio</p>
+      <p class="balance-reference" data-balance-reference hidden><span data-balance-reference-label></span> <time data-balance-time></time></p>
+      <p class="balance-detail" data-state-detail hidden></p>
+    </div>
+    <button class="button balance-refresh" type="button" data-refresh-balance>Actualizar saldo</button>
+  </div>
+  <div class="balance-card-bottom">
+    <span>{{ account.public_label }}<small>Cuenta terminada en {{ account.number_suffix }}</small></span>
+    {% if show_balance_link %}
+      <a href="{% url 'saldo' %}">Ver detalle <span aria-hidden="true">↗</span></a>
+    {% else %}
+      <a href="{% url 'movimientos' %}">Ver movimientos <span aria-hidden="true">→</span></a>
+    {% endif %}
+  </div>
+</section>

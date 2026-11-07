@@ -6,6 +6,8 @@
   const accountId = encodeURIComponent(app.dataset.account);
   const view = app.dataset.view;
   const base = `/api/cuentas/${accountId}/`;
+  const balanceCard = app.querySelector('[data-balance-card]');
+  const balanceButton = balanceCard?.querySelector('[data-refresh-balance]');
   let balanceBusy = false;
   let lastConfirmed = null;
   let movementsBusy = false;
@@ -14,36 +16,39 @@
   const all = selector => [...app.querySelectorAll(selector)];
   const setText = (selector, value) => all(selector).forEach(el => { el.textContent = value; });
 
-  function setBalanceReference(message) {
-    const reference = app.querySelector('[data-balance-reference]');
-    if (!reference) return;
-    reference.textContent = message;
-    reference.hidden = !message;
-  }
-
-  function clearBalance() {
-    ['[data-balance]', '[data-current-balance]', '[data-credited]', '[data-spent]']
-      .forEach(selector => setText(selector, '—'));
-    setBalanceReference('');
-  }
-
   function readSnapshot(snapshot) {
     if (!snapshot || !Number.isFinite(snapshot.balance) || typeof snapshot.updated_at !== 'string'
         || !Number.isFinite(Date.parse(snapshot.updated_at))) return null;
     return snapshot;
   }
 
-  function showUnconfirmedBalance() {
-    clearBalance();
-    setText('[data-balance-heading]', lastConfirmed ? 'Saldo sin actualizar' : 'Saldo no disponible');
-    if (lastConfirmed) {
-      const date = api.dateTime(lastConfirmed.updated_at);
-      setText('[data-balance]', api.money(lastConfirmed.balance));
-      setBalanceReference('Último saldo confirmado: ' + date);
-      setText('[data-updated]', 'Último saldo confirmado: ' + date);
+  function showBalance(state, label, snapshot = null, message = '') {
+    if (!balanceCard) return;
+    balanceCard.dataset.balanceState = state;
+    setText('[data-balance-heading]', label);
+    setText('[data-balance]', snapshot ? api.money(snapshot.balance) : '—');
+
+    const reference = balanceCard.querySelector('[data-balance-reference]');
+    const date = balanceCard.querySelector('[data-balance-time]');
+    if (snapshot) {
+      setText('[data-balance-reference-label]', state === 'current' ? 'Confirmado el' : 'Último saldo confirmado el');
+      date.dateTime = snapshot.updated_at;
+      date.textContent = api.dateTime(snapshot.updated_at);
     } else {
-      setText('[data-updated]', '');
+      date.removeAttribute('datetime');
+      date.textContent = '';
     }
+    reference.hidden = !snapshot;
+
+    const detail = balanceCard.querySelector('[data-state-detail]');
+    detail.textContent = message;
+    detail.hidden = !message;
+  }
+
+  function showBalanceSummary(data = null) {
+    setText('[data-current-balance]', data ? api.money(data.balance) : '—');
+    setText('[data-credited]', data ? api.money(data.credited) : '—');
+    setText('[data-spent]', data ? api.money(data.spent) : '—');
   }
 
   function errorBox(selector, message, show) {
@@ -55,46 +60,41 @@
   }
 
   async function balance() {
-    if (balanceBusy || api.isExpired()) return;
+    if (!balanceButton || balanceBusy || api.isExpired()) return;
     balanceBusy = true;
-    const buttons = all('[data-refresh-balance], [data-retry-balance]');
-    buttons.forEach(button => { button.disabled = true; });
-    showUnconfirmedBalance();
-    if (!lastConfirmed) setText('[data-balance-heading]', 'Consultando saldo…');
-    setText('[data-state-label]', 'Consultando información…');
-    setText('[data-state-detail]', 'Se está comprobando el saldo de esta cuenta.');
-    errorBox('[data-balance-error]', '', false);
+    // El mismo botón conserva el foco del teclado mientras espera la respuesta.
+    balanceButton.setAttribute('aria-disabled', 'true');
+    balanceButton.textContent = 'Consultando…';
+    showBalance('loading', lastConfirmed ? 'Saldo sin actualizar' : 'Consultando saldo…', lastConfirmed);
+    showBalanceSummary();
     const result = await api.request(base + 'saldo/');
-    const label = app.querySelector('[data-state-label]');
     const expired = result.code === 401 || api.isExpired();
     const denied = result.code === 403;
     const confirmed = readSnapshot({balance: result.data?.balance, updated_at: result.updated_at});
     if (result.ok && result.status === 'updated' && confirmed && !expired) {
       lastConfirmed = confirmed;
-      setText('[data-balance-heading]', 'Saldo disponible');
-      setBalanceReference('');
-      setText('[data-balance]', api.money(result.data.balance));
-      setText('[data-current-balance]', api.money(result.data.balance));
-      setText('[data-credited]', api.money(result.data.credited));
-      setText('[data-spent]', api.money(result.data.spent));
-      setText('[data-state-label]', 'Información actualizada');
-      setText('[data-state-detail]', result.message || 'La consulta terminó correctamente. El monto corresponde a los registros de prueba.');
-      setText('[data-updated]', result.updated_at ? 'Última consulta: ' + api.dateTime(result.updated_at) : '');
-      if (label) label.classList.remove('pending');
+      showBalance('current', 'Saldo actualizado', confirmed);
+      showBalanceSummary(result.data);
+      balanceButton.textContent = 'Actualizar saldo';
     } else {
       // Ante una respuesta del servidor se usa solo la copia de la sesión actual.
       // Si falla la conexión completa, sigue disponible la copia de esta página.
       if (expired || denied) lastConfirmed = null;
       else if (result.code !== 0) lastConfirmed = readSnapshot(result.last_confirmed);
-      showUnconfirmedBalance();
-      setText('[data-state-label]', expired ? 'Sesión finalizada' : denied ? 'Acceso no autorizado'
-        : lastConfirmed ? 'Saldo sin actualizar' : 'Saldo no disponible');
-      setText('[data-state-detail]', result.message || 'No se obtuvo un saldo actualizado.');
-      if (label) label.classList.add('pending');
-      if (!expired && !denied) errorBox('[data-balance-error]', result.message || 'La consulta sigue pendiente. Se puede reintentar.', true);
+      if (expired || denied) {
+        showBalance(expired ? 'expired' : 'denied', expired ? 'Sesión finalizada' : 'Acceso no autorizado',
+          null, result.message || 'No se pudo consultar el saldo.');
+        balanceButton.textContent = 'Actualizar saldo';
+      } else {
+        showBalance(lastConfirmed ? 'stale' : 'unavailable',
+          lastConfirmed ? 'Saldo sin actualizar' : 'Saldo no disponible', lastConfirmed,
+          result.message || 'No se pudo actualizar el saldo.');
+        balanceButton.textContent = 'Reintentar';
+      }
     }
     balanceBusy = false;
-    buttons.forEach(button => { button.disabled = api.isExpired(); });
+    balanceButton.disabled = expired || denied;
+    balanceButton.removeAttribute('aria-disabled');
   }
 
   function element(tag, className, text) {
@@ -203,7 +203,7 @@
     if (next) next.disabled = api.isExpired() || currentPage >= totalPages;
   }
 
-  all('[data-refresh-balance], [data-retry-balance]').forEach(button => button.addEventListener('click', balance));
+  balanceButton?.addEventListener('click', balance);
   all('[data-retry-movements]').forEach(button => button.addEventListener('click', () => movements(currentPage)));
   const form = app.querySelector('[data-movement-filters]');
   let initialPage = 1;
@@ -225,12 +225,10 @@
   if (next) next.addEventListener('click', () => movements(Math.min(totalPages, currentPage + 1)));
   document.addEventListener('prototype:expired', () => {
     lastConfirmed = null;
-    showUnconfirmedBalance();
-    errorBox('[data-balance-error]', '', false);
+    showBalance('expired', 'Sesión finalizada', null, 'Vuelve a ingresar para consultar el saldo.');
+    showBalanceSummary();
+    if (balanceButton) balanceButton.textContent = 'Actualizar saldo';
     placeholder('La sesión finalizó. Es necesario ingresar nuevamente.');
-    setText('[data-state-label]', 'Sesión finalizada');
-    setText('[data-state-detail]', 'Es necesario volver a ingresar para consultar información.');
-    setText('[data-updated]', '');
     setText('[data-movement-count]', 'Acceso finalizado');
     all('button').forEach(button => { button.disabled = true; });
   });

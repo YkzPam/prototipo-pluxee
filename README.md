@@ -26,7 +26,7 @@ Las cuentas de demostración permiten ingresar directamente con su usuario y con
 La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo y los movimientos provienen de MySQL. Los filtros se comprueban en el servidor y las operaciones del beneficiario se limitan a su propia cuenta.
 
 - **Acceso y sesión:** ingreso, bloqueo temporal por intentos fallidos y aviso antes del vencimiento. Si la sesión termina durante una consulta, al autenticarse nuevamente se vuelve a la vista de consulta, con sus filtros de movimientos cuando corresponda.
-- **Saldo y movimientos:** consulta actualizada, filtros, historial vacío, interrupción diferenciada y reintento. Durante una interrupción, el último saldo confirmado de la sesión se identifica con su fecha y el aviso «Saldo sin actualizar». Si la sesión no tiene un valor previo, se muestra «Saldo no disponible».
+- **Saldo y movimientos:** consulta actualizada, filtros, historial vacío, interrupción diferenciada y reintento. La tarjeta de saldo reúne el importe, su estado, la hora de confirmación y la acción disponible. Durante una interrupción muestra «Saldo sin actualizar» si la sesión tiene un valor previo o «Saldo no disponible» si aún no lo tiene.
 - **Comercios:** catálogo ficticio, búsqueda por nombre o código, categoría, comuna y favoritos por usuario.
 - **Pago académico:** selección del comercio, validación de monto y PIN, tarjeta activa, saldo suficiente, cargo persistido y comprobante privado. Repetir la misma confirmación conserva un único cargo.
 - **Mi tarjeta y perfil:** bloqueo o activación de la tarjeta ficticia, edición del nombre de prueba y acceso al cambio de contraseña.
@@ -41,6 +41,8 @@ La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo 
 5. Mantener la sesión del beneficiario en una ventana y abrir administración en un perfil de navegador independiente. Consultar el saldo como beneficiario, inducir una interrupción como administrador y reintentar como beneficiario en la misma sesión. Revisar el aviso «Saldo sin actualizar» y la fecha del último valor confirmado. Restablecer el servicio, repetir la consulta y revisar el intervalo registrado en el panel administrativo.
 6. Mostrar el rechazo del panel administrativo al usar un beneficiario. La prueba automatizada también verifica intentos de consultar otra cuenta y de reutilizar una sesión cerrada.
 
+Para evidenciar la corrección de reintentos, consultar el saldo durante la interrupción, pulsar de nuevo inmediatamente y comprobar que la respuesta aplica la espera. Después de restablecer el servicio y esperar ese intervalo, el siguiente intento muestra el saldo actualizado. El fallo original y su nueva comprobación están registrados en `beneficios/tests/EVIDENCIA_PRUEBAS.md`. La página se puede presentar también con una ventana angosta y navegar con Tab hasta la acción de saldo.
+
 ## 4. Organización técnica
 
 El modelo es incremental: acceso y sesión, consultas, seguimiento y funciones adicionales comparten usuarios, permisos y persistencia. Django controla autenticación, sesiones, formularios, ORM y CSRF. Las vistas coordinan el recorrido; `services.py` adapta los datos académicos; `responses.py` construye respuestas diferenciadas; `events.py` notifica el registro de eventos. `policies.py` conserva únicamente configuración inmutable por proceso, sin un usuario compartido.
@@ -52,6 +54,8 @@ El informe de la evaluación 2 dejó la estructura física sujeta al gestor acad
 ## 5. Verificación y entornos
 
 `verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete, pero su presencia no implica que GitHub Actions se haya ejecutado o que exista un despliegue remoto.
+
+En Windows, `.venv\Scripts\python.exe scripts\entregar.py --desplegar` ejecuta el proceso completo. El ZIP verificado se extrae en una carpeta que se identifica por su huella. La versión candidata inicia en otro puerto local y se comprueba con HTTPS y MySQL antes de pasar al puerto 8443. Las versiones comparten los datos locales y las claves del equipo. El resultado queda en `dist/verificacion_local.txt` y `dist/despliegue_local.json`.
 
 | Perfil | Configuración y alcance |
 |---|---|
