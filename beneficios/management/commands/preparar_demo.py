@@ -6,6 +6,7 @@ from django.contrib.auth.hashers import make_password
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
+from beneficios.demo_credentials import ADMIN_PASSWORD, BENEFICIARY_PASSWORD
 from beneficios.models import BenefitAccount, DemoCard, Merchant, Movement, ServiceState
 
 
@@ -28,7 +29,7 @@ class Command(BaseCommand):
             })
             if created:
                 # Clave pública de ejercicio; no se reutiliza para ningún sistema real.
-                user.set_password('Prototipo2026!')
+                user.set_password(ADMIN_PASSWORD if staff else BENEFICIARY_PASSWORD)
                 user.save(update_fields=['password'])
                 created_count += 1
             if label:

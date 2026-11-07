@@ -6,13 +6,14 @@ from datetime import timezone
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import identify_hasher, is_password_usable
+from django.contrib.auth.hashers import check_password, identify_hasher, is_password_usable, make_password
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.core.management.color import no_style
 from django.db import DatabaseError, connection, models, transaction
 
+from beneficios.demo_credentials import ADMIN_PASSWORD, BENEFICIARY_PASSWORD
 from beneficios.models import (
     AuditEvent,
     BenefitAccount,
@@ -54,6 +55,9 @@ def copy_rows(source, source_table, model, *, user_table=False):
             values[field.attname] = value
         if user_table:
             checked_hash(values['password'])
+            if (values['username'] == 'administrador' and values['is_staff']
+                    and check_password(BENEFICIARY_PASSWORD, values['password'])):
+                values['password'] = make_password(ADMIN_PASSWORD)
         if model is DemoCard:
             checked_hash(values['pin_hash'])
         # La inserción cruda del ORM conserva fechas automáticas y aplica el cifrado de campos.

@@ -12,14 +12,14 @@ El inicio está preparado para Windows con Python 3.12 o superior. `preparar.cmd
 
 El certificado público se genera en `.runtime/security/web_tls/Pluxee_Prototipo_Local.crt`, válido para `127.0.0.1` y `localhost`. El inicio no modifica la confianza de Windows ni del navegador. Para verificar la conexión sin cambiar esa configuración, se puede usar `curl.exe --cacert .runtime/security/web_tls/Pluxee_Prototipo_Local.crt https://127.0.0.1:8443/ingresar/` con un cliente compatible, o el cliente de Python indicado en la verificación. Para detener también MySQL al terminar, ejecutar `python scripts/mysql_local.py detener` con el Python del entorno virtual.
 
-| Usuario de prueba | Función |
-|---|---|
-| `beneficiario` | Cuenta de Camila; saldo, movimientos, comercios y pago académico. |
-| `beneficiario2` | Cuenta de Diego; permite comprobar la separación entre cuentas. |
-| `sinmovimientos` | Cuenta sin operaciones; muestra un resultado vacío válido. |
-| `administrador` | Bitácora y escenarios controlados de disponibilidad. |
+| Usuario de prueba | Contraseña inicial | Función |
+|---|---|---|
+| `beneficiario` | `Prototipo2026!` | Cuenta de Camila para consultar saldo y movimientos, buscar comercios y realizar pagos académicos. |
+| `beneficiario2` | `Prototipo2026!` | Cuenta de Diego para comprobar la separación entre cuentas. |
+| `sinmovimientos` | `Prototipo2026!` | Cuenta sin operaciones que muestra un resultado vacío válido. |
+| `administrador` | `AdminPluxee2026!` | Bitácora y escenarios controlados de disponibilidad. |
 
-Las cuentas de demostración permiten ingresar directamente con su usuario y contraseña. La clave de las cuentas recién creadas es **`Prototipo2026!`** y el PIN de pago ficticio es **`4826`**. Son credenciales públicas del ejercicio. El cambio de contraseña es voluntario desde **Mi perfil**. Si una cuenta ya cambió su clave, se usa la vigente. Ejecutar nuevamente la preparación conserva ese cambio.
+Las cuentas de demostración permiten ingresar directamente con su usuario y contraseña. Si se personalizó la contraseña, se utiliza la vigente. El PIN de pago ficticio es **`4826`**. La tabla contiene credenciales públicas del ejercicio. El cambio voluntario está disponible en **Mi perfil** para beneficiarios y en el menú de administración para el administrador.
 
 ## 2. Funciones disponibles
 
