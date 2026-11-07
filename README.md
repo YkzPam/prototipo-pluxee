@@ -25,12 +25,12 @@ Las cuentas de demostración permiten ingresar directamente con su usuario y con
 
 La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo y los movimientos provienen de MySQL. Los filtros se comprueban en el servidor y las operaciones del beneficiario se limitan a su propia cuenta.
 
-- **Acceso y sesión:** ingreso, rechazo genérico de credenciales, bloqueo temporal, continuidad al navegar, vencimiento y cierre que invalida la sesión anterior.
-- **Saldo y movimientos:** consulta actualizada, filtros, historial vacío, interrupción diferenciada y reintento. Una falla no sustituye el saldo por cero.
+- **Acceso y sesión:** ingreso, bloqueo temporal por intentos fallidos y aviso antes del vencimiento. Si la sesión termina durante una consulta, al autenticarse nuevamente se vuelve a la vista de consulta, con sus filtros de movimientos cuando corresponda.
+- **Saldo y movimientos:** consulta actualizada, filtros, historial vacío, interrupción diferenciada y reintento. Durante una interrupción, el último saldo confirmado de la sesión se identifica con su fecha y el aviso «Saldo sin actualizar». Si la sesión no tiene un valor previo, se muestra «Saldo no disponible».
 - **Comercios:** catálogo ficticio, búsqueda por nombre o código, categoría, comuna y favoritos por usuario.
 - **Pago académico:** selección del comercio, validación de monto y PIN, tarjeta activa, saldo suficiente, cargo persistido y comprobante privado. Repetir la misma confirmación conserva un único cargo.
 - **Mi tarjeta y perfil:** bloqueo o activación de la tarjeta ficticia, edición del nombre de prueba y acceso al cambio de contraseña.
-- **Seguimiento:** eventos y filtros para el administrador. Sus controles permiten interrumpir o restablecer las fuentes de saldo y movimientos sin alterar el libro de operaciones.
+- **Seguimiento:** eventos y filtros para el administrador. El historial de interrupciones de prueba presenta su inicio, restablecimiento, duración y consultas pendientes registradas por el prototipo.
 
 ## 3. Recorrido para la presentación
 
@@ -38,7 +38,7 @@ La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo 
 2. Buscar un comercio, marcarlo como favorito y abrir «Pagar aquí».
 3. Confirmar un monto de prueba con el PIN `4826`, revisar el comprobante y comprobar el nuevo movimiento.
 4. Bloquear la tarjeta de prueba y comprobar que un nuevo pago sea rechazado sin generar un cargo. Activarla nuevamente.
-5. Cerrar la sesión, ingresar como `administrador` e inducir una interrupción de saldo. Cerrar y entrar como beneficiario para observar la consulta pendiente y el reintento. Restablecer el servicio desde administración y repetir la consulta.
+5. Mantener la sesión del beneficiario en una ventana y abrir administración en un perfil de navegador independiente. Consultar el saldo como beneficiario, inducir una interrupción como administrador y reintentar como beneficiario en la misma sesión. Revisar el aviso «Saldo sin actualizar» y la fecha del último valor confirmado. Restablecer el servicio, repetir la consulta y revisar el intervalo registrado en el panel administrativo.
 6. Mostrar el rechazo del panel administrativo al usar un beneficiario. La prueba automatizada también verifica intentos de consultar otra cuenta y de reutilizar una sesión cerrada.
 
 ## 4. Organización técnica

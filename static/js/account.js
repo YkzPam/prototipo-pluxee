@@ -7,14 +7,43 @@
   const view = app.dataset.view;
   const base = `/api/cuentas/${accountId}/`;
   let balanceBusy = false;
+  let lastConfirmed = null;
   let movementsBusy = false;
   let currentPage = 1;
   let totalPages = 1;
   const all = selector => [...app.querySelectorAll(selector)];
   const setText = (selector, value) => all(selector).forEach(el => { el.textContent = value; });
 
+  function setBalanceReference(message) {
+    const reference = app.querySelector('[data-balance-reference]');
+    if (!reference) return;
+    reference.textContent = message;
+    reference.hidden = !message;
+  }
+
   function clearBalance() {
-    ['[data-balance]', '[data-credited]', '[data-spent]'].forEach(selector => setText(selector, '—'));
+    ['[data-balance]', '[data-current-balance]', '[data-credited]', '[data-spent]']
+      .forEach(selector => setText(selector, '—'));
+    setBalanceReference('');
+  }
+
+  function readSnapshot(snapshot) {
+    if (!snapshot || !Number.isFinite(snapshot.balance) || typeof snapshot.updated_at !== 'string'
+        || !Number.isFinite(Date.parse(snapshot.updated_at))) return null;
+    return snapshot;
+  }
+
+  function showUnconfirmedBalance() {
+    clearBalance();
+    setText('[data-balance-heading]', lastConfirmed ? 'Saldo sin actualizar' : 'Saldo no disponible');
+    if (lastConfirmed) {
+      const date = api.dateTime(lastConfirmed.updated_at);
+      setText('[data-balance]', api.money(lastConfirmed.balance));
+      setBalanceReference('Último saldo confirmado: ' + date);
+      setText('[data-updated]', 'Último saldo confirmado: ' + date);
+    } else {
+      setText('[data-updated]', '');
+    }
   }
 
   function errorBox(selector, message, show) {
@@ -30,15 +59,22 @@
     balanceBusy = true;
     const buttons = all('[data-refresh-balance], [data-retry-balance]');
     buttons.forEach(button => { button.disabled = true; });
-    clearBalance();
+    showUnconfirmedBalance();
+    if (!lastConfirmed) setText('[data-balance-heading]', 'Consultando saldo…');
     setText('[data-state-label]', 'Consultando información…');
     setText('[data-state-detail]', 'Se está comprobando el saldo de esta cuenta.');
-    setText('[data-updated]', '');
     errorBox('[data-balance-error]', '', false);
     const result = await api.request(base + 'saldo/');
     const label = app.querySelector('[data-state-label]');
-    if (result.ok && result.status === 'updated' && result.data && !api.isExpired()) {
+    const expired = result.code === 401 || api.isExpired();
+    const denied = result.code === 403;
+    const confirmed = readSnapshot({balance: result.data?.balance, updated_at: result.updated_at});
+    if (result.ok && result.status === 'updated' && confirmed && !expired) {
+      lastConfirmed = confirmed;
+      setText('[data-balance-heading]', 'Saldo disponible');
+      setBalanceReference('');
       setText('[data-balance]', api.money(result.data.balance));
+      setText('[data-current-balance]', api.money(result.data.balance));
       setText('[data-credited]', api.money(result.data.credited));
       setText('[data-spent]', api.money(result.data.spent));
       setText('[data-state-label]', 'Información actualizada');
@@ -46,11 +82,16 @@
       setText('[data-updated]', result.updated_at ? 'Última consulta: ' + api.dateTime(result.updated_at) : '');
       if (label) label.classList.remove('pending');
     } else {
-      clearBalance();
-      setText('[data-state-label]', result.code === 401 ? 'Sesión finalizada' : result.code === 403 ? 'Acceso no autorizado' : 'Consulta pendiente');
+      // Ante una respuesta del servidor se usa solo la copia de la sesión actual.
+      // Si falla la conexión completa, sigue disponible la copia de esta página.
+      if (expired || denied) lastConfirmed = null;
+      else if (result.code !== 0) lastConfirmed = readSnapshot(result.last_confirmed);
+      showUnconfirmedBalance();
+      setText('[data-state-label]', expired ? 'Sesión finalizada' : denied ? 'Acceso no autorizado'
+        : lastConfirmed ? 'Saldo sin actualizar' : 'Saldo no disponible');
       setText('[data-state-detail]', result.message || 'No se obtuvo un saldo actualizado.');
       if (label) label.classList.add('pending');
-      if (result.code !== 401) errorBox('[data-balance-error]', result.message || 'La consulta sigue pendiente. Se puede reintentar.', true);
+      if (!expired && !denied) errorBox('[data-balance-error]', result.message || 'La consulta sigue pendiente. Se puede reintentar.', true);
     }
     balanceBusy = false;
     buttons.forEach(button => { button.disabled = api.isExpired(); });
@@ -128,8 +169,16 @@
     if (pagination) pagination.hidden = true;
     const params = new URLSearchParams();
     const form = app.querySelector('[data-movement-filters]');
-    if (form) new FormData(form).forEach((value, key) => { if (value) params.set(key, value); });
+    if (form) new FormData(form).forEach((value, key) => {
+      if (value && (key !== 'tipo' || value !== 'todos')) params.set(key, value);
+    });
     params.set('page', page);
+    if (form) {
+      const url = new URL(location.href);
+      url.search = params.toString();
+      if (page === 1) url.searchParams.delete('page');
+      if (url.href !== location.href) history.replaceState(history.state, '', url);
+    }
     const result = await api.request(base + 'movimientos/?' + params.toString());
     if (result.ok && result.status === 'updated' && result.data && !api.isExpired()) {
       const items = Array.isArray(result.data.items) ? result.data.items : [];
@@ -157,7 +206,16 @@
   all('[data-refresh-balance], [data-retry-balance]').forEach(button => button.addEventListener('click', balance));
   all('[data-retry-movements]').forEach(button => button.addEventListener('click', () => movements(currentPage)));
   const form = app.querySelector('[data-movement-filters]');
+  let initialPage = 1;
   if (form) {
+    const saved = new URLSearchParams(location.search);
+    for (const name of ['desde', 'hasta', 'tipo']) {
+      const field = form.elements.namedItem(name);
+      const value = saved.get(name);
+      if (field && value && (name !== 'tipo' || ['abono', 'cargo', 'todos'].includes(value))) field.value = value;
+    }
+    const page = Number(saved.get('page'));
+    if (Number.isInteger(page) && page >= 1 && page <= 100000) initialPage = page;
     form.addEventListener('submit', event => { event.preventDefault(); movements(1); });
     form.addEventListener('reset', () => { requestAnimationFrame(() => movements(1)); });
   }
@@ -166,7 +224,9 @@
   if (prev) prev.addEventListener('click', () => movements(Math.max(1, currentPage - 1)));
   if (next) next.addEventListener('click', () => movements(Math.min(totalPages, currentPage + 1)));
   document.addEventListener('prototype:expired', () => {
-    clearBalance();
+    lastConfirmed = null;
+    showUnconfirmedBalance();
+    errorBox('[data-balance-error]', '', false);
     placeholder('La sesión finalizó. Es necesario ingresar nuevamente.');
     setText('[data-state-label]', 'Sesión finalizada');
     setText('[data-state-detail]', 'Es necesario volver a ingresar para consultar información.');
@@ -175,5 +235,5 @@
     all('button').forEach(button => { button.disabled = true; });
   });
   if (view === 'dashboard' || view === 'balance') balance();
-  if (view === 'dashboard' || view === 'movements') movements();
+  if (view === 'dashboard' || view === 'movements') movements(initialPage);
 })();

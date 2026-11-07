@@ -75,6 +75,13 @@
       <header class="topbar"><span class="context-label">{% if request.user.is_staff %}Panel de seguimiento{% else %}Beneficio de alimentación{% endif %}</span><span class="academic-pill"><span aria-hidden="true"></span> Prototipo académico · Datos ficticios</span></header>
       <main id="contenido" class="page-content" tabindex="-1">
         <div class="session-alert notice notice-error" data-session-alert role="alert" hidden><div><strong>La sesión ha finalizado</strong><p data-session-message>Es necesario ingresar nuevamente para continuar.</p></div><a class="button button-small" href="{% url 'ingresar' %}">Volver a ingresar</a></div>
+        {% if request.session_clock and not request.user.must_change_password %}
+        <span class="sr-only" role="status" data-session-announcer></span>
+        <div class="session-alert notice notice-info" data-session-warning data-clock="{{ request.session_clock }}" data-activity-url="{% url 'actividad' %}" hidden>
+          <div><strong data-session-warning-title>La sesión está por vencer</strong><p data-session-warning-message></p></div>
+          <button class="button button-small" type="button" data-session-continue>Continuar sesión</button>
+        </div>
+        {% endif %}
         {% if messages %}<div class="messages">{% for message in messages %}<div class="notice {% if message.tags == 'error' %}notice-error{% else %}notice-success{% endif %}" role="status">{{ message }}</div>{% endfor %}</div>{% endif %}
         {% block content %}{% endblock %}
       </main>

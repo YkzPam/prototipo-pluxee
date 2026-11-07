@@ -6,15 +6,16 @@ from django.contrib.auth import authenticate, get_user_model, login, logout, upd
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.paginator import Paginator, EmptyPage
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Case, Count, When
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from .balance_snapshot import last_confirmed_balance, remember_balance, snapshot_key
 from .events import record
 from .forms import LoginForm, MovementFilterForm, ServiceStateForm
-from .models import AuditEvent, BenefitAccount, ServiceState
+from .models import AuditEvent, BenefitAccount, ServiceInterruption, ServiceState
+from .policies import session_return_path
 from .responses import UpdatedResponseCreator, PendingResponseCreator, RejectedResponseCreator
 from .security import protected, login_blocked, login_failed, clear_login_failures
 from .services import MockDataServiceAdapter, SourceUnavailable
@@ -22,12 +23,12 @@ from .services import MockDataServiceAdapter, SourceUnavailable
 
 @require_http_methods(['GET', 'POST'])
 def ingresar(request):
+    next_url = session_return_path(request.POST.get('next', request.GET.get('next', '')))
     if request.user.is_authenticated:
         if request.user.must_change_password:
             return redirect('cambiar_clave')
-        return redirect('inicio')
+        return redirect(next_url or 'inicio')
     form = LoginForm(request.POST or None)
-    next_url = request.POST.get('next', request.GET.get('next', ''))
     if request.method == 'POST' and form.is_valid():
         username = form.cleaned_data['username']
         blocked = login_blocked(request, username)
@@ -47,9 +48,7 @@ def ingresar(request):
             record(request, 'login', 'success', 'Ingreso correcto mediante cuenta de prueba.')
             if user.must_change_password:
                 return redirect('cambiar_clave')
-            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
-                return redirect(next_url)
-            return redirect('inicio')
+            return redirect(next_url or 'inicio')
     return render(request, 'login.html', {'form': form, 'next': next_url, 'active_page': 'ingresar'})
 
 
@@ -101,13 +100,14 @@ def _authorized_account(request, account_id):
     return account
 
 
-def _retry_limit(request, code):
+def _retry_limit(request, code, balance_key=None):
     now = timezone.now().timestamp()
     key = f'pending_retry_{code}'
     last = request.session.get(key, 0)
     if now - last < settings.QUERY_RETRY_SECONDS:
         response = RejectedResponseCreator().create_response(
-            request, f'Se debe esperar {settings.QUERY_RETRY_SECONDS} segundos antes de reintentar.', http_status=429)
+            request, f'Se debe esperar {settings.QUERY_RETRY_SECONDS} segundos antes de reintentar.',
+            http_status=429, **last_confirmed_balance(balance_key))
         response['Retry-After'] = str(settings.QUERY_RETRY_SECONDS)
         return response
     return None
@@ -118,23 +118,29 @@ def _query(request, account_id, code, operation):
     account = _authorized_account(request, account_id)
     if account is None:
         return RejectedResponseCreator().create_response(request)
-    limited = _retry_limit(request, code)
+    balance_key = snapshot_key(request, account) if code == 'balance' else None
+    limited = _retry_limit(request, code, balance_key)
     if limited:
         return limited
     try:
         data = operation(account)
-    except SourceUnavailable:
+    except SourceUnavailable as error:
         request.session[f'pending_retry_{code}'] = timezone.now().timestamp()
         logged = record(request, code, 'pending', 'Fuente académica interrumpida; consulta pendiente sin modificar registros.',
-                        int((perf_counter() - start) * 1000))
+                        int((perf_counter() - start) * 1000), interruption_id=error.interruption_id)
         # Django no guarda automáticamente sesiones en respuestas 5xx. En esta
         # interrupción controlada se conservan la actividad y el límite de reintento.
         request.session.save()
-        return PendingResponseCreator().create_response(request, audit_recorded=logged)
+        return PendingResponseCreator().create_response(
+            request, audit_recorded=logged, **last_confirmed_balance(balance_key))
     request.session.pop(f'pending_retry_{code}', None)
     logged = record(request, code, 'success', 'Consulta autorizada de datos ficticios completada.',
                     int((perf_counter() - start) * 1000))
-    return UpdatedResponseCreator().create_response(request, data=data, updated_at=timezone.now().isoformat(), audit_recorded=logged)
+    updated_at = timezone.now().isoformat()
+    if balance_key:
+        remember_balance(balance_key, balance=data['balance'], updated_at=updated_at,
+                         timeout=request.session.get_expiry_age())
+    return UpdatedResponseCreator().create_response(request, data=data, updated_at=updated_at, audit_recorded=logged)
 
 
 @require_GET
@@ -166,7 +172,7 @@ def api_movimientos(request, account_id):
     return _query(request, account_id, 'movements', operation)
 
 
-@require_POST
+@require_http_methods(['GET', 'POST'])
 @protected(api=True)
 def actividad(request):
     return UpdatedResponseCreator().create_response(request, 'La sesión permanece vigente.',
@@ -196,6 +202,19 @@ def cambiar_clave(request):
     return render(request, 'change_password.html', {'form': form, 'active_page': 'clave'})
 
 
+def _interruption_summary():
+    now = timezone.now()
+    periods = ServiceInterruption.objects.annotate(
+        pending_count=Count('pending_queries'),
+    ).order_by(Case(When(restored_at__isnull=True, then=0), default=1), '-started_at', '-pk')[:25]
+    for period in periods:
+        seconds = max(0, int(((period.restored_at or now) - period.started_at).total_seconds()))
+        hours, remainder = divmod(seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        period.elapsed = f'{hours:02d}:{minutes:02d}:{seconds:02d}'
+    return periods
+
+
 @require_GET
 @protected(administrator=True)
 def seguimiento(request):
@@ -221,6 +240,7 @@ def seguimiento(request):
     return render(request, 'seguimiento.html', {
         'events': Paginator(events, 25).get_page(request.GET.get('page')),
         'stats': stats, 'services': ServiceState.objects.order_by('code'), 'active_page': 'seguimiento',
+        'interruptions': _interruption_summary(),
         'event_type': event_type, 'outcome': outcome,
         'from_date': request.GET.get('from_date', ''), 'to_date': request.GET.get('to_date', ''),
         'filters': {'event_type': event_type, 'outcome': outcome,
@@ -235,12 +255,28 @@ def seguimiento(request):
 def servicios(request):
     form = ServiceStateForm(request.POST)
     if form.is_valid():
-        service = ServiceState.objects.filter(code=form.cleaned_data['service']).first()
+        service = ServiceState.objects.select_for_update().filter(code=form.cleaned_data['service']).first()
         if service:
-            service.available = form.cleaned_data['state'] == 'available'
-            service.save(update_fields=['available', 'changed_at'])
-            record(request, 'service', 'success', f'Servicio de prueba {service.label}: ' + ('disponible.' if service.available else 'interrumpido.'))
-            messages.success(request, 'El escenario de prueba se actualizó. Los saldos y movimientos permanecen intactos.')
+            available = form.cleaned_data['state'] == 'available'
+            if available == service.available:
+                messages.info(request, 'El servicio de prueba ya está en ese estado.')
+                return redirect('seguimiento')
+            now = timezone.now()
+            if available:
+                if service.active_interruption_id:
+                    ServiceInterruption.objects.filter(
+                        pk=service.active_interruption_id, restored_at__isnull=True,
+                    ).update(restored_at=now)
+                service.active_interruption_id = None
+            else:
+                service.active_interruption = ServiceInterruption.objects.create(
+                    service_code=service.code, started_at=now,
+                )
+            service.available = available
+            service.save(update_fields=['available', 'changed_at', 'active_interruption'])
+            detail = 'restablecido' if available else 'interrumpido'
+            record(request, 'service', 'success', f'Servicio de prueba {service.label} {detail} desde administración.')
+            messages.success(request, 'El estado del servicio de prueba se actualizó.')
         else:
             messages.error(request, 'El servicio de prueba no existe.')
     else:

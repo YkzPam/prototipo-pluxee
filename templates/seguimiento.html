@@ -5,6 +5,33 @@
 <p class="muted">Actividad registrada en las últimas 24 horas.</p>
 <div class="stats-grid" aria-label="Resumen de las últimas 24 horas"><section class="surface stat"><span>Eventos registrados</span><strong>{{ stats.total|default:0 }}</strong></section><section class="surface stat"><span>Resultados correctos</span><strong>{{ stats.success|default:0 }}</strong></section><section class="surface stat"><span>Consultas interrumpidas</span><strong>{{ stats.interrupted|default:0 }}</strong></section><section class="surface stat"><span>Accesos rechazados</span><strong>{{ stats.denied|default:0 }}</strong></section></div>
 <section class="surface service-section"><div class="section-heading"><div><h2>Escenarios de disponibilidad</h2><p class="muted">La interrupción es inducida dentro del prototipo. No afecta a la plataforma real de Pluxee.</p></div><span class="tag">Entorno de prueba</span></div><div class="service-grid">{% for service in services %}<article class="service-item"><div><span class="service-indicator {% if not service.available %}unavailable{% endif %}" aria-hidden="true"></span><h3>{{ service.label }}</h3><span class="status-badge {% if service.available %}status-success{% else %}status-pending{% endif %}">{% if service.available %}Disponible{% else %}Interrumpido{% endif %}</span></div><p>{% if service.available %}Las consultas pueden recuperar los registros de prueba.{% else %}Las consultas muestran un aviso y permiten reintentar, sin modificar los datos.{% endif %}</p><form method="post" action="{% url 'servicios' %}">{% csrf_token %}<input type="hidden" name="service" value="{{ service.code }}"><input type="hidden" name="state" value="{% if service.available %}unavailable{% else %}available{% endif %}"><button class="button button-small {% if service.available %}button-secondary{% endif %}" type="submit">{% if service.available %}Inducir interrupción{% else %}Restablecer servicio{% endif %}</button></form></article>{% endfor %}</div></section>
+<section class="surface events-section" aria-labelledby="interruption-history">
+  <div class="section-heading">
+    <div>
+      <h2 id="interruption-history">Historial de interrupciones simuladas</h2>
+      <p class="muted">El registro distingue cada simulación y cuenta las consultas de saldo o movimientos que quedaron pendientes por ese escenario.</p>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <caption class="sr-only">Hasta 25 interrupciones con las que siguen activas primero</caption>
+      <thead><tr><th scope="col">Servicio</th><th scope="col">Inicio</th><th scope="col">Restablecimiento</th><th scope="col">Duración</th><th scope="col">Consultas pendientes</th></tr></thead>
+      <tbody>
+        {% for period in interruptions %}
+        <tr>
+          <th scope="row">{{ period.get_service_code_display }}</th>
+          <td class="nowrap"><time datetime="{{ period.started_at|date:'c' }}">{{ period.started_at|date:'d/m/Y H:i:s' }}</time></td>
+          <td class="nowrap">{% if period.restored_at %}<time datetime="{{ period.restored_at|date:'c' }}">{{ period.restored_at|date:'d/m/Y H:i:s' }}</time>{% else %}<span class="status-badge status-pending">En curso</span>{% endif %}</td>
+          <td class="nowrap">{{ period.elapsed }}{% if not period.restored_at %} transcurridos{% endif %}</td>
+          <td>{{ period.pending_count }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Aún no hay interrupciones simuladas en este historial.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="surface events-section"><div class="section-heading"><div><h2>Bitácora de eventos</h2><p class="muted">Accesos, consultas y cambios de estado. Los registros excluyen contraseñas e identificadores de sesión.</p></div></div>
 <form class="filters event-filters" method="get"><div class="field"><label for="event_type">Evento</label><select name="event_type" id="event_type"><option value="">Todos</option>{% for value,label in event_types %}<option value="{{ value }}" {% if filters.event_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div><div class="field"><label for="outcome">Resultado</label><select name="outcome" id="outcome"><option value="">Todos</option>{% for value,label in outcomes %}<option value="{{ value }}" {% if filters.outcome == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div><div class="field"><label for="from_date">Desde</label><input id="from_date" name="from_date" type="date" value="{{ filters.from_date|default:'' }}"></div><div class="field"><label for="to_date">Hasta</label><input id="to_date" name="to_date" type="date" value="{{ filters.to_date|default:'' }}"></div><button class="button button-small" type="submit">Filtrar</button><a class="button button-quiet button-small" href="{% url 'seguimiento' %}">Limpiar</a></form>
 <div class="table-wrap"><table class="data-table events-table"><caption class="sr-only">Eventos del servidor del prototipo</caption><thead><tr><th scope="col">Fecha y hora</th><th scope="col">Evento</th><th scope="col">Cuenta</th><th scope="col">Resultado</th><th scope="col">Detalle</th></tr></thead><tbody>{% for ev in events %}<tr><td class="nowrap">{{ ev.created_at|date:'d/m/Y' }}<small>{{ ev.created_at|date:'H:i:s' }}</small></td><td>{{ ev.get_event_type_display }}<small class="event-id">{{ ev.request_id }}</small></td><td>{{ ev.actor.username|default:'No autenticado' }}</td><td><span class="status-badge {% if ev.outcome == 'success' %}status-success{% elif ev.outcome == 'pending' or ev.outcome == 'interrupted' %}status-pending{% else %}status-neutral{% endif %}">{{ ev.get_outcome_display }}</span></td><td>{{ ev.detail }}{% if ev.duration_ms != None %}<small>{{ ev.duration_ms }} ms</small>{% endif %}</td></tr>{% empty %}<tr><td colspan="5"><div class="empty-state"><strong>No hay eventos para este filtro</strong><p>Los registros aparecerán cuando se ejecuten operaciones en el prototipo.</p></div></td></tr>{% endfor %}</tbody></table></div>

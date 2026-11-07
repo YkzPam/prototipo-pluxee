@@ -75,7 +75,8 @@ APP_GRANTS = {
     'beneficios_movement': 'SELECT, INSERT',
     'beneficios_payment': 'SELECT, INSERT',
     'beneficios_paymentthrottle': 'SELECT, INSERT, UPDATE',
-    'beneficios_servicestate': 'SELECT, UPDATE (`available`, `changed_at`)',
+    'beneficios_serviceinterruption': 'SELECT, INSERT, UPDATE (`restored_at`)',
+    'beneficios_servicestate': 'SELECT, UPDATE (`available`, `changed_at`, `active_interruption_id`)',
 }
 
 

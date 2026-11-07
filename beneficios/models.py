@@ -27,11 +27,23 @@ class Movement(models.Model):
         ordering = ['-occurred_at', '-pk']
 
 
+SERVICE_CODES = [('balance', 'Saldo'), ('movements', 'Movimientos')]
+
+
+class ServiceInterruption(models.Model):
+    """Periodo de indisponibilidad inducido desde el panel de demostración."""
+
+    service_code = models.CharField(max_length=20, choices=SERVICE_CODES)
+    started_at = models.DateTimeField(db_index=True)
+    restored_at = models.DateTimeField(null=True, blank=True)
+
+
 class ServiceState(models.Model):
-    code = models.CharField(max_length=20, unique=True, choices=[('balance', 'Saldo'), ('movements', 'Movimientos')])
+    code = models.CharField(max_length=20, unique=True, choices=SERVICE_CODES)
     label = models.CharField(max_length=40)
     available = models.BooleanField(default=True)
     changed_at = models.DateTimeField(auto_now=True)
+    active_interruption = models.ForeignKey(ServiceInterruption, null=True, blank=True, on_delete=models.PROTECT)
 
 
 class AuditEvent(models.Model):
@@ -61,6 +73,9 @@ class AuditEvent(models.Model):
     request_id = models.UUIDField(db_index=True)
     duration_ms = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    interruption = models.ForeignKey(
+        ServiceInterruption, null=True, blank=True, on_delete=models.PROTECT, related_name='pending_queries',
+    )
 
     class Meta:
         ordering = ['-created_at', '-pk']

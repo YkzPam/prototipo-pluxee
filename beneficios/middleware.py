@@ -1,12 +1,14 @@
+import json
 import uuid
 from datetime import datetime, timezone as dt_timezone
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
 from .events import record
-from .policies import session_policy
+from .policies import session_policy, session_return_path
 from .responses import RejectedResponseCreator
 
 
@@ -30,6 +32,10 @@ class SessionPolicyMiddleware:
                 if request.path.startswith('/api/'):
                     return RejectedResponseCreator().create_response(request, reason, status='expired', http_status=401)
                 messages.warning(request, reason)
+                if request.method in ('GET', 'HEAD'):
+                    target = session_return_path(request.get_full_path())
+                    if target and target != reverse('inicio'):
+                        return redirect_to_login(target)
                 return redirect('ingresar')
             if request.user.must_change_password:
                 change_password_url = reverse('cambiar_clave')
@@ -41,10 +47,17 @@ class SessionPolicyMiddleware:
                 allowed_paths = (change_password_url, reverse('ingresar'), reverse('salir'))
                 if request.path not in allowed_paths and not request.path_info.startswith('/static/'):
                     return redirect(change_password_url)
-            request.session['auth_started_at'] = created
-            request.session['last_activity_at'] = now
-            # El vencimiento absoluto no se extiende con navegación ni heartbeat.
-            request.session.set_expiry(datetime.fromtimestamp(created + policy.max_seconds, tz=dt_timezone.utc))
+            if request.method != 'GET' or request.path_info != reverse('actividad'):
+                last = now
+                request.session['auth_started_at'] = created
+                request.session['last_activity_at'] = last
+                # Consultar el reloj sin actividad no renueva la sesión.
+                request.session.set_expiry(datetime.fromtimestamp(created + policy.max_seconds, tz=dt_timezone.utc))
+            request.session_clock = json.dumps(policy.clock(now, created, last), separators=(',', ':'))
+            response = self.get_response(request)
+            if response.status_code < 500 and request.user.is_authenticated and not request.user.must_change_password:
+                response['X-Session-Clock'] = request.session_clock
+            return response
         return self.get_response(request)
 
 

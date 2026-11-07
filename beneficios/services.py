@@ -6,7 +6,9 @@ from .models import Movement, ServiceState
 
 
 class SourceUnavailable(Exception):
-    pass
+    def __init__(self, interruption_id=None):
+        super().__init__()
+        self.interruption_id = interruption_id
 
 
 class IBenefitServiceAdapter(ABC):
@@ -25,8 +27,13 @@ class MockDataServiceAdapter(IBenefitServiceAdapter):
 
     @staticmethod
     def check_service(code, *, database=None):
-        if not ServiceState.objects.using(database or read_alias()).filter(code=code, available=True).exists():
+        state = (ServiceState.objects.using(database or read_alias()).filter(code=code)
+                 .values_list('available', 'active_interruption_id').first())
+        if state is None:
             raise SourceUnavailable
+        available, interruption_id = state
+        if not available:
+            raise SourceUnavailable(interruption_id)
 
     def balance(self, account):
         self.check_service('balance', database=self.database)

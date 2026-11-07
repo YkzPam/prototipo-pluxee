@@ -15,6 +15,7 @@ class DomainEvent:
     detail: str
     request_id: object
     duration_ms: int | None = None
+    interruption_id: int | None = None
 
 
 class AuditObserver:
@@ -24,7 +25,7 @@ class AuditObserver:
             AuditEvent.objects.create(actor=event.actor if getattr(event.actor, 'is_authenticated', False) else None,
                                       event_type=event.event_type, outcome=event.outcome,
                                       detail=event.detail, request_id=event.request_id,
-                                      duration_ms=event.duration_ms)
+                                      duration_ms=event.duration_ms, interruption_id=event.interruption_id)
 
 
 class EventSubject:
@@ -43,8 +44,9 @@ class EventSubject:
         return ok
 
 
-def record(request, event_type, outcome, detail, duration_ms=None):
+def record(request, event_type, outcome, detail, duration_ms=None, *, interruption_id=None):
     return EventSubject([AuditObserver()]).notify(DomainEvent(
         actor=request.user, event_type=event_type, outcome=outcome, detail=detail,
         request_id=request.request_id, duration_ms=duration_ms,
+        interruption_id=interruption_id,
     ))
