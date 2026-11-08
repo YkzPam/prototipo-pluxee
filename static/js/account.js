@@ -133,11 +133,20 @@
       return;
     }
     items.forEach(item => {
-      const row = element('tr');
+      const row = element('tr', 'movement-table-entry');
+      row.setAttribute('role', 'row');
       const credit = item.kind === 'abono';
-      const kind = element('td');
-      kind.append(element('span', 'status-badge ' + (credit ? 'status-success' : 'status-neutral'), credit ? 'Abono' : 'Cargo'));
-      row.append(element('td', '', item.description), element('td', 'nowrap', api.date(item.date)), kind, element('td', 'amount-cell movement-money' + (credit ? ' credit' : ''), (credit ? '+ ' : '− ') + api.money(item.amount)));
+      const type = element('td', 'movement-entry-kind');
+      type.append(element('span', 'status-badge ' + (credit ? 'status-success' : 'status-neutral'), credit ? 'Abono' : 'Cargo'));
+      const cells = [
+        element('td', 'movement-entry-description', item.description),
+        element('td', 'movement-entry-date', api.date(item.date)),
+        type,
+        element('td', 'amount-cell movement-entry-amount movement-money' + (credit ? ' credit' : ''),
+          (credit ? '+ ' : '− ') + api.money(item.amount)),
+      ];
+      cells.forEach(cell => cell.setAttribute('role', 'cell'));
+      row.append(...cells);
       holder.append(row);
     });
   }
@@ -147,8 +156,10 @@
     if (recent) recent.replaceChildren(element('p', 'empty-state', message));
     const holder = app.querySelector('[data-movement-rows]');
     if (holder) {
-      const row = element('tr');
+      const row = element('tr', 'movement-table-placeholder');
+      row.setAttribute('role', 'row');
       const cell = element('td');
+      cell.setAttribute('role', 'cell');
       cell.colSpan = 4;
       cell.append(element('div', 'empty-state', message));
       row.append(cell);
@@ -209,6 +220,15 @@
   let initialPage = 1;
   if (form) {
     const saved = new URLSearchParams(location.search);
+    const filterPanel = app.querySelector('[data-movement-filter-panel]');
+    const mobile = window.matchMedia('(max-width: 700px)');
+    if (filterPanel) {
+      const hasFilters = saved.has('desde') || saved.has('hasta') || ['abono', 'cargo'].includes(saved.get('tipo'));
+      filterPanel.open = !mobile.matches || hasFilters;
+      mobile.addEventListener('change', event => {
+        if (!event.matches) filterPanel.open = true;
+      });
+    }
     for (const name of ['desde', 'hasta', 'tipo']) {
       const field = form.elements.namedItem(name);
       const value = saved.get(name);

@@ -1,0 +1,225 @@
+/* Ritmo compartido en los servicios de la cuenta de prueba. */
+.merchant-filters :is(input, select, .button),
+.payment-form :is(input:not([type="hidden"]), select, .button),
+.profile-form :is(input:not([type="hidden"]), .button),
+.profile-logout .button {
+  min-block-size: 44px;
+}
+
+.merchant-filters label,
+.payment-form .field > label,
+.profile-form .field > label {
+  color: var(--ink);
+  font-size: .85rem;
+}
+
+.merchant-card-head {
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: .75rem;
+  margin-bottom: .85rem;
+}
+
+.merchant-card-head .merchant-avatar,
+.merchant-card-head form {
+  flex: 0 0 auto;
+}
+
+.merchant-card-head .favorite-button {
+  width: 44px;
+  height: 44px;
+  color: #65447c;
+}
+
+.merchant-identity {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-top: .12rem;
+}
+
+.merchant-identity h3 {
+  margin: 0;
+  color: var(--purple);
+  font-size: 1rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.merchant-identity p {
+  margin: .25rem 0 0;
+  color: var(--muted);
+  font-size: .84rem;
+  font-weight: 650;
+}
+
+.merchant-card .merchant-description,
+.merchant-card .merchant-address,
+.merchant-code small {
+  color: var(--muted);
+}
+
+.merchant-card .merchant-address {
+  margin: 0 0 1rem;
+  overflow-wrap: anywhere;
+}
+
+.merchant-card-foot {
+  margin-top: auto;
+  padding-top: .8rem;
+  flex-wrap: wrap;
+}
+
+.merchant-card-foot .button {
+  min-block-size: 44px;
+  margin-left: auto;
+  font-size: .79rem;
+}
+
+.payment-amount-control {
+  position: relative;
+}
+
+.payment-amount-control > span {
+  position: absolute;
+  top: 50%;
+  left: .9rem;
+  transform: translateY(-50%);
+  color: var(--purple);
+  font-size: 1rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.payment-amount-control > input {
+  width: 100%;
+  padding-left: 2rem;
+  border-color: #ad99c7;
+  color: var(--purple);
+  font-size: 1.12rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-submit .button {
+  font-size: .9rem;
+  text-wrap: balance;
+}
+
+.payment-form .field-hint,
+.profile-form .field-hint,
+.profile-option small,
+.help-topic p,
+.faq-item > p {
+  color: var(--muted);
+  font-size: .83rem;
+  line-height: 1.55;
+}
+
+.profile-options-list {
+  display: grid;
+  gap: .55rem;
+  margin-top: .85rem;
+}
+
+.profile-options-list .profile-option {
+  border: 1px solid var(--line);
+  border-radius: .65rem;
+  background: #faf8fc;
+  padding: .85rem;
+  min-block-size: 56px;
+  color: var(--purple);
+  font-size: .89rem;
+}
+
+.profile-options-list .profile-option:hover {
+  background: var(--purple-soft);
+}
+
+.profile-options-list .profile-option > .ui-icon {
+  color: var(--purple);
+}
+
+.profile-options-list .profile-option-arrow {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.profile-form button,
+.profile-options .profile-logout {
+  margin-top: .4rem;
+}
+
+.profile-options .profile-logout {
+  padding-top: .6rem;
+}
+
+.help-topic {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: start;
+  column-gap: .8rem;
+  row-gap: .45rem;
+}
+
+.help-topic .action-icon {
+  grid-row: span 3;
+  float: none;
+  margin: 0;
+}
+
+.help-topic h2,
+.help-topic p {
+  margin: 0;
+}
+
+.help-topic .text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-block-size: 44px;
+  gap: .35rem;
+  font-size: .83rem;
+  text-underline-offset: .16em;
+}
+
+.help-topic .text-link .ui-icon {
+  width: .9rem;
+  height: .9rem;
+  flex: 0 0 auto;
+}
+
+.faq-item > summary {
+  min-block-size: 44px;
+  gap: .65rem;
+  color: var(--ink);
+  font-size: .87rem;
+}
+
+.faq-item > summary .faq-toggle {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: .45rem;
+  background: var(--purple-soft);
+  color: var(--purple);
+  line-height: 1;
+}
+
+.faq-toggle::before { content: "+"; }
+.faq-item[open] .faq-toggle::before { content: "−"; }
+
+@media (max-width: 700px) {
+  .merchant-card-head {
+    gap: .6rem;
+  }
+
+  .payment-amount-control > input {
+    font-size: 1.07rem;
+  }
+
+  .profile-form > .button {
+    width: 100%;
+  }
+}

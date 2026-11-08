@@ -1,0 +1,256 @@
+.login-form-wrap .login-help p {
+  color: var(--muted);
+}
+
+.login-form-wrap .login-services > span {
+  color: var(--muted);
+}
+
+.followup-services {
+  margin-top: 0;
+}
+
+.followup-services .service-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.followup-services .service-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.followup-services .service-item h3 {
+  font-size: 1rem;
+}
+
+.followup-services .service-item p {
+  color: var(--muted);
+}
+
+.followup-services .service-item form {
+  margin-top: auto;
+}
+
+.followup-services .service-item-interrupted {
+  background: var(--orange-bg);
+  border-color: #e9cba8;
+}
+
+.followup-summary {
+  margin-top: 24px;
+}
+
+.followup-summary .section-heading {
+  margin-bottom: 12px;
+}
+
+.followup-summary .stats-grid {
+  margin: 0;
+}
+
+.followup-summary .stat {
+  min-width: 0;
+}
+
+.followup-summary .stat dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.followup-summary .stat dd {
+  margin: 8px 0 0;
+  color: var(--purple);
+  font-size: 1.65rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.followup-table th {
+  color: var(--muted);
+}
+
+.followup-table tbody th {
+  color: var(--ink);
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+.followup-cell-label {
+  display: none;
+}
+
+.followup-event-reference {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.followup-event-reference summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--purple);
+}
+
+.followup-event-reference code {
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 700px) {
+  .login-layout .login-story {
+    padding: 18px 20px 19px;
+  }
+
+  .login-layout .login-story .brand {
+    font-size: 1.55rem;
+  }
+
+  .login-layout .login-story .brand-mark {
+    width: 34px;
+    height: 34px;
+    line-height: 27px;
+    font-size: 1.9rem;
+  }
+
+  .login-layout .login-story-copy {
+    margin-top: 16px;
+  }
+
+  .login-layout .login-story-copy .eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .login-layout .login-story-copy h1 {
+    margin-bottom: 6px;
+    font-size: clamp(1.4rem, 5.8vw, 2rem);
+    letter-spacing: -0.02em;
+  }
+
+  .login-layout .login-story-copy h1 br {
+    display: none;
+  }
+
+  .login-layout .login-story-copy > p {
+    color: #eadff5;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .login-layout .login-form-area {
+    padding: 19px 20px 24px;
+  }
+
+  .login-layout .login-heading {
+    margin: 15px 0 14px;
+  }
+
+  .login-layout .login-heading .eyebrow {
+    margin-bottom: 4px;
+  }
+
+  .login-layout .login-heading h2 {
+    margin-bottom: 6px;
+    font-size: 1.65rem;
+  }
+
+  .login-layout .login-form {
+    gap: 14px;
+  }
+
+  .login-layout .login-help {
+    margin-top: 15px;
+    padding-top: 13px;
+  }
+
+  .login-layout .login-services {
+    margin-top: 12px;
+  }
+
+  .followup-services .service-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .followup-summary .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .followup-summary .stat {
+    padding: 14px;
+  }
+
+  .followup-summary .stat dt {
+    min-height: 2.8em;
+  }
+
+  .event-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .event-filters .field,
+  .event-filters input,
+  .event-filters select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .followup-table {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .followup-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .followup-table tbody {
+    display: grid;
+    gap: 9px;
+  }
+
+  .followup-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .followup-table tbody th,
+  .followup-table tbody td,
+  .followup-table tbody td:first-child,
+  .followup-table tbody td:last-child {
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .followup-table tbody th,
+  .followup-event-detail,
+  .followup-table .followup-empty-row td {
+    grid-column: 1 / -1;
+  }
+
+  .followup-cell-label {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 600;
+  }
+
+  .followup-table .status-badge {
+    white-space: normal;
+  }
+}

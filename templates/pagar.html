@@ -7,7 +7,15 @@
 <form method="post" class="payment-form">{% csrf_token %}{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
 {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 <div class="payment-step"><span class="step-number" aria-hidden="true">1</span><div class="field"><label for="id_merchant">Comercio de prueba</label>{{ form.merchant }}{% if form.merchant.errors %}<div class="field-errors" role="alert">{{ form.merchant.errors }}</div>{% endif %}<span class="field-hint">El código identifica al local ficticio. También se puede elegir desde el <a href="{% url 'comercios' %}">buscador de comercios</a>.</span></div></div>
-<div class="payment-step"><span class="step-number" aria-hidden="true">2</span><div class="field"><label for="id_amount">Monto de la compra en pesos chilenos</label>{{ form.amount }}{% if form.amount.errors %}<div class="field-errors" role="alert">{{ form.amount.errors }}</div>{% endif %}<span class="field-hint">Ingresa un monto entero, sin puntos ni decimales.</span></div></div>
+<div class="payment-step payment-step-amount">
+  <span class="step-number" aria-hidden="true">2</span>
+  <div class="field">
+    <label for="id_amount">Monto de la compra en pesos chilenos</label>
+    <div class="payment-amount-control"><span aria-hidden="true">$</span>{{ form.amount }}</div>
+    {% if form.amount.errors %}<div class="field-errors" role="alert">{{ form.amount.errors }}</div>{% endif %}
+    <span class="field-hint">Ingresa un monto entero, sin puntos ni decimales.</span>
+  </div>
+</div>
 <div class="payment-step"><span class="step-number" aria-hidden="true">3</span><div class="field"><label for="id_pin">PIN de compra de prueba</label>{{ form.pin }}{% if form.pin.errors %}<div class="field-errors" role="alert">{{ form.pin.errors }}</div>{% endif %}<span class="field-hint">El PIN de demostración es <strong>4826</strong>. No se debe ingresar un PIN real.</span></div></div>
 <div class="payment-submit"><button class="button button-full" type="submit" {% if card.is_blocked %}disabled{% endif %}>Confirmar pago de prueba <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button></div></form></section>
 <aside class="payment-summary"><section class="balance-card balance-card-compact"><div class="card-topline"><span>Saldo disponible</span><span class="card-brand" aria-hidden="true">p.</span></div><div class="balance-amount">${{ balance|clp }}</div><p class="balance-caption">Pesos chilenos · Saldo ficticio</p><div class="balance-card-bottom"><span>{{ account.public_label }}<small>Terminada en {{ account.number_suffix }}</small></span><span class="status-badge {% if card.is_blocked %}status-pending{% else %}status-success{% endif %}">{% if card.is_blocked %}Bloqueada{% else %}Activa{% endif %}</span></div></section>{% if card.is_blocked %}<div class="notice notice-error"><div><strong>La tarjeta de prueba está bloqueada</strong><p>Para pagar, primero se debe habilitar en <a href="{% url 'tarjeta' %}">Mi tarjeta</a>.</p></div></div>{% endif %}<div class="account-note"><span aria-hidden="true">i</span><p>El pago requiere una tarjeta activa y saldo suficiente. La misma confirmación conserva un único cargo.</p></div></aside></div>

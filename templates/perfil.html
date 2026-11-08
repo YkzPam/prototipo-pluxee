@@ -2,5 +2,41 @@
 {% block title %}Mi perfil{% endblock %}
 {% block content %}
 <div class="page-heading"><div><span class="eyebrow">MI CUENTA</span><h1>Mi perfil</h1><p>Administra la información y el acceso de la cuenta de prueba.</p></div></div>
-<div class="profile-layout"><section class="surface profile-form-card"><div class="profile-summary"><span class="profile-avatar" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span><div><h2>{{ request.user.get_full_name|default:request.user.username }}</h2><p>Beneficiario de prueba · {{ request.user.username }}</p></div></div><form method="post" class="standard-form profile-form">{% csrf_token %}{% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}<div class="field"><label for="id_first_name">Nombre ficticio</label>{{ form.first_name }}{% if form.first_name.errors %}<div class="field-errors" role="alert">{{ form.first_name.errors }}</div>{% endif %}</div><div class="field"><label for="id_last_name">Apellido ficticio</label>{{ form.last_name }}{% if form.last_name.errors %}<div class="field-errors" role="alert">{{ form.last_name.errors }}</div>{% endif %}</div><p class="field-hint">Se deben utilizar nombres de prueba. Esta edición no verifica ni modifica una identidad real.</p><button class="button" type="submit">Guardar cambios</button></form></section><section class="surface profile-options"><h2>Configuración y ayuda</h2><a href="{% url 'tarjeta' %}" class="profile-option"><svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg><span>Mi tarjeta<small>Consultar y cambiar el estado de prueba</small></span><span aria-hidden="true">›</span></a><a href="{% url 'cambiar_clave' %}" class="profile-option"><svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg><span>Cambiar contraseña<small>Actualizar el acceso a esta cuenta</small></span><span aria-hidden="true">›</span></a><a href="{% url 'ayuda' %}" class="profile-option"><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg><span>Centro de ayuda<small>Consultar preguntas del prototipo</small></span><span aria-hidden="true">›</span></a><form action="{% url 'salir' %}" method="post" class="profile-logout">{% csrf_token %}<button class="button button-secondary button-full" type="submit">Cerrar sesión</button></form></section></div>
+<div class="profile-layout">
+  <section class="surface profile-form-card">
+    <div class="profile-summary">
+      <span class="profile-avatar" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span>
+      <div><h2>{{ request.user.get_full_name|default:request.user.username }}</h2><p>Beneficiario de prueba · {{ request.user.username }}</p></div>
+    </div>
+    <form method="post" class="standard-form profile-form">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="field"><label for="id_first_name">Nombre ficticio</label>{{ form.first_name }}{% if form.first_name.errors %}<div class="field-errors" role="alert">{{ form.first_name.errors }}</div>{% endif %}</div>
+      <div class="field"><label for="id_last_name">Apellido ficticio</label>{{ form.last_name }}{% if form.last_name.errors %}<div class="field-errors" role="alert">{{ form.last_name.errors }}</div>{% endif %}</div>
+      <p class="field-hint">Se deben utilizar nombres de prueba. Esta edición no verifica ni modifica una identidad real.</p>
+      <button class="button" type="submit">Guardar cambios</button>
+    </form>
+  </section>
+  <section class="surface profile-options" aria-labelledby="profile-options-heading">
+    <h2 id="profile-options-heading">Configuración y ayuda</h2>
+    <div class="profile-options-list">
+      <a href="{% url 'tarjeta' %}" class="profile-option">
+        <svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg>
+        <span>Mi tarjeta<small>Consultar y cambiar el estado de prueba</small></span>
+        <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
+      </a>
+      <a href="{% url 'cambiar_clave' %}" class="profile-option">
+        <svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg>
+        <span>Cambiar contraseña<small>Actualizar el acceso a esta cuenta</small></span>
+        <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
+      </a>
+      <a href="{% url 'ayuda' %}" class="profile-option">
+        <svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg>
+        <span>Centro de ayuda<small>Consultar preguntas del prototipo</small></span>
+        <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
+      </a>
+    </div>
+    <form action="{% url 'salir' %}" method="post" class="profile-logout">{% csrf_token %}<button class="button button-secondary button-full" type="submit">Cerrar sesión</button></form>
+  </section>
+</div>
 {% endblock %}

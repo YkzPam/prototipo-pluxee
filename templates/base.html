@@ -7,6 +7,10 @@
   <meta name="color-scheme" content="light">
   <title>{% block title %}Mi cuenta{% endblock %} · Prototipo Pluxee</title>
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/visual.css' %}">
+  <link rel="stylesheet" href="{% static 'css/movimientos.css' %}">
+  <link rel="stylesheet" href="{% static 'css/ingreso-seguimiento.css' %}">
+  <link rel="stylesheet" href="{% static 'css/servicios.css' %}">
   <script src="{% static 'js/common.js' %}" defer></script>
   {% block scripts %}{% endblock %}
 </head>
@@ -23,6 +27,9 @@
     <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.5a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
     <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
     <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-wallet" viewBox="0 0 24 24"><path d="M20 8H5a2 2 0 0 1 0-4h13v4M3 6v13a2 2 0 0 0 2 2h15V8m0 5h-5a2 2 0 0 0 0 4h5m-5-2h.01"/></symbol>
+    <symbol id="icon-tracking" viewBox="0 0 24 24"><path d="M4 4v16h16M7 14l4-5 4 3 5-6"/></symbol>
+    <symbol id="icon-exit" viewBox="0 0 24 24"><path d="M10 4H5v16h5m-1-8h12m-4-4 4 4-4 4"/></symbol>
   </defs></svg>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
   {% if request.user.is_authenticated %}
@@ -36,12 +43,15 @@
       <nav class="nav-links desktop-nav" aria-label="Secciones">
         {% if request.user.is_staff %}
         <a href="{% url 'seguimiento' %}" class="{% if active_page == 'seguimiento' %}active{% endif %}" {% if active_page == 'seguimiento' %}aria-current="page"{% endif %}>
-          <span class="nav-icon" aria-hidden="true">▦</span> Seguimiento
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-tracking"/></svg> Seguimiento
         </a>
         {% else %}
         <a href="{% url 'inicio' %}" class="{% if active_page == 'inicio' %}active{% endif %}" {% if active_page == 'inicio' %}aria-current="page"{% endif %}>
           <svg class="ui-icon" aria-hidden="true"><use href="#icon-home"/></svg> Inicio
         </a>
+        <a href="{% url 'saldo' %}" class="{% if active_page == 'saldo' %}active{% endif %}" {% if active_page == 'saldo' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-wallet"/></svg> Consultar saldo</a>
+        <a href="{% url 'movimientos' %}" class="{% if active_page == 'movimientos' %}active{% endif %}" {% if active_page == 'movimientos' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg> Mis movimientos</a>
+        <div class="nav-divider"></div>
         <a href="{% url 'pagar' %}" class="{% if active_page == 'pagar' %}active{% endif %}" {% if active_page == 'pagar' %}aria-current="page"{% endif %}>
           <svg class="ui-icon" aria-hidden="true"><use href="#icon-pay"/></svg> Pagar
         </a>
@@ -51,15 +61,12 @@
         <a href="{% url 'perfil' %}" class="{% if active_page == 'perfil' %}active{% endif %}" {% if active_page == 'perfil' %}aria-current="page"{% endif %}>
           <svg class="ui-icon" aria-hidden="true"><use href="#icon-user"/></svg> Mi perfil
         </a>
-        <div class="nav-divider"></div>
-        <a href="{% url 'movimientos' %}" class="{% if active_page == 'movimientos' %}active{% endif %}" {% if active_page == 'movimientos' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg> Mis movimientos</a>
-        <a href="{% url 'saldo' %}" class="{% if active_page == 'saldo' %}active{% endif %}" {% if active_page == 'saldo' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">$</span> Consultar saldo</a>
         <a href="{% url 'tarjeta' %}" class="{% if active_page == 'tarjeta' %}active{% endif %}" {% if active_page == 'tarjeta' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg> Mi tarjeta</a>
         <a href="{% url 'ayuda' %}" class="{% if active_page == 'ayuda' %}active{% endif %}" {% if active_page == 'ayuda' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg> Ayuda</a>
         {% endif %}
         {% if request.user.is_staff %}
         <a href="{% url 'cambiar_clave' %}" class="{% if active_page == 'clave' %}active{% endif %}" {% if active_page == 'clave' %}aria-current="page"{% endif %}>
-          <span class="nav-icon" aria-hidden="true">◇</span> Cambiar contraseña
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg> Cambiar contraseña
         </a>
         {% endif %}
       </nav>
@@ -68,7 +75,7 @@
           <span class="avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
           <div><strong>{{ request.user.get_short_name|default:request.user.username }}</strong><small>{% if request.user.is_staff %}Administrador de prueba{% else %}Beneficiario de prueba{% endif %}</small></div>
         </div>
-        <form action="{% url 'salir' %}" method="post">{% csrf_token %}<button class="logout-button" type="submit"><span aria-hidden="true">↪</span> Cerrar sesión</button></form>
+        <form action="{% url 'salir' %}" method="post">{% csrf_token %}<button class="logout-button" type="submit"><svg class="ui-icon" aria-hidden="true"><use href="#icon-exit"/></svg> Cerrar sesión</button></form>
       </div>
     </aside>
     <div class="app-main">
@@ -82,7 +89,11 @@
           <button class="button button-small" type="button" data-session-continue>Continuar sesión</button>
         </div>
         {% endif %}
-        {% if messages %}<div class="messages">{% for message in messages %}<div class="notice {% if message.tags == 'error' %}notice-error{% else %}notice-success{% endif %}" role="status">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% if messages %}<div class="messages">
+          {% for message in messages %}
+          <div class="notice {% if message.tags == 'error' %}notice-error{% elif message.tags == 'warning' %}notice-warning{% elif message.tags == 'success' %}notice-success{% else %}notice-info{% endif %}" role="status">{{ message }}</div>
+          {% endfor %}
+        </div>{% endif %}
         {% block content %}{% endblock %}
       </main>
       <footer class="app-footer">Proyecto de Ingeniería de Software · Entorno académico independiente de Pluxee Chile.</footer>

@@ -2,25 +2,38 @@
 {% block title %}Movimientos{% endblock %}
 {% block scripts %}<script src="{% static 'js/account.js' %}" defer></script>{% endblock %}
 {% block content %}
-<div data-account="{{ account.pk }}" data-view="movements">
+<div class="movements-page" data-account="{{ account.pk }}" data-view="movements">
   <div class="page-heading"><div><span class="eyebrow">MI BENEFICIO</span><h1>Movimientos</h1><p>Historial de operaciones de {{ account.public_label }}.</p></div><span class="tag">Datos ficticios</span></div>
   <section class="surface movements-section"><div class="section-heading"><div><h2>Historial de la cuenta</h2><p class="muted">El filtro se aplica solo a los registros de esta cuenta.</p></div><button class="button button-secondary button-small" type="button" data-retry-movements>Actualizar</button></div>
-    <form class="filters" data-movement-filters>
-      <div class="field"><label for="desde">Desde</label><input type="date" name="desde" id="desde"></div>
-      <div class="field"><label for="hasta">Hasta</label><input type="date" name="hasta" id="hasta"></div>
-      <div class="field">
-        <label for="tipo">Tipo de movimiento</label>
-        <select id="tipo" name="tipo">
-          <option value="todos">Todos</option>
-          {% for value,label in movement_kinds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
-        </select>
-      </div>
-      <button class="button button-small" type="submit">Aplicar filtros</button>
-      <button class="button button-quiet button-small" type="reset">Limpiar</button>
-    </form>
+    <details class="movement-filter-panel" data-movement-filter-panel>
+      <summary>Filtros de movimientos</summary>
+      <form class="filters movement-filters" data-movement-filters>
+        <div class="field"><label for="desde">Desde</label><input type="date" name="desde" id="desde"></div>
+        <div class="field"><label for="hasta">Hasta</label><input type="date" name="hasta" id="hasta"></div>
+        <div class="field movement-filter-type">
+          <label for="tipo">Tipo de movimiento</label>
+          <select id="tipo" name="tipo">
+            <option value="todos">Todos</option>
+            {% for value,label in movement_kinds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="movement-filter-actions">
+          <button class="button button-small" type="submit">Aplicar filtros</button>
+          <button class="button button-quiet button-small" type="reset">Limpiar</button>
+        </div>
+      </form>
+    </details>
     <div class="table-caption"><span data-movement-count role="status">Consultando movimientos…</span><span class="muted" data-movements-updated></span></div>
     <div class="notice notice-error" data-movements-error role="alert" hidden><div><strong>La consulta no se completó</strong><p data-error-message>No fue posible consultar el historial.</p></div><button class="button button-small" type="button" data-retry-movements>Reintentar</button></div>
-    <div class="table-wrap"><table class="data-table movement-table"><caption class="sr-only">Movimientos de la cuenta de prueba</caption><thead><tr><th scope="col">Movimiento</th><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col" class="amount-cell">Monto</th></tr></thead><tbody data-movement-rows><tr><td colspan="4"><div class="empty-state">Consultando los registros…</div></td></tr></tbody></table></div>
+    <div class="table-wrap">
+      <table class="data-table movement-table" role="table">
+        <caption class="sr-only">Movimientos de la cuenta de prueba</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Movimiento</th><th scope="col" role="columnheader">Fecha</th><th scope="col" role="columnheader">Tipo</th><th scope="col" role="columnheader" class="amount-cell">Monto</th></tr></thead>
+        <tbody role="rowgroup" data-movement-rows>
+          <tr class="movement-table-placeholder" role="row"><td role="cell" colspan="4"><div class="empty-state">Consultando los registros…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
     <div class="pagination" data-pagination hidden><button class="button button-secondary button-small" type="button" data-page-prev>Anterior</button><span data-page-label></span><button class="button button-secondary button-small" type="button" data-page-next>Siguiente</button></div>
   </section>
   <div class="account-note"><span aria-hidden="true">i</span><p>«Sin movimientos» significa que la consulta terminó correctamente y no encontró registros para el filtro. Una falla del servicio se informa como consulta pendiente.</p></div>

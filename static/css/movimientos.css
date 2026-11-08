@@ -1,0 +1,151 @@
+.movement-filter-panel {
+  margin-bottom: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--background);
+}
+
+.movement-filter-panel summary {
+  padding: .8rem 1rem;
+  color: var(--purple);
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.movement-filter-panel summary:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.movement-filter-panel .movement-filters {
+  margin: 0;
+  padding: 0 1rem 1rem;
+  border: 0;
+  background: transparent;
+}
+
+.movement-filter-panel:not([open]) .movement-filters {
+  display: none;
+}
+
+.movement-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+}
+
+.movement-entry-description {
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.movement-entry-date {
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .movements-page .movements-section .section-heading {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .65rem;
+  }
+
+  .movement-filter-panel summary {
+    min-height: 44px;
+    padding: .75rem;
+  }
+
+  .movement-filter-panel .movement-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .6rem;
+    padding: 0 .75rem .75rem;
+  }
+
+  .movement-filters .field,
+  .movement-filters input,
+  .movement-filters select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .movement-filters input[type="date"] {
+    padding-inline: .35rem;
+    font-size: .8rem;
+  }
+
+  .movement-filter-type,
+  .movement-filter-actions {
+    grid-column: 1 / -1;
+  }
+
+  .movements-page .table-wrap {
+    overflow: visible;
+  }
+
+  .movements-page .movement-table,
+  .movements-page .movement-table tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Keep headers available to assistive technology in the compact layout. */
+  .movement-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .movement-table .movement-table-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .2rem .65rem;
+    padding: .85rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .movement-table .movement-table-entry > td {
+    min-width: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .movement-entry-description {
+    grid-area: 1 / 1;
+    line-height: 1.45;
+  }
+
+  .movement-entry-date {
+    grid-area: 2 / 1;
+    white-space: normal;
+    color: var(--muted);
+  }
+
+  .movement-entry-kind {
+    grid-area: 3 / 1;
+  }
+
+  .movement-entry-amount {
+    grid-area: 1 / 2 / 4 / 3;
+    color: var(--ink);
+  }
+
+  .movement-table-placeholder,
+  .movement-table-placeholder > td {
+    display: block;
+  }
+
+  .movements-page .pagination {
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+}
