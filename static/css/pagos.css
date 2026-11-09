@@ -1,0 +1,179 @@
+/* Selector y formularios de los medios de pago de la demostración. */
+.payment-methods {
+  margin-block-end: 1rem;
+}
+
+.payment-methods h2 {
+  margin: 0 0 .75rem;
+  font-size: 1.05rem;
+}
+
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .6rem;
+}
+
+.payment-method-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  min-block-size: 66px;
+  padding: .65rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: .75rem;
+  background: #fff;
+  color: var(--purple);
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.payment-method-link:hover {
+  border-color: var(--purple);
+}
+
+.payment-method-link:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 3px;
+}
+
+.payment-method-link[aria-current="page"] {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+  box-shadow: inset 0 0 0 1px var(--purple);
+}
+
+.payment-method-link[aria-current="page"]::after {
+  position: absolute;
+  inset-inline: .8rem;
+  inset-block-end: -1px;
+  block-size: 3px;
+  border-radius: 3px;
+  background: var(--lime);
+  content: "";
+}
+
+.payment-method-card {
+  grid-column: 1 / -1;
+  min-block-size: 52px;
+}
+
+.payment-method-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: .55rem;
+  background: var(--purple-soft);
+}
+
+.payment-method-link[aria-current="page"] .payment-method-icon {
+  background: var(--purple);
+  color: #fff;
+}
+
+.payment-method-icon .ui-icon {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+}
+
+.payment-method-link strong,
+.payment-method-link small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.payment-method-link strong { font-size: .9rem; }
+.payment-method-link small { margin-block-start: .18rem; color: var(--muted); font-size: .76rem; }
+
+.payment-disclaimer p { margin: 0; }
+
+.payment-form-card .section-heading > div,
+.payment-form-card .payment-step > .field { min-inline-size: 0; }
+
+.payment-code-panel {
+  padding: .9rem;
+  margin-block-end: 1.3rem;
+  border: 1px solid var(--line);
+  border-radius: .75rem;
+  background: #faf8fc;
+}
+
+.payment-code-panel h3 { margin-block: 0 .45rem; font-size: .95rem; }
+.payment-code-panel > p { margin-block: 0 .85rem; color: var(--muted); font-size: .85rem; }
+
+.payment-issue-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: .6rem .8rem;
+}
+
+.payment-issue-form .notice { grid-column: 1 / -1; margin: 0; }
+.payment-issue-form .button { align-self: start; margin-block-start: 1.55rem; min-block-size: 44px; }
+.payment-issue-form input:not([type="hidden"]) { min-block-size: 44px; }
+
+.payment-issued-code {
+  display: grid;
+  justify-items: center;
+  gap: .35rem;
+  padding: .85rem;
+  margin-block-end: .8rem;
+  border: 1px solid var(--line);
+  border-radius: .55rem;
+  background: #fff;
+  color: var(--purple);
+  text-align: center;
+  font-size: .8rem;
+}
+
+.payment-issued-code code {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: .15em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .payment-method-link {
+    transition: transform 140ms ease-out, border-color 140ms ease-out, background-color 140ms ease-out;
+  }
+  .payment-method-link:active { transform: scale(.98); }
+
+  [data-payment-change] .payment-method-link[aria-current="page"]::after {
+    transform-origin: left;
+    animation: payment-selection 240ms ease-out;
+  }
+  [data-payment-change] .payment-method-link[aria-current="page"] .payment-method-icon {
+    animation: payment-icon-select 240ms ease-out;
+  }
+  [data-payment-change] .payment-form-card { animation: payment-form-enter 280ms ease-out; }
+}
+
+@keyframes payment-selection {
+  from { transform: scaleX(.15); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes payment-icon-select {
+  from { transform: scale(.85); }
+  to { transform: scale(1); }
+}
+
+@keyframes payment-form-enter {
+  from { opacity: .8; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .payment-method-grid,
+  .payment-issue-form { grid-template-columns: minmax(0, 1fr); }
+
+  .payment-method-link { min-block-size: 56px; }
+  .payment-issue-form .button { inline-size: 100%; margin-block-start: 0; }
+  .payment-form-card { min-inline-size: 0; }
+  .receipt-details > div { flex-wrap: wrap; gap: .25rem .7rem; }
+  .receipt-details dd { text-align: start; }
+}

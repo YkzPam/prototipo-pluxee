@@ -1,21 +1,27 @@
+import csv
 from datetime import timedelta
+from math import ceil
+import re
 from time import perf_counter
+from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from django.core.paginator import Paginator, EmptyPage
+from django.core.paginator import Paginator
 from django.db import DatabaseError, transaction
-from django.db.models import Case, Count, When
-from django.shortcuts import redirect, render
+from django.db.models import Case, Count, Q, When
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .balance_snapshot import last_confirmed_balance, remember_balance, snapshot_key
 from .database_access import read_alias
 from .events import record
 from .forms import LoginForm, MovementFilterForm, ServiceStateForm
-from .models import AuditEvent, BenefitAccount, Movement, ServiceInterruption, ServiceState
+from .models import AuditEvent, BenefitAccount, Movement, ServiceInterruption, ServiceState, SERVICE_CODES
 from .policies import session_return_path
 from .responses import UpdatedResponseCreator, PendingResponseCreator, RejectedResponseCreator
 from .security import protected, login_blocked, login_failed, clear_login_failures
@@ -79,10 +85,30 @@ def _benefit_page(request, template, active_page, *, account_context=None):
     return render(request, template, context)
 
 
+def _interrupted_queries():
+    try:
+        return list(ServiceState.objects.using(read_alias()).filter(
+            available=False, code__in=[code for code, _ in SERVICE_CODES],
+        ).order_by('code').values_list('code', flat=True))
+    except DatabaseError:
+        return None
+
+
 @require_GET
 @protected()
 def inicio(request):
-    return _benefit_page(request, 'dashboard.html', 'inicio')
+    return _benefit_page(request, 'dashboard.html', 'inicio', account_context=lambda _: {
+        'interrupted_queries': _interrupted_queries() or [],
+    })
+
+
+@require_GET
+@protected(api=True)
+def estado_consultas(request):
+    interrupted = _interrupted_queries()
+    if interrupted is None:
+        return PendingResponseCreator().create_response(request, 'No se pudo comprobar el estado de las consultas.')
+    return UpdatedResponseCreator().create_response(request, data={'interrupted': interrupted})
 
 
 @require_GET
@@ -117,14 +143,13 @@ def _authorized_account(request, account_id):
 
 
 def _retry_limit(request, code, balance_key=None):
-    now = timezone.now().timestamp()
-    key = f'pending_retry_{code}'
-    last = request.session.get(key, 0)
-    if now - last < settings.QUERY_RETRY_SECONDS:
+    last = request.session.get(f'pending_retry_{code}', 0)
+    remaining = ceil(settings.QUERY_RETRY_SECONDS - (timezone.now().timestamp() - last))
+    if remaining > 0:
         response = RejectedResponseCreator().create_response(
-            request, f'Se debe esperar {settings.QUERY_RETRY_SECONDS} segundos antes de reintentar.',
+            request, 'La consulta sigue pendiente y aún no se ha actualizado.',
             http_status=429, **last_confirmed_balance(balance_key))
-        response['Retry-After'] = str(settings.QUERY_RETRY_SECONDS)
+        response['Retry-After'] = str(remaining)
         return response
     return None
 
@@ -147,8 +172,10 @@ def _query(request, account_id, code, operation):
         # Django no guarda automáticamente sesiones en respuestas 5xx. En esta
         # interrupción controlada se conservan la actividad y el límite de reintento.
         request.session.save()
-        return PendingResponseCreator().create_response(
+        response = PendingResponseCreator().create_response(
             request, audit_recorded=logged, **last_confirmed_balance(balance_key))
+        response['Retry-After'] = str(settings.QUERY_RETRY_SECONDS)
+        return response
     request.session.pop(f'pending_retry_{code}', None)
     logged = record(request, code, 'success', 'Consulta autorizada de datos ficticios completada.',
                     int((perf_counter() - start) * 1000))
@@ -176,11 +203,7 @@ def api_movimientos(request, account_id):
     def operation(account):
         query = MockDataServiceAdapter().movements(account, form.cleaned_data)
         paginator = Paginator(query, 20)
-        try:
-            page = paginator.page(form.cleaned_data.get('page') or 1)
-        except EmptyPage:
-            return {'items': [], 'page': form.cleaned_data.get('page') or 1,
-                    'pages': paginator.num_pages, 'total': paginator.count}
+        page = paginator.get_page(form.cleaned_data.get('page') or 1)
         return {'items': [{'id': item.pk, 'date': timezone.localtime(item.occurred_at).isoformat(),
                            'description': item.description, 'kind': item.kind, 'amount': item.amount}
                           for item in page], 'page': page.number, 'pages': paginator.num_pages, 'total': paginator.count}
@@ -218,57 +241,128 @@ def cambiar_clave(request):
     return render(request, 'change_password.html', {'form': form, 'active_page': 'clave'})
 
 
-def _interruption_summary():
-    now = timezone.now()
-    periods = ServiceInterruption.objects.annotate(
-        pending_count=Count('pending_queries'),
-    ).order_by(Case(When(restored_at__isnull=True, then=0), default=1), '-started_at', '-pk')[:25]
-    for period in periods:
-        seconds = max(0, int(((period.restored_at or now) - period.started_at).total_seconds()))
-        hours, remainder = divmod(seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        period.elapsed = f'{hours:02d}:{minutes:02d}:{seconds:02d}'
-    return periods
+QUERY_EVENT_TYPES = (AuditEvent.Type.BALANCE, AuditEvent.Type.MOVEMENTS)
+SUMMARY_FILTERS = {
+    'interrupted': {'event_type': 'queries', 'outcome': AuditEvent.Outcome.PENDING},
+    'login_denied': {'event_type': AuditEvent.Type.LOGIN, 'outcome': AuditEvent.Outcome.DENIED},
+    'access_denied': {'event_type': AuditEvent.Type.ACCESS, 'outcome': AuditEvent.Outcome.DENIED},
+    'expired': {'event_type': AuditEvent.Type.EXPIRED, 'outcome': AuditEvent.Outcome.EXPIRED},
+}
+
+
+def _interruption_elapsed(period, now):
+    seconds = max(0, int(((period.restored_at or now) - period.started_at).total_seconds()))
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f'{hours:02d}:{minutes:02d}:{seconds:02d}'
+
+
+def _event_type_condition(event_type):
+    if event_type == 'queries':
+        return Q(event_type__in=QUERY_EVENT_TYPES)
+    return Q(event_type=event_type)
+
+
+def _followup_events(params, now):
+    events = AuditEvent.objects.all()
+    filters = {name: params.get(name, '') for name in
+               ('event_type', 'outcome', 'from_date', 'to_date', 'period', 'interruption')}
+    event_type, outcome = filters['event_type'], filters['outcome']
+    if event_type in AuditEvent.Type.values or event_type == 'queries':
+        events = events.filter(_event_type_condition(event_type))
+    else:
+        filters['event_type'] = ''
+    if outcome in AuditEvent.Outcome.values:
+        events = events.filter(outcome=outcome)
+    else:
+        filters['outcome'] = ''
+    if filters['period'] == '24h':
+        events = events.filter(created_at__gte=now - timedelta(hours=24))
+    else:
+        filters['period'] = ''
+
+    dates = MovementFilterForm({'desde': filters['from_date'], 'hasta': filters['to_date']})
+    dates_valid = dates.is_valid()
+    if dates_valid:
+        if dates.cleaned_data.get('desde'):
+            events = events.filter(created_at__date__gte=dates.cleaned_data['desde'])
+        if dates.cleaned_data.get('hasta'):
+            events = events.filter(created_at__date__lte=dates.cleaned_data['hasta'])
+
+    selected_interruption = None
+    if filters['interruption']:
+        if not re.fullmatch(r'[1-9][0-9]{0,18}', filters['interruption']):
+            raise Http404
+        selected_interruption = get_object_or_404(
+            ServiceInterruption.objects.annotate(pending_count=Count('pending_queries')),
+            pk=int(filters['interruption']),
+        )
+        events = events.filter(interruption=selected_interruption)
+    return events, filters, dates_valid, selected_interruption
 
 
 @require_GET
 @protected(administrator=True)
 def seguimiento(request):
-    audit = AuditEvent.objects.all()
-    events = audit.select_related('actor')
-    event_type = request.GET.get('event_type', '')
-    outcome = request.GET.get('outcome', '')
-    if event_type in AuditEvent.Type.values:
-        events = events.filter(event_type=event_type)
-    if outcome in AuditEvent.Outcome.values:
-        events = events.filter(outcome=outcome)
-    dates = MovementFilterForm({'desde': request.GET.get('from_date', ''), 'hasta': request.GET.get('to_date', '')})
-    if dates.is_valid():
-        if dates.cleaned_data.get('desde'):
-            events = events.filter(created_at__date__gte=dates.cleaned_data['desde'])
-        if dates.cleaned_data.get('hasta'):
-            events = events.filter(created_at__date__lte=dates.cleaned_data['hasta'])
-    elif request.GET.get('from_date') or request.GET.get('to_date'):
+    now = timezone.now()
+    events, filters, dates_valid, selected_interruption = _followup_events(request.GET, now)
+    if not dates_valid:
         messages.error(request, 'El rango de fechas no es válido. Se muestran los registros sin ese filtro.')
-    day_events = AuditEvent.objects.filter(created_at__gte=timezone.now() - timedelta(hours=24))
-    counts = {row['outcome']: row['total'] for row in day_events.values('outcome').annotate(total=Count('id'))}
-    stats = {'total': sum(counts.values()), 'success': counts.get('success', 0),
-             'interrupted': counts.get('pending', 0), 'denied': counts.get('denied', 0)}
-    event_types = set(audit.order_by().values_list('event_type', flat=True).distinct())
-    outcomes = set(audit.order_by().values_list('outcome', flat=True).distinct())
+
+    day_events = AuditEvent.objects.filter(created_at__gte=now - timedelta(hours=24))
+    stats = day_events.aggregate(
+        total=Count('id'),
+        success=Count('id', filter=Q(outcome=AuditEvent.Outcome.SUCCESS)),
+        **{key: Count('id', filter=_event_type_condition(value['event_type']) & Q(outcome=value['outcome']))
+           for key, value in SUMMARY_FILTERS.items()},
+    )
+    interruptions = ServiceInterruption.objects.annotate(pending_count=Count('pending_queries')).order_by(
+        Case(When(restored_at__isnull=True, then=0), default=1), '-started_at', '-pk',
+    )[:25]
+    for period in interruptions:
+        period.elapsed = _interruption_elapsed(period, now)
+    if selected_interruption:
+        selected_interruption.elapsed = _interruption_elapsed(selected_interruption, now)
+
+    audit = AuditEvent.objects.order_by()
+    observed_types = set(audit.values_list('event_type', flat=True).distinct())
+    if observed_types.intersection(QUERY_EVENT_TYPES):
+        observed_types.add('queries')
+    observed_types.add(filters['event_type'])
+    observed_outcomes = set(audit.values_list('outcome', flat=True).distinct()) | {filters['outcome']}
+    event_choices = [('queries', 'Consultas de saldo y movimientos'), *AuditEvent.Type.choices]
     return render(request, 'seguimiento.html', {
-        'events': Paginator(events, 25).get_page(request.GET.get('page')),
+        'events': Paginator(events.select_related('actor'), 25).get_page(request.GET.get('page')),
         'stats': stats, 'services': ServiceState.objects.order_by('code'), 'active_page': 'seguimiento',
-        'interruptions': _interruption_summary(),
-        'event_type': event_type, 'outcome': outcome,
-        'from_date': request.GET.get('from_date', ''), 'to_date': request.GET.get('to_date', ''),
-        'filters': {'event_type': event_type, 'outcome': outcome,
-                    'from_date': request.GET.get('from_date', ''), 'to_date': request.GET.get('to_date', '')},
-        'event_types': [(value, label) for value, label in AuditEvent.Type.choices
-                        if value in event_types or value == event_type],
-        'outcomes': [(value, label) for value, label in AuditEvent.Outcome.choices
-                     if value in outcomes or value == outcome],
+        'interruptions': interruptions, 'selected_interruption': selected_interruption,
+        'filters': filters, 'event_query': urlencode({key: value for key, value in filters.items() if value}),
+        'summary_filters': {key: urlencode({'period': '24h', **value}) for key, value in SUMMARY_FILTERS.items()},
+        'event_types': [(value, label) for value, label in event_choices if value in observed_types],
+        'outcomes': [(value, label) for value, label in AuditEvent.Outcome.choices if value in observed_outcomes],
+        'export_available': dates_valid,
     })
+
+
+@require_GET
+@protected(administrator=True)
+@never_cache
+def seguimiento_exportar(request):
+    events, _, dates_valid, _ = _followup_events(request.GET, timezone.now())
+    if not dates_valid:
+        return HttpResponseBadRequest('El rango de fechas de la exportación no es válido.', content_type='text/plain')
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8',
+                            headers={'Content-Disposition': 'attachment; filename="bitacora_pluxee.csv"'})
+    response.write('\ufeff')
+    writer = csv.writer(response)
+    writer.writerow(('Fecha y hora', 'Evento', 'Resultado', 'Duración (ms)'))
+    event_labels, outcome_labels = dict(AuditEvent.Type.choices), dict(AuditEvent.Outcome.choices)
+    rows = events.values_list('created_at', 'event_type', 'outcome', 'duration_ms').iterator()
+    for created_at, event_type, outcome, duration_ms in rows:
+        writer.writerow((timezone.localtime(created_at).isoformat(timespec='seconds'),
+                         event_labels.get(event_type, 'Otro evento'), outcome_labels.get(outcome, 'Otro resultado'),
+                         duration_ms))
+    return response
 
 
 @require_POST

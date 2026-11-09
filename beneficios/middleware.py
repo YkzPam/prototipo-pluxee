@@ -47,11 +47,12 @@ class SessionPolicyMiddleware:
                 allowed_paths = (change_password_url, reverse('ingresar'), reverse('salir'))
                 if request.path not in allowed_paths and not request.path_info.startswith('/static/'):
                     return redirect(change_password_url)
-            if request.method != 'GET' or request.path_info != reverse('actividad'):
+            passive_checks = (reverse('actividad'), reverse('estado_consultas'))
+            if request.method != 'GET' or request.path_info not in passive_checks:
                 last = now
                 request.session['auth_started_at'] = created
                 request.session['last_activity_at'] = last
-                # Consultar el reloj sin actividad no renueva la sesión.
+                # Las comprobaciones pasivas no renuevan la sesión.
                 request.session.set_expiry(datetime.fromtimestamp(created + policy.max_seconds, tz=dt_timezone.utc))
             request.session_clock = json.dumps(policy.clock(now, created, last), separators=(',', ':'))
             response = self.get_response(request)

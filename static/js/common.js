@@ -115,7 +115,8 @@
       catch { payload = {status: 'error', message: 'El servidor no entregó una respuesta válida. La consulta no se ha actualizado.'}; }
       if (response.status === 401 || payload.status === 'expired') expire(payload.message);
       const sessionClock = receiveClock(response.headers.get('X-Session-Clock'));
-      return {ok: response.ok, code: response.status, ...payload, sessionClock};
+      const retryAfter = [429, 503].includes(response.status) ? Number(response.headers.get('Retry-After')) : 0;
+      return {ok: response.ok, code: response.status, ...payload, sessionClock, retryAfter};
     } catch {
       return {ok: false, code: 0, status: 'pending', message: 'No fue posible conectar con el servidor. La consulta sigue pendiente; se puede reintentar cuando vuelva la conexión.'};
     } finally {

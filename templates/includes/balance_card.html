@@ -1,4 +1,10 @@
 <section class="balance-card balance-card-unified" aria-labelledby="balance-heading" data-balance-card data-balance-state="loading">
+  {% if show_balance_link %}
+  <div class="benefit-masthead">
+    <div><small>BENEFICIO DE ALIMENTACIÓN</small><strong>Junaeb</strong></div>
+    <svg class="ui-icon" aria-hidden="true"><use href="#icon-wallet"/></svg>
+  </div>
+  {% endif %}
   <div class="card-topline">
     <h2 id="balance-heading">Mi saldo</h2>
     <span class="card-brand" aria-hidden="true">p.</span>

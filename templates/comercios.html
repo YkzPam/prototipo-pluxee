@@ -1,10 +1,32 @@
 {% extends 'base.html' %}
 {% block title %}Comercios{% endblock %}
 {% block content %}
-<div class="page-heading"><div><span class="eyebrow">DÓNDE COMPRAR · DEMO</span><h1>Comercios</h1><p>Encuentra un local de prueba y guarda tus favoritos.</p></div></div>
-<div class="notice notice-info"><p>Todos los comercios de este buscador son ficticios. No representan locales adheridos ni ubicaciones verificadas de Pluxee.</p></div>
-<section class="surface merchant-search"><form class="filters merchant-filters" method="get"><div class="field merchant-query"><label for="id_q">Nombre o código del comercio</label>{{ form.q }}</div><div class="field"><label for="id_categoria">Categoría</label>{{ form.categoria }}</div><div class="field"><label for="id_comuna">Comuna de prueba</label>{{ form.comuna }}</div><button class="button button-small" type="submit">Buscar</button><a class="button button-quiet button-small" href="{% url 'comercios' %}">Limpiar</a></form>{% if form.errors %}<div class="notice notice-error" role="alert">{{ form.errors }}</div>{% endif %}</section>
-<div class="section-heading merchant-result-heading"><div><h2>Locales de prueba</h2><p class="muted">El corazón permite agregar o quitar un favorito de esta cuenta.</p></div><span class="result-count">{{ merchants|length }} resultado{{ merchants|length|pluralize:'s' }}</span></div>
+<header class="pluxee-section-hero">
+  <div>
+    <span class="pluxee-section-badge">Beneficio Junaeb · Demo</span>
+    <h1>Comercios</h1>
+    <p>Busca dónde usar el saldo de demostración.</p>
+  </div>
+  <span class="pluxee-section-symbol" aria-hidden="true"><svg class="ui-icon"><use href="#icon-shop"/></svg></span>
+</header>
+<section class="surface merchant-search pluxee-merchant-search" aria-labelledby="merchant-search-heading">
+  <div class="pluxee-merchant-search-intro">
+    <h2 id="merchant-search-heading">Buscador de comercios</h2>
+    <p class="muted">El catálogo y sus ubicaciones son ficticios.</p>
+  </div>
+  <form class="filters merchant-filters" method="get">
+    <div class="field merchant-query"><label for="id_q">Nombre o código del comercio</label>{{ form.q }}</div>
+    <div class="field"><label for="id_categoria">Categoría</label>{{ form.categoria }}</div>
+    <div class="field"><label for="id_comuna">Comuna de prueba</label>{{ form.comuna }}</div>
+    <div class="pluxee-merchant-actions">
+      <label class="pluxee-merchant-favorites"><input type="checkbox" name="favoritos" value="1"{% if favorites_only %} checked{% endif %}> Solo favoritos</label>
+      <button class="button button-small" type="submit">Buscar</button>
+      <a class="button button-quiet button-small" href="{% url 'comercios' %}">Limpiar</a>
+    </div>
+  </form>
+  {% if form.errors %}<div class="notice notice-error" role="alert">{{ form.errors }}</div>{% endif %}
+</section>
+<div class="section-heading merchant-result-heading pluxee-merchant-results"><div><h2>{% if favorites_only %}Mis favoritos{% else %}Locales de prueba{% endif %}</h2><p class="muted">Guarda un local con el corazón para encontrarlo más rápido.</p></div><span class="result-count">{{ merchants|length }} resultado{{ merchants|length|pluralize:'s' }}</span></div>
 <div class="merchant-grid">
   {% for merchant in merchants %}
   <article class="surface merchant-card">
@@ -14,7 +36,7 @@
         <h3>{{ merchant.name }}</h3>
         <p>{{ merchant.commune }}</p>
       </div>
-      <form method="post" action="{% url 'favorito' merchant.pk %}">
+      <form method="post" action="{% url 'favorito' merchant.pk %}{% querystring %}">
         {% csrf_token %}
         <button class="favorite-button {% if merchant.pk in favorite_ids %}is-favorite{% endif %}" type="submit" aria-label="{% if merchant.pk in favorite_ids %}Quitar {{ merchant.name }} de favoritos{% else %}Agregar {{ merchant.name }} a favoritos{% endif %}" aria-pressed="{% if merchant.pk in favorite_ids %}true{% else %}false{% endif %}">
           <svg class="ui-icon" aria-hidden="true"><use href="#icon-heart"/></svg>

@@ -12,6 +12,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import escape
 
 from beneficios.models import (
     AuditEvent, BenefitAccount, DemoCard, Merchant, MerchantFavorite,
@@ -274,6 +275,21 @@ class ExtendedPrototypeFlowsTests(TestCase):
         self.assertEqual([item.pk for item in favorites.context['merchants']], [self.merchant.pk])
         all_items = self.client.get(reverse('comercios')).context['merchants']
         self.assertNotIn(self.inactive_merchant.pk, [item.pk for item in all_items])
+
+    def test_removing_favorite_keeps_the_catalog_filters(self):
+        self.sign_in()
+        MerchantFavorite.objects.create(user=self.alice, merchant=self.merchant)
+        filters = {'q': 'Cafetería', 'categoria': 'Cafetería', 'comuna': 'Santiago', 'favoritos': '1'}
+        listing = reverse('comercios', query=filters)
+        favorite = reverse('favorito', args=[self.merchant.pk], query=filters)
+        page = self.client.get(listing)
+        self.assertContains(page, f'action="{escape(favorite)}"')
+
+        response = self.client.post(f'{favorite}&next=https://example.com/', follow=True)
+        self.assertEqual(response.redirect_chain, [(listing, 302)])
+        self.assertTrue(response.context['favorites_only'])
+        self.assertFalse(response.context['merchants'])
+        self.assertFalse(MerchantFavorite.objects.filter(user=self.alice, merchant=self.merchant).exists())
 
     def test_merchant_search_rejects_invalid_parameters_and_inactive_favorites(self):
         self.sign_in()

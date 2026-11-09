@@ -2,16 +2,33 @@
 {% block title %}Inicio{% endblock %}
 {% block scripts %}<script src="{% static 'js/account.js' %}" defer></script>{% endblock %}
 {% block content %}
-<div data-account="{{ account.pk }}" data-view="dashboard">
-  <div class="page-heading"><div><span class="eyebrow">MI BENEFICIO JUNAEB · DEMO</span><h1>Hola, {{ request.user.get_short_name|default:request.user.username }}<span class="greeting-dot">.</span></h1><p>¿Qué necesitas hacer hoy?</p></div><a class="help-shortcut" href="{% url 'ayuda' %}" aria-label="Abrir ayuda"><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg></a></div>
+<div class="pluxee-home" data-account="{{ account.pk }}" data-view="dashboard">
+  <header class="page-heading pluxee-home-heading">
+    <div><span class="eyebrow">MI BENEFICIO JUNAEB · DEMO</span><h1>Hola, {{ request.user.get_short_name|default:request.user.username }}<span class="greeting-dot">.</span></h1><p>Consulta tu saldo y accede a tus opciones de pago.</p></div>
+    <a class="help-shortcut" href="{% url 'ayuda' %}" aria-label="Abrir ayuda"><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg></a>
+  </header>
+  <section class="notice notice-warning query-status" aria-labelledby="query-status-heading" data-query-status data-status-url="{% url 'estado_consultas' %}"{% if not interrupted_queries %} hidden{% endif %}>
+    <div>
+      <h2 id="query-status-heading">Estado de las consultas</h2>
+      <p data-query-status-message>{% if 'balance' in interrupted_queries and 'movements' in interrupted_queries %}Hay una interrupción simulada en las consultas de saldo y movimientos.{% elif 'balance' in interrupted_queries %}Hay una interrupción simulada en la consulta de saldo.{% elif 'movements' in interrupted_queries %}Hay una interrupción simulada en la consulta de movimientos.{% endif %}</p>
+    </div>
+    <div class="query-status-actions">
+      <button class="button button-secondary button-small" type="button" data-query-retry="balance"{% if 'balance' not in interrupted_queries %} hidden{% endif %}>Reintentar saldo</button>
+      <button class="button button-secondary button-small" type="button" data-query-retry="movements"{% if 'movements' not in interrupted_queries %} hidden{% endif %}>Reintentar movimientos</button>
+      <a class="button button-quiet button-small" href="{% url 'reportar_problema' %}">Reportar un problema</a>
+    </div>
+  </section>
+  <span class="sr-only" data-query-status-announcement role="status"></span>
   {% include "includes/balance_card.html" with show_balance_link=True %}
   <nav class="home-actions" aria-label="Acciones del beneficio">
-    <a href="{% url 'movimientos' %}" class="home-action home-action-movements"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg></span><span>Mis movimientos<span class="action-caption">Ver el historial</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
-    <a href="{% url 'pagar' %}" class="home-action home-action-pay"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-pay"/></svg></span><span>Pagar<span class="action-caption">Compra de prueba</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
-    <a href="{% url 'comercios' %}" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-shop"/></svg></span><span>Comercios<span class="action-caption">Buscar un local</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
-    <a href="{% url 'tarjeta' %}" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg></span><span>Mi tarjeta<span class="action-caption">Administrar estado</span></span><svg class="ui-icon action-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+    <a href="{% url 'movimientos' %}" class="home-action home-action-movements"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg></span><span>Ver mis movimientos</span></a>
+    <a href="{% url 'pagar' %}?metodo=qr" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-pay"/></svg></span><span>Pago QR</span></a>
+    <a href="{% url 'pagar' %}?metodo=dynamic" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg></span><span>Clave Dinámica</span></a>
+    <a href="{% url 'pagar' %}?metodo=online" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-wallet"/></svg></span><span>Pago Online</span></a>
+    <a href="{% url 'comercios' %}" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-shop"/></svg></span><span>Comercios</span></a>
+    <a href="{% url 'tarjeta' %}" class="home-action"><span class="action-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg></span><span>Mi tarjeta</span></a>
   </nav>
-  <section class="surface movements-section" aria-labelledby="recent-heading"><div class="section-heading"><div><h2 id="recent-heading">Últimos movimientos</h2><p class="muted">Operaciones almacenadas para esta cuenta ficticia.</p></div><a class="text-link" href="{% url 'movimientos' %}">Ver todos <span aria-hidden="true">→</span></a></div><div class="movement-list" data-recent-movements aria-live="polite"><p class="empty-state">Consultando los movimientos…</p></div><div class="notice notice-error" data-movements-error role="alert" hidden><div><p data-error-message>No fue posible consultar los movimientos.</p></div><button class="button button-small" type="button" data-retry-movements>Reintentar</button></div></section>
+  <section class="surface movements-section" aria-labelledby="recent-heading"><div class="section-heading"><div><h2 id="recent-heading" tabindex="-1">Últimos movimientos</h2><p class="muted">Operaciones almacenadas para esta cuenta ficticia.</p></div><a class="text-link" href="{% url 'movimientos' %}">Ver todos <span aria-hidden="true">→</span></a></div><div class="movement-list" data-recent-movements aria-live="polite"><p class="empty-state">Consultando los movimientos…</p></div><div class="notice notice-error" data-movements-error role="alert" hidden><div><p data-error-message>No fue posible consultar los movimientos.</p></div><button class="button button-small" type="button" data-retry-movements>Reintentar</button></div></section>
   <a class="help-banner" href="{% url 'ayuda' %}"><span class="help-banner-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg></span><span><strong>La información clara ayuda a continuar.</strong><small>Revisa qué hacer ante una consulta pendiente o el cierre de sesión.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
 </div>
 {% endblock %}

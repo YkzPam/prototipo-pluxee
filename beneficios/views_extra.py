@@ -1,14 +1,17 @@
 """Servicios académicos adicionales, sin conexión con la red real de Pluxee."""
+import secrets
 import uuid
 from datetime import timedelta
 from django.contrib import messages
 from django.db import OperationalError, transaction
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.crypto import constant_time_compare, salted_hmac
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .events import record
-from .forms_extra import CardActionForm, MerchantSearchForm, PaymentForm, ProfileForm
+from .forms_extra import CardActionForm, DynamicCodeForm, MerchantSearchForm, PaymentForm, ProfileForm
 from .models import BenefitAccount, DemoCard, Merchant, MerchantFavorite, Movement, Payment, PaymentThrottle
 from .security import protected
 from .services import MockDataServiceAdapter, SourceUnavailable
@@ -16,6 +19,10 @@ from .services import MockDataServiceAdapter, SourceUnavailable
 
 class AuditUnavailable(Exception):
     """Un cargo no se confirma sin su registro de auditoría."""
+
+
+DYNAMIC_CODE_VALIDITY = timedelta(minutes=90)
+PAYMENT_LOCKOUT = timedelta(minutes=15)
 
 
 def _beneficiary(request):
@@ -77,24 +84,63 @@ def favorito(request, merchant_id):
     else:
         MerchantFavorite.objects.get_or_create(user=request.user, merchant=merchant)
         messages.success(request, 'El comercio de prueba se agregó a favoritos.')
-    return redirect('comercios')
+    form = MerchantSearchForm(request.GET)
+    query = {name: value for name, value in form.cleaned_data.items() if value} if form.is_valid() else {}
+    if request.GET.get('favoritos') == '1':
+        query['favoritos'] = '1'
+    return redirect(reverse('comercios', query=query))
+
+
+def _lock_payment_card(card):
+    # En SQLite la escritura adquiere el bloqueo antes de leer el saldo o la
+    # clave. En MySQL bloquea la misma fila que usa el cambio de estado.
+    DemoCard.objects.filter(pk=card.pk).update(status=F('status'))
+    card.refresh_from_db()
+
+
+def _payment_credential(request, now, matches, failure):
+    throttle, _ = PaymentThrottle.objects.get_or_create(user=request.user, defaults={'window_started': now})
+    if throttle.blocked_until and throttle.blocked_until > now:
+        record(request, 'payment', 'denied', 'Validación académica rechazada por límite temporal de intentos.')
+        return throttle, 'La validación está bloqueada temporalmente. Se debe esperar quince minutos desde el bloqueo.', 429
+    if throttle.blocked_until or now - throttle.window_started >= PAYMENT_LOCKOUT:
+        throttle.failures = 0
+        throttle.window_started = now
+        throttle.blocked_until = None
+    if not matches():
+        throttle.failures += 1
+        if throttle.failures >= 5:
+            throttle.blocked_until = now + PAYMENT_LOCKOUT
+        throttle.save()
+        record(request, 'payment', 'denied', 'La credencial de demostración no se pudo validar.')
+        return throttle, failure, 400
+    return throttle, None, 200
+
+
+def _reset_payment_attempts(throttle, now):
+    throttle.failures = 0
+    throttle.blocked_until = None
+    throttle.window_started = now
+    throttle.save()
+
+
+def _dynamic_digest(request, card, code):
+    value = f'{card.account_id}:{request.session.session_key}:{code}'
+    return salted_hmac('pluxee.demo.dynamic-payment', value, algorithm='sha256').hexdigest()
 
 
 def _payment_result(request, values, account, card):
     """Serializa cargos de una cuenta y confirma libro y comprobante juntos."""
     with transaction.atomic():
-        # La primera operación dentro de la transacción es una escritura. En
-        # SQLite esto adquiere el bloqueo antes de leer el saldo; select_for_update
-        # por sí solo no bloquea filas en ese motor. En otros motores bloquea la
-        # fila de la tarjeta. Bloqueo/activación emplea la misma fila.
-        DemoCard.objects.filter(pk=card.pk).update(status=F('status'))
-        card.refresh_from_db()
+        _lock_payment_card(card)
+        method = values['method']
         previous = Payment.objects.filter(user=request.user, idempotency_key=values['idempotency_key']).first()
         if previous:
-            if previous.amount == values['amount'] and previous.merchant_id == values['merchant'].pk:
+            if (previous.amount == values['amount'] and previous.merchant_id == values['merchant'].pk
+                    and previous.method == method):
                 return previous, None, 200
             record(request, 'payment', 'denied', 'Referencia de pago ya utilizada con datos distintos.')
-            return None, 'La referencia ya se utilizó para otro monto o comercio. Se debe iniciar un nuevo pago.', 409
+            return None, 'La referencia ya se utilizó para otra compra. Se debe iniciar un nuevo pago.', 409
         if not Merchant.objects.filter(pk=values['merchant'].pk, active=True).exists():
             return None, 'El comercio de prueba ya no está disponible.', 400
         try:
@@ -107,40 +153,66 @@ def _payment_result(request, values, account, card):
             record(request, 'payment', 'denied', 'Pago académico rechazado por tarjeta de prueba bloqueada.')
             return None, 'La tarjeta de prueba está bloqueada. Se debe activar antes de pagar.', 409
         now = timezone.now()
-        throttle, _ = PaymentThrottle.objects.get_or_create(user=request.user, defaults={'window_started': now})
-        if throttle.blocked_until and throttle.blocked_until > now:
-            record(request, 'payment', 'denied', 'Pago académico rechazado por límite temporal de intentos.')
-            return None, 'El ingreso del PIN está bloqueado temporalmente. Se debe esperar quince minutos desde el bloqueo.', 429
-        if (throttle.blocked_until and throttle.blocked_until <= now) or now - throttle.window_started >= timedelta(minutes=15):
-            throttle.failures = 0
-            throttle.window_started = now
-            throttle.blocked_until = None
-        if not card.check_pin(values['pin']):
-            throttle.failures += 1
-            if throttle.failures >= 5:
-                throttle.blocked_until = now + timedelta(minutes=15)
-            throttle.save()
-            record(request, 'payment', 'denied', 'Pago académico rechazado por validación del PIN de prueba.')
-            return None, 'El PIN de demostración no es válido. No se realizó ningún cargo.', 400
+        if method == Payment.Method.DYNAMIC:
+            def matches():
+                return (request.session.session_key and card.dynamic_expires_at and now < card.dynamic_expires_at
+                        and constant_time_compare(card.dynamic_code_digest, _dynamic_digest(request, card, values['dynamic_code'])))
+
+            invalid = 'La clave dinámica no coincide, venció o ya se utilizó. Puedes generar otra.'
+        else:
+            def matches():
+                return card.check_pin(values['pin'])
+
+            invalid = 'El PIN de demostración no es válido. No se realizó ningún cargo.'
+        throttle, failure, status = _payment_credential(request, now, matches, invalid)
+        if failure:
+            return None, failure, status
         if values['amount'] > balance:
             record(request, 'payment', 'denied', 'Pago académico rechazado por saldo de prueba insuficiente.')
             return None, 'El monto supera el saldo disponible. No se realizó ningún cargo.', 400
-        throttle.failures = 0
-        throttle.blocked_until = None
-        throttle.window_started = now
-        throttle.save()
+        _reset_payment_attempts(throttle, now)
         movement = Movement.objects.create(
             account=account, kind=Movement.Kind.DEBIT, amount=values['amount'],
             description=f'Pago de prueba: {values["merchant"].name}'[:120], occurred_at=now)
         payment = Payment.objects.create(
             user=request.user, account=account, merchant=values['merchant'], movement=movement,
             amount=values['amount'], balance_after=balance - values['amount'],
-            idempotency_key=values['idempotency_key'])
+            idempotency_key=values['idempotency_key'], method=method)
+        if method == Payment.Method.DYNAMIC:
+            card.dynamic_code_digest = ''
+            card.dynamic_expires_at = None
+            card.save(update_fields=['dynamic_code_digest', 'dynamic_expires_at'])
         if not record(request, 'payment', 'success', 'Pago académico confirmado con un único cargo y comprobante.'):
             # La excepción sale de atomic: nunca conservar solo una parte de
             # cargo, comprobante y registro obligatorio del pago.
             raise AuditUnavailable
         return payment, None, 200
+
+
+def _payment_page(request, form, account, card, method, *, status=200, dynamic_form=None,
+                  issued_code=None, issued_expires_at=None):
+    try:
+        balance = MockDataServiceAdapter().balance(account)['balance']
+    except SourceUnavailable:
+        balance = None
+    selected_merchant = getattr(form, 'cleaned_data', {}).get('merchant') or form['merchant'].value()
+    selected_merchant_id = getattr(selected_merchant, 'pk', selected_merchant)
+    return render(request, 'pagar.html', {
+        'form': form, 'account': account, 'card': card, 'method': method,
+        'balance': balance, 'merchants': Merchant.objects.filter(active=True),
+        'selected_merchant_id': selected_merchant_id, 'active_page': 'pagar',
+        'dynamic_form': dynamic_form if dynamic_form is not None else DynamicCodeForm(prefix='clave'),
+        'issued_code': issued_code, 'issued_expires_at': issued_expires_at,
+    }, status=status)
+
+
+def _payment_initial(method, merchant_id):
+    initial = {'idempotency_key': uuid.uuid4(), 'method': method}
+    if merchant_id.isascii() and merchant_id.isdecimal() and len(merchant_id) <= 12:
+        initial['merchant'] = merchant_id
+        if method == Payment.Method.QR:
+            initial['qr_code'] = Merchant.objects.filter(pk=merchant_id, active=True).values_list('code', flat=True).first()
+    return initial
 
 
 @require_http_methods(['GET', 'POST'])
@@ -153,10 +225,10 @@ def pagar(request):
     if card is None:
         return render(request, 'error.html', {'title': 'Tarjeta no disponible', 'status': 404,
             'message': 'La cuenta no tiene una tarjeta de demostración disponible.'}, status=404)
-    initial = {'idempotency_key': uuid.uuid4()}
-    merchant_id = request.GET.get('comercio', '')
-    if merchant_id.isdigit() and len(merchant_id) <= 12:
-        initial['merchant'] = merchant_id
+    method = (request.POST.get('method') if request.method == 'POST' else request.GET.get('metodo'))
+    if method not in Payment.Method.values:
+        method = Payment.Method.ONLINE
+    initial = _payment_initial(method, request.GET.get('comercio', ''))
     form = PaymentForm(request.POST if request.method == 'POST' else None, initial=initial)
     http_status = 200
     if request.method == 'POST':
@@ -176,12 +248,54 @@ def pagar(request):
                 request.session.save()
         else:
             http_status = 400
-    try:
-        balance = MockDataServiceAdapter().balance(account)['balance']
-    except SourceUnavailable:
-        balance = None
-    return render(request, 'pagar.html', {'form': form, 'account': account, 'card': card,
-        'balance': balance, 'merchants': Merchant.objects.filter(active=True), 'active_page': 'pagar'}, status=http_status)
+    return _payment_page(request, form, account, card, method, status=http_status)
+
+
+def _issue_dynamic_code(request, card, pin):
+    with transaction.atomic():
+        _lock_payment_card(card)
+        if card.is_blocked:
+            return None, None, 'La tarjeta de prueba está bloqueada. Se debe activar para generar una clave.', 409
+        if not request.session.session_key:
+            return None, None, 'Ingresa nuevamente para generar una clave de prueba.', 403
+        now = timezone.now()
+        throttle, failure, status = _payment_credential(
+            request, now, lambda: card.check_pin(pin), 'El PIN de demostración no es válido.',
+        )
+        if failure:
+            return None, None, failure, status
+        code = f'{secrets.randbelow(10000):04d}'
+        expires_at = now + DYNAMIC_CODE_VALIDITY
+        card.dynamic_code_digest = _dynamic_digest(request, card, code)
+        card.dynamic_expires_at = expires_at
+        card.save(update_fields=['dynamic_code_digest', 'dynamic_expires_at'])
+        _reset_payment_attempts(throttle, now)
+        if not record(request, 'card', 'success', 'Clave dinámica académica generada.'):
+            raise AuditUnavailable
+        return code, expires_at, None, 200
+
+
+@require_POST
+@protected()
+def generar_clave_dinamica(request):
+    account, error = _beneficiary(request)
+    if error is not None:
+        return error
+    card = get_object_or_404(DemoCard, account=account)
+    dynamic_form = DynamicCodeForm(request.POST, prefix='clave')
+    code, expires_at, status = None, None, 400
+    if dynamic_form.is_valid():
+        try:
+            code, expires_at, failure, status = _issue_dynamic_code(request, card, dynamic_form.cleaned_data['pin'])
+        except (AuditUnavailable, OperationalError):
+            failure, status = 'La clave no se pudo generar. Puedes volver a intentarlo.', 503
+            request.session.save()
+        if failure:
+            dynamic_form.add_error(None, failure)
+    method = Payment.Method.DYNAMIC
+    form = PaymentForm(initial=_payment_initial(method, request.POST.get('comercio', '')))
+    return _payment_page(request, form, account, card, method, status=status, dynamic_form=dynamic_form,
+                         issued_code=code, issued_expires_at=expires_at)
 
 
 @require_GET
@@ -230,7 +344,10 @@ def tarjeta(request):
         if form.is_valid():
             new_status = DemoCard.Status.BLOCKED if form.cleaned_data['action'] == 'block' else DemoCard.Status.ACTIVE
             with transaction.atomic():
-                DemoCard.objects.filter(pk=card.pk).update(status=new_status, changed_at=timezone.now())
+                updates = {'status': new_status, 'changed_at': timezone.now()}
+                if new_status == DemoCard.Status.BLOCKED:
+                    updates.update(dynamic_code_digest='', dynamic_expires_at=None)
+                DemoCard.objects.filter(pk=card.pk).update(**updates)
                 record(request, 'card', 'success', 'Tarjeta de prueba ' + ('bloqueada.' if new_status == DemoCard.Status.BLOCKED else 'activada.'))
             messages.success(request, 'El estado de la tarjeta de prueba se actualizó.')
             return redirect('tarjeta')
@@ -248,7 +365,7 @@ def ayuda(request):
     faqs = [
         {'question': '¿Este prototipo utiliza dinero real?', 'answer': 'No. Las cuentas, los saldos, los comercios y los pagos son ficticios y pertenecen al ejercicio académico. No existe conexión con los servicios de Pluxee.'},
         {'question': '¿Qué ocurre si una consulta se interrumpe?', 'answer': 'La consulta queda pendiente y permite reintentar. Una interrupción no cambia el saldo ni se muestra como un saldo cero.'},
-        {'question': '¿Cómo funciona el pago de demostración?', 'answer': 'Se selecciona un comercio ficticio, un monto entero en pesos y el PIN de prueba 4826. El sistema valida la cuenta, la tarjeta, los servicios y el saldo antes de crear un cargo y un comprobante.'},
+        {'question': '¿Cómo funciona el pago de demostración?', 'answer': 'Se selecciona un medio de pago, un comercio ficticio y un monto entero en pesos. El pago online, QR y con tarjeta se confirman con el PIN de prueba 4826. Para usar una clave dinámica, se genera con el PIN y se ingresa el código de un solo uso. Cada compra confirmada genera un cargo de prueba y un comprobante.'},
         {'question': '¿Se puede bloquear la tarjeta de prueba?', 'answer': 'La opción Mi tarjeta permite bloquearla y activarla. Mientras está bloqueada no admite pagos académicos, pero permite consultar saldo y movimientos.'},
         {'question': '¿Cuándo finaliza la sesión?', 'answer': 'El acceso finaliza al cerrar la sesión o al alcanzar los límites de inactividad o duración configurados. La navegación activa conserva el acceso mientras la sesión siga vigente.'},
         {'question': '¿Qué información puede editarse?', 'answer': 'Mi perfil permite cambiar únicamente el nombre y el apellido ficticios de esta cuenta. No se requieren datos personales ni credenciales de servicios reales.'},

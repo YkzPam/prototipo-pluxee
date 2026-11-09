@@ -21,6 +21,10 @@
 .nav-links > a:focus-visible, .bottom-nav > a:focus-visible,
 .logout-button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
+.profile-link { color: var(--ink); text-decoration: none; }
+.profile-link:hover strong { text-decoration: underline; text-underline-offset: .2em; }
+.profile-link:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; border-radius: .4rem; }
+
 .notice { border-inline-start-width: 3px; }
 .notice-info { color: #4d3965; border-inline-start-color: #7655a1; }
 .notice-success { color: #205438; border-inline-start-color: #387353; }
@@ -37,11 +41,23 @@
 .home-action-pay .action-icon { background: #f0ebf8; }
 .home-action:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 
+.query-status { flex-wrap: wrap; gap: 10px 16px; }
+.query-status h2 { margin: 0; font-size: .95rem; color: inherit; }
+.query-status-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
 @media (max-width: 700px) {
   .page-content .button { min-height: 44px; }
+  .page-content .field :is(input:not([type="hidden"]), select),
+  .login-form .field input { font-size: max(16px, 1rem); }
   .bottom-nav { padding-inline: 6px; }
   .bottom-nav > a { font-size: .76rem; color: #604b73; line-height: 1.2; }
   .bottom-nav > a.active { color: var(--purple); background: #eee7f7; }
   .sidebar .logout-button { color: #f0e7f8; font-size: .76rem; }
   .app-admin .sidebar .nav-links > a { color: #f0e7f8; }
+}
+
+@media (max-width: 380px) {
+  .app-main .page-content { padding-inline: 14px; }
+  .app-main .page-heading { gap: 8px; }
+  .app-main .page-heading .help-shortcut { width: 44px; height: 44px; }
 }

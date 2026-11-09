@@ -1,0 +1,55 @@
+<div class="report-list">
+  {% for report in reports %}
+  <article class="report-card" aria-labelledby="report-{{ report.pk }}">
+    <h3 id="report-{{ report.pk }}">{{ report.get_category_display }}</h3>
+    <ol class="report-progress" aria-label="Progreso del reporte" role="list">
+      <li class="report-step{% if report.status == 'review' or report.status == 'resolved' %} is-completed{% endif %}"{% if report.status == 'received' %} aria-current="step"{% endif %}>
+        <span class="report-step-marker" aria-hidden="true">{% if report.status == 'review' or report.status == 'resolved' %}✓{% else %}1{% endif %}</span>
+        <span>Recibido{% if report.status == 'review' or report.status == 'resolved' %}<span class="sr-only">, etapa completada</span>{% endif %}</span>
+      </li>
+      <li class="report-step{% if report.status == 'resolved' %} is-completed{% endif %}"{% if report.status == 'review' %} aria-current="step"{% endif %}>
+        <span class="report-step-marker" aria-hidden="true">{% if report.status == 'resolved' %}✓{% else %}2{% endif %}</span>
+        <span>En revisión{% if report.status == 'resolved' %}<span class="sr-only">, etapa completada</span>{% elif report.status == 'received' %}<span class="sr-only">, etapa pendiente</span>{% endif %}</span>
+      </li>
+      <li class="report-step"{% if report.status == 'resolved' %} aria-current="step"{% endif %}>
+        <span class="report-step-marker" aria-hidden="true">{% if report.status == 'resolved' %}✓{% else %}3{% endif %}</span>
+        <span>Resuelto{% if report.status != 'resolved' %}<span class="sr-only">, etapa pendiente</span>{% endif %}</span>
+      </li>
+    </ol>
+    <dl class="report-meta">
+      <div><dt>Folio</dt><dd><code>{{ report.pk }}</code></dd></div>
+      <div><dt>Registrado</dt><dd><time datetime="{{ report.created_at|date:'c' }}">{{ report.created_at|date:'d/m/Y H:i' }}</time></dd></div>
+      {% if report.status != 'received' %}<div><dt>Última actualización</dt><dd><time datetime="{{ report.updated_at|date:'c' }}">{{ report.updated_at|date:'d/m/Y H:i' }}</time></dd></div>{% endif %}
+      {% if admin_actions %}<div><dt>Cuenta de prueba</dt><dd>{{ report.reporter.username }}</dd></div>{% endif %}
+    </dl>
+    <p class="report-text">{{ report.description }}</p>
+    {% if report.response %}
+      <div class="report-reply"><strong>Respuesta del administrador</strong><p class="report-text">{{ report.response }}</p></div>
+    {% endif %}
+    {% if admin_actions and report.status != 'resolved' %}
+    <details class="report-update">
+      <summary>Actualizar reporte</summary>
+      <form method="post" action="{% url 'reportes_admin_actualizar' report.pk %}{% querystring %}" class="standard-form report-form">
+        {% csrf_token %}
+        <input type="hidden" name="status" value="{% if report.status == 'received' %}review{% else %}resolved{% endif %}">
+        <div class="field">
+          <label for="response-{{ report.pk }}">Respuesta para el beneficiario (opcional)</label>
+          <textarea id="response-{{ report.pk }}" name="response" rows="3" maxlength="400" aria-describedby="response-hint-{{ report.pk }}"></textarea>
+          <p class="field-hint" id="response-hint-{{ report.pk }}">Usa solo datos de prueba. Si dejas el campo vacío, se conserva la respuesta anterior.</p>
+        </div>
+        <button class="button button-small" type="submit">{% if report.status == 'received' %}Marcar en revisión{% else %}Marcar resuelto{% endif %}</button>
+      </form>
+    </details>
+    {% endif %}
+  </article>
+  {% empty %}
+  <div class="empty-state">{% if admin_actions %}No hay reportes para los filtros seleccionados.{% else %}Esta cuenta aún no tiene reportes registrados.{% endif %}</div>
+  {% endfor %}
+</div>
+{% if reports.has_other_pages %}
+<nav class="pagination report-pagination" aria-label="Páginas de reportes">
+  {% if reports.has_previous %}<a class="button button-secondary button-small" href="{% querystring page=reports.previous_page_number %}#{{ list_anchor }}">Anterior</a>{% endif %}
+  <span>Página {{ reports.number }} de {{ reports.paginator.num_pages }}</span>
+  {% if reports.has_next %}<a class="button button-secondary button-small" href="{% querystring page=reports.next_page_number %}#{{ list_anchor }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}

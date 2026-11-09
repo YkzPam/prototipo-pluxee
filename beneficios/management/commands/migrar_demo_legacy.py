@@ -40,12 +40,14 @@ def checked_hash(value):
 
 def copy_rows(source, source_table, model, *, user_table=False):
     new_fields = {
-        'auth_user': 'must_change_password',
-        'beneficios_auditevent': 'interruption',
-        'beneficios_servicestate': 'active_interruption',
+        'auth_user': {'must_change_password'},
+        'beneficios_auditevent': {'interruption'},
+        'beneficios_servicestate': {'active_interruption'},
+        'beneficios_democard': {'dynamic_code_digest', 'dynamic_expires_at'},
+        'beneficios_payment': {'method'},
     }
     fields = [field for field in model._meta.local_concrete_fields
-              if field.name != new_fields.get(source_table)]
+              if field.name not in new_fields.get(source_table, ())]
     source_columns = {row['name'] for row in source.execute(f'PRAGMA table_info("{source_table}")')}
     if any(field.column not in source_columns for field in fields):
         raise CommandError(f'El esquema SQLite anterior no corresponde a la tabla {source_table}.')

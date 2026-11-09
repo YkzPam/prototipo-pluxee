@@ -24,5 +24,9 @@
     {% empty %}<p class="muted">No hay preguntas registradas.</p>{% endfor %}
   </div>
 </section>
-<div class="account-note"><span aria-hidden="true">i</span><p>Este espacio contiene ayuda local del proyecto. No crea solicitudes de soporte ni envía mensajes a Pluxee Chile.</p></div>
+<section class="surface card-help" aria-labelledby="help-report-heading">
+  <h2 id="help-report-heading">Reportar un problema</h2>
+  <p>La cuenta de prueba puede registrar un problema y revisar el estado del reporte en este prototipo académico.</p>
+  <div class="inline-actions"><a class="button button-secondary" href="{% url 'reportar_problema' %}">Crear o revisar un reporte</a></div>
+</section>
 {% endblock %}

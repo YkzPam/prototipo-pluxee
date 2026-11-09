@@ -190,39 +190,52 @@ class PrototypeWorkflowsTests(TestCase):
         self.assertTrue(ServiceState.objects.get(code='balance').available)
         self.assertEqual(self.client.get(reverse('servicios')).status_code, 405)
 
+    @override_settings(QUERY_RETRY_SECONDS=4)
     def test_interrupted_balance_is_pending_without_zero_and_recovers_after_retry(self):
         self.authenticate_client()
         original = list(Movement.objects.values())
         ServiceState.objects.filter(code='balance').update(available=False)
-        response = self.client.get(self.balance_url())
+        started_at = timezone.now()
+        with patch('django.utils.timezone.now', return_value=started_at):
+            response = self.client.get(self.balance_url())
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()['status'], 'pending')
+        self.assertEqual(response.headers.get('Retry-After'), '4')
         self.assertNotIn('data', response.json())
         self.assertIn('_auth_user_id', self.client.session)
         self.assertEqual(list(Movement.objects.values()), original)
-        limited = self.client.get(self.balance_url())
-        self.assertEqual(limited.status_code, 429)
-        self.assertIn('Retry-After', limited)
         ServiceState.objects.filter(code='balance').update(available=True)
-        future = timezone.now() + timedelta(seconds=settings.QUERY_RETRY_SECONDS + 1)
-        with patch('django.utils.timezone.now', return_value=future):
+        for elapsed, remaining in ((2.25, '2'), (3.75, '1')):
+            with self.subTest(elapsed=elapsed), patch(
+                'django.utils.timezone.now', return_value=started_at + timedelta(seconds=elapsed),
+            ):
+                limited = self.client.get(self.balance_url())
+                self.assertEqual(limited.status_code, 429)
+                self.assertEqual(limited.headers.get('Retry-After'), remaining)
+        with patch('django.utils.timezone.now', return_value=started_at + timedelta(seconds=4)):
             recovered = self.client.get(self.balance_url())
         self.assertEqual(recovered.status_code, 200)
+        self.assertNotIn('Retry-After', recovered)
         self.assertEqual(recovered.json()['data']['balance'], 7500)
         self.assertEqual(list(Movement.objects.values()), original)
-        self.assertTrue(AuditEvent.objects.filter(event_type='balance', outcome='pending').exists())
+        self.assertEqual(AuditEvent.objects.filter(event_type='balance', outcome='pending').count(), 1)
 
     def test_movements_interruption_and_empty_history_are_distinct(self):
         self.authenticate_client()
         ServiceState.objects.filter(code='movements').update(available=False)
         pending = self.client.get(self.movements_url())
         self.assertEqual(pending.status_code, 503)
+        self.assertEqual(pending.headers.get('Retry-After'), str(settings.QUERY_RETRY_SECONDS))
         self.assertNotIn('data', pending.json())
+        balance = self.client.get(self.balance_url())
+        self.assertEqual(balance.status_code, 200)
+        self.assertNotIn('Retry-After', balance)
         ServiceState.objects.filter(code='movements').update(available=True)
         future = timezone.now() + timedelta(seconds=settings.QUERY_RETRY_SECONDS + 1)
         with patch('django.utils.timezone.now', return_value=future):
             empty = self.client.get(self.movements_url(), {'desde': '2025-01-01', 'hasta': '2025-01-02'})
         self.assertEqual(empty.status_code, 200)
+        self.assertNotIn('Retry-After', empty)
         self.assertEqual(empty.json()['data']['items'], [])
         self.assertEqual(empty.json()['status'], 'updated')
 
@@ -230,9 +243,11 @@ class PrototypeWorkflowsTests(TestCase):
         self.authenticate_client()
         response = self.client.get(self.movements_url(), {'desde': '2026-11-02', 'hasta': '2026-11-04', 'tipo': 'cargo'})
         self.assertEqual([item['id'] for item in response.json()['data']['items']], [self.debit.pk])
-        past_end = self.client.get(self.movements_url(), {'page': 200})
-        self.assertEqual(past_end.json()['data']['items'], [])
-        self.assertEqual(past_end.json()['data']['total'], 2)
+        past_end = self.client.get(self.movements_url(), {'tipo': 'cargo', 'page': 200})
+        data = past_end.json()['data']
+        self.assertEqual([item['id'] for item in data['items']], [self.debit.pk])
+        self.assertEqual(data['page'], data['pages'])
+        self.assertEqual(data['total'], 1)
 
     def test_movement_filter_offers_own_stored_kinds_and_keeps_a_valid_deep_link(self):
         self.authenticate_client(self.bob)

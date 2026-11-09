@@ -69,15 +69,16 @@ APP_GRANTS = {
     'identidad_user_user_permissions': 'SELECT',
     'beneficios_auditevent': 'SELECT, INSERT',
     'beneficios_benefitaccount': 'SELECT',
-    'beneficios_democard': 'SELECT, UPDATE (`status`, `changed_at`)',
+    'beneficios_democard': 'SELECT, UPDATE (`status`, `changed_at`, `dynamic_code_digest`, `dynamic_expires_at`)',
     'beneficios_loginthrottle': 'SELECT, INSERT, UPDATE, DELETE',
     'beneficios_merchant': 'SELECT',
     'beneficios_merchantfavorite': 'SELECT, INSERT, DELETE',
     'beneficios_movement': 'SELECT, INSERT',
     'beneficios_payment': 'SELECT, INSERT',
     'beneficios_paymentthrottle': 'SELECT, INSERT, UPDATE',
-    'beneficios_serviceinterruption': 'SELECT, INSERT, UPDATE (`restored_at`)',
+    'beneficios_serviceinterruption': 'SELECT, INSERT, UPDATE (`restored_at`, `verification_note`, `verified_at`, `verified_by_id`)',
     'beneficios_servicestate': 'SELECT, UPDATE (`available`, `changed_at`, `active_interruption_id`)',
+    'beneficios_supportreport': 'SELECT, INSERT, UPDATE (`status`, `response`, `updated_at`)',
 }
 
 
@@ -361,7 +362,8 @@ def verify(vault):
         checks['lectura_autorizada'] = READER_TABLES
         checks['lecturas_denegadas'] = {
             table: rejection(cur, f'SELECT 1 FROM `{table}` LIMIT 1')
-            for table in ('identidad_user', 'django_session', 'beneficios_auditevent', 'beneficios_payment')
+            for table in ('identidad_user', 'django_session', 'beneficios_auditevent', 'beneficios_payment',
+                          'beneficios_supportreport')
         }
         checks['escrituras_denegadas_consulta'] = {
             'UPDATE': rejection(cur, 'UPDATE beneficios_servicestate SET available = 1 WHERE 1 = 0'),
@@ -376,6 +378,8 @@ def verify(vault):
         checks['actualizacion_autorizada_app_sin_cambiar_filas'] = cur.rowcount == 0
         checks['cambio_privilegios_usuario_denegado_app'] = rejection(
             cur, 'UPDATE identidad_user SET is_staff = 1 WHERE 1 = 0')
+        checks['cambio_titular_reporte_denegado_app'] = rejection(
+            cur, 'UPDATE beneficios_supportreport SET reporter_id = reporter_id WHERE 1 = 0')
         name = f'chequeo_permiso_{secrets.token_hex(8)}'
         try:
             checks['create_denegado_app'] = rejection(cur, f'CREATE TABLE `{name}` (id INT)')

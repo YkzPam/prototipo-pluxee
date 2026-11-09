@@ -67,3 +67,9 @@ class SessionWarningTests(TestCase):
         self.client.post(reverse('salir'))
         movements = reverse('movimientos')
         self.assertRedirects(self.login(movements + '?tipo=no-existe'), movements, fetch_redirect_response=False)
+
+    def test_malformed_return_url_does_not_prevent_signing_in(self):
+        target = '/\n/[invalid'
+        response = self.client.get(reverse('ingresar'), {'next': target})
+        self.assertContains(response, '<input type="hidden" name="next" value="">', html=True)
+        self.assertRedirects(self.login(target), reverse('inicio'), fetch_redirect_response=False)

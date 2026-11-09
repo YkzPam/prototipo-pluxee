@@ -8,13 +8,74 @@
   const base = `/api/cuentas/${accountId}/`;
   const balanceCard = app.querySelector('[data-balance-card]');
   const balanceButton = balanceCard?.querySelector('[data-refresh-balance]');
+  const queryStatus = app.querySelector('[data-query-status]');
+  const queryBalanceButton = queryStatus?.querySelector('[data-query-retry="balance"]');
+  const queryMovementsButton = queryStatus?.querySelector('[data-query-retry="movements"]');
   let balanceBusy = false;
   let lastConfirmed = null;
   let movementsBusy = false;
+  let statusBusy = false;
+  let statusTimer;
   let currentPage = 1;
   let totalPages = 1;
   const all = selector => [...app.querySelectorAll(selector)];
   const setText = (selector, value) => all(selector).forEach(el => { el.textContent = value; });
+  const movementRetryButtons = all('[data-retry-movements]');
+  const movementActions = all('[data-page-prev], [data-page-next], [data-movement-filters] button');
+  const prev = app.querySelector('[data-page-prev]');
+  const next = app.querySelector('[data-page-next]');
+
+  function retryCountdown(buttons) {
+    const labels = new Map();
+    let timer;
+
+    function clear() {
+      clearTimeout(timer);
+      for (const [button, label] of labels) {
+        button.textContent = label;
+        button.removeAttribute('aria-disabled');
+        delete button.dataset.retryWaiting;
+      }
+      labels.clear();
+    }
+
+    function start(seconds, onReady) {
+      if (api.isExpired() || !Number.isSafeInteger(seconds) || seconds <= 0) return false;
+      const deadline = performance.now() + seconds * 1000;
+      for (const button of buttons) {
+        labels.set(button, button.textContent);
+        button.setAttribute('aria-disabled', 'true');
+        button.dataset.retryWaiting = 'true';
+      }
+
+      function tick() {
+        const remaining = deadline - performance.now();
+        if (remaining <= 0) {
+          clear();
+          onReady?.();
+          return;
+        }
+        const secondsLeft = Math.ceil(remaining / 1000);
+        for (const button of buttons) button.textContent = `Reintentar en ${secondsLeft} s`;
+        timer = setTimeout(tick, remaining - (secondsLeft - 1) * 1000);
+      }
+
+      tick();
+      return true;
+    }
+
+    return {start, clear, waiting: () => labels.size > 0};
+  }
+
+  const balanceRetry = retryCountdown([balanceButton, queryBalanceButton].filter(Boolean));
+  const movementRetry = retryCountdown([...movementRetryButtons, queryMovementsButton].filter(Boolean));
+
+  function updateMovementControls(waiting) {
+    const disabled = waiting || api.isExpired();
+    movementActions.forEach(button => { button.disabled = disabled; });
+    if (prev) prev.disabled = disabled || currentPage <= 1;
+    if (next) next.disabled = disabled || currentPage >= totalPages;
+  }
 
   function readSnapshot(snapshot) {
     if (!snapshot || !Number.isFinite(snapshot.balance) || typeof snapshot.updated_at !== 'string'
@@ -59,11 +120,58 @@
     if (detail) detail.textContent = message;
   }
 
+  function showQueryStatus(interrupted, snapshotAtRequest) {
+    const balanceInterrupted = interrupted.includes('balance');
+    const movementsInterrupted = interrupted.includes('movements');
+    const visible = balanceInterrupted || movementsInterrupted;
+    const notice = queryStatus.querySelector('[data-query-status-message]');
+    const subject = balanceInterrupted && movementsInterrupted ? 'las consultas de saldo y movimientos'
+      : balanceInterrupted ? 'la consulta de saldo' : 'la consulta de movimientos';
+    const message = visible ? `Hay una interrupción simulada en ${subject}.` : '';
+    if (notice.textContent !== message) {
+      notice.textContent = message;
+      setText('[data-query-status-announcement]', message || 'Se restablecieron los servicios de consulta.');
+    }
+    const focused = document.activeElement;
+    queryBalanceButton.hidden = !balanceInterrupted;
+    queryMovementsButton.hidden = !movementsInterrupted;
+    queryStatus.hidden = !visible;
+    if (focused === queryBalanceButton && !balanceInterrupted) balanceButton.focus({preventScroll: true});
+    if (focused === queryMovementsButton && !movementsInterrupted) {
+      app.querySelector('#recent-heading').focus();
+    }
+    if (balanceInterrupted && lastConfirmed === snapshotAtRequest && balanceCard.dataset.balanceState === 'current') {
+      showBalance('stale', 'Saldo sin actualizar', lastConfirmed, 'El servicio de saldo está interrumpido en esta prueba.');
+      balanceButton.textContent = 'Reintentar';
+    }
+  }
+
+  function scheduleQueryStatusCheck() {
+    clearTimeout(statusTimer);
+    if (queryStatus && !queryStatus.hidden && !document.hidden && !api.isExpired()) {
+      statusTimer = setTimeout(refreshQueryStatus, 15000);
+    }
+  }
+
+  async function refreshQueryStatus() {
+    if (!queryStatus || document.hidden || api.isExpired() || statusBusy) return;
+    clearTimeout(statusTimer);
+    statusBusy = true;
+    const snapshotAtRequest = lastConfirmed;
+    const result = await api.request(queryStatus.dataset.statusUrl);
+    statusBusy = false;
+    if (!api.isExpired() && result.ok && result.status === 'updated' && Array.isArray(result.data?.interrupted)) {
+      showQueryStatus(result.data.interrupted, snapshotAtRequest);
+    }
+    scheduleQueryStatusCheck();
+  }
+
   async function balance() {
-    if (!balanceButton || balanceBusy || api.isExpired()) return;
+    if (!balanceButton || balanceBusy || balanceRetry.waiting() || api.isExpired()) return;
     balanceBusy = true;
     // El mismo botón conserva el foco del teclado mientras espera la respuesta.
     balanceButton.setAttribute('aria-disabled', 'true');
+    queryBalanceButton?.setAttribute('aria-disabled', 'true');
     balanceButton.textContent = 'Consultando…';
     showBalance('loading', lastConfirmed ? 'Saldo sin actualizar' : 'Consultando saldo…', lastConfirmed);
     showBalanceSummary();
@@ -95,6 +203,8 @@
     balanceBusy = false;
     balanceButton.disabled = expired || denied;
     balanceButton.removeAttribute('aria-disabled');
+    queryBalanceButton?.removeAttribute('aria-disabled');
+    balanceRetry.start(result.retryAfter);
   }
 
   function element(tag, className, text) {
@@ -168,9 +278,11 @@
   }
 
   async function movements(page = 1) {
-    if (movementsBusy || api.isExpired()) return;
+    if (movementsBusy || movementRetry.waiting() || api.isExpired()) return;
     movementsBusy = true;
-    const buttons = all('[data-retry-movements], [data-page-prev], [data-page-next], [data-movement-filters] button');
+    app.dataset.movementsBusy = 'true';
+    queryMovementsButton?.setAttribute('aria-disabled', 'true');
+    const buttons = [...movementRetryButtons, ...movementActions];
     buttons.forEach(button => { button.disabled = true; });
     errorBox('[data-movements-error]', '', false);
     placeholder('Consultando los registros…');
@@ -196,6 +308,12 @@
       if (view === 'dashboard') recentRows(items); else tableRows(items);
       currentPage = result.data.page || 1;
       totalPages = result.data.pages || 1;
+      if (form && currentPage !== page) {
+        const url = new URL(location.href);
+        if (currentPage === 1) url.searchParams.delete('page');
+        else url.searchParams.set('page', currentPage);
+        history.replaceState(history.state, '', url);
+      }
       const total = result.data.total || 0;
       setText('[data-movement-count]', total === 1 ? '1 movimiento encontrado' : `${total} movimientos encontrados`);
       setText('[data-movements-updated]', result.updated_at ? 'Consulta: ' + api.dateTime(result.updated_at) : '');
@@ -207,15 +325,37 @@
       if (result.code !== 401) errorBox('[data-movements-error]', result.message || 'No fue posible recuperar el historial. Se puede reintentar.', true);
     }
     movementsBusy = false;
+    delete app.dataset.movementsBusy;
+    queryMovementsButton?.removeAttribute('aria-disabled');
     buttons.forEach(button => { button.disabled = api.isExpired(); });
-    const prev = app.querySelector('[data-page-prev]');
-    const next = app.querySelector('[data-page-next]');
-    if (prev) prev.disabled = api.isExpired() || currentPage <= 1;
-    if (next) next.disabled = api.isExpired() || currentPage >= totalPages;
+    const waiting = movementRetry.start(result.retryAfter, () => updateMovementControls(false));
+    updateMovementControls(waiting);
   }
 
-  balanceButton?.addEventListener('click', balance);
-  all('[data-retry-movements]').forEach(button => button.addEventListener('click', () => movements(currentPage)));
+  async function retryBalance() {
+    if (balanceBusy || balanceRetry.waiting()) return;
+    await balance();
+    await refreshQueryStatus();
+  }
+
+  async function retryMovements() {
+    if (movementsBusy || movementRetry.waiting()) return;
+    await movements(currentPage);
+    await refreshQueryStatus();
+  }
+
+  balanceButton?.addEventListener('click', retryBalance);
+  queryBalanceButton?.addEventListener('click', retryBalance);
+  queryMovementsButton?.addEventListener('click', retryMovements);
+  movementRetryButtons.forEach(button => button.addEventListener('click', retryMovements));
+  if (queryStatus) {
+    window.addEventListener('focus', refreshQueryStatus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clearTimeout(statusTimer);
+      else refreshQueryStatus();
+    });
+    scheduleQueryStatusCheck();
+  }
   const form = app.querySelector('[data-movement-filters]');
   let initialPage = 1;
   if (form) {
@@ -239,11 +379,13 @@
     form.addEventListener('submit', event => { event.preventDefault(); movements(1); });
     form.addEventListener('reset', () => { requestAnimationFrame(() => movements(1)); });
   }
-  const prev = app.querySelector('[data-page-prev]');
-  const next = app.querySelector('[data-page-next]');
   if (prev) prev.addEventListener('click', () => movements(Math.max(1, currentPage - 1)));
   if (next) next.addEventListener('click', () => movements(Math.min(totalPages, currentPage + 1)));
   document.addEventListener('prototype:expired', () => {
+    clearTimeout(statusTimer);
+    balanceRetry.clear();
+    movementRetry.clear();
+    if (queryStatus) queryStatus.hidden = true;
     lastConfirmed = null;
     showBalance('expired', 'Sesión finalizada', null, 'Vuelve a ingresar para consultar el saldo.');
     showBalanceSummary();

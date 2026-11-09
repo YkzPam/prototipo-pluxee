@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Bandeja de reportes{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Bandeja de reportes</h1><p>Revisa los problemas registrados por las cuentas ficticias y actualiza su estado.</p></div>
+</div>
+<section class="surface report-section" id="lista-reportes" aria-labelledby="report-inbox-heading">
+  <div class="section-heading report-heading">
+    <div><h2 id="report-inbox-heading">Reportes del prototipo</h2><p class="muted">La respuesta se muestra en el reporte de la cuenta que lo registró.</p></div>
+    <a class="button button-secondary button-small" href="{% url 'seguimiento' %}">Volver a Seguimiento</a>
+  </div>
+  <form class="filters report-filters" method="get" action="{% url 'reportes_admin' %}">
+    {% for field in filters %}
+    <div class="field">{{ field.label_tag }}{{ field }}{% if field.errors %}<div class="field-errors" role="alert">{{ field.errors }}</div>{% endif %}</div>
+    {% endfor %}
+    <button class="button button-small" type="submit">Filtrar reportes</button>
+    <a class="button button-quiet button-small" href="{% url 'reportes_admin' %}">Limpiar filtros</a>
+  </form>
+  {% include 'includes/reportes_lista.html' with admin_actions=True list_anchor='lista-reportes' %}
+</section>
+{% endblock %}

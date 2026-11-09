@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Actividad de mi cuenta{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">MI CUENTA</span>
+    <h1>Actividad de mi cuenta</h1>
+    <p>Ingresos y cierres de sesión registrados para esta cuenta de prueba.</p>
+  </div>
+</div>
+<section class="surface events-section" aria-labelledby="account-activity-heading">
+  <div class="section-heading">
+    <div><h2 id="account-activity-heading">Historial de acceso</h2><p class="muted">Los registros más recientes aparecen primero.</p></div>
+    <a class="button button-small button-secondary" href="{% url 'perfil' %}">Volver a Mi perfil</a>
+  </div>
+  {% if activity %}
+  <div class="movement-list" role="list" aria-label="Actividad registrada">
+    {% for event in activity %}
+    <div class="movement-row" role="listitem">
+      <span class="movement-symbol{% if event.type == 'login' %} credit{% endif %}" aria-hidden="true">
+        <svg class="ui-icon"><use href="{% if event.type == 'login' %}#icon-check{% elif event.type == 'logout' %}#icon-exit{% else %}#icon-lock{% endif %}"/></svg>
+      </span>
+      <div class="movement-description">
+        <strong>{{ event.title }}</strong>
+        <small>{{ event.reason }}</small>
+        <small><time datetime="{{ event.created_at|date:'c' }}">{{ event.created_at|date:'d/m/Y H:i:s' }}</time></small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><strong>Sin actividad registrada</strong><p>Los ingresos y cierres de sesión aparecerán aquí cuando se registren en el prototipo.</p></div>
+  {% endif %}
+  {% if page.has_other_pages %}
+  <nav class="pagination" aria-label="Páginas de la actividad de cuenta">
+    {% if page.has_previous %}<a class="button button-secondary button-small" href="?page={{ page.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="button button-secondary button-small" href="?page={{ page.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

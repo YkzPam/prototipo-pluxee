@@ -1,5 +1,25 @@
 {% extends 'base.html' %}{% load moneda %}
 {% block title %}Comprobante de prueba{% endblock %}
 {% block content %}
-<section class="surface receipt-card"><div class="receipt-success" aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"/></svg></div><span class="eyebrow">OPERACIÓN DEMO</span><h1>Pago de prueba realizado</h1><p class="muted">La operación quedó registrada en la cuenta ficticia.</p><div class="receipt-amount">${{ payment.amount|clp }}<small>Pesos chilenos</small></div><dl class="receipt-details"><div><dt>Comercio</dt><dd>{{ payment.merchant.name }}</dd></div><div><dt>Código de comercio</dt><dd>{{ payment.merchant.code }}</dd></div><div><dt>Fecha y hora</dt><dd>{{ payment.created_at|date:'d/m/Y · H:i:s' }}</dd></div><div><dt>Cuenta</dt><dd>Terminada en {{ account.number_suffix }}</dd></div><div><dt>Saldo después del pago</dt><dd>${{ payment.balance_after|clp }}</dd></div><div class="receipt-reference"><dt>Referencia de prueba</dt><dd>{{ payment.id }}</dd></div></dl><div class="receipt-notice"><strong>Comprobante académico, sin valor comercial.</strong><p>No acredita un pago real ni fue enviado a un comercio o a un correo electrónico.</p></div><div class="receipt-actions"><a class="button button-full" href="{% url 'movimientos' %}">Ver el movimiento</a><a class="button button-secondary button-full" href="{% url 'inicio' %}">Volver al inicio</a></div></section>
+<section class="surface receipt-card">
+  <div class="receipt-success" aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"/></svg></div>
+  <span class="eyebrow">OPERACIÓN DEMO</span>
+  <h1>Pago de prueba realizado</h1>
+  <p class="muted">La operación quedó registrada en la cuenta ficticia.</p>
+  <div class="receipt-amount">${{ payment.amount|clp }}<small>Pesos chilenos</small></div>
+  <dl class="receipt-details">
+    <div><dt>Medio de pago</dt><dd>{{ payment.get_method_display }}</dd></div>
+    <div><dt>Comercio</dt><dd>{{ payment.merchant.name }}</dd></div>
+    <div><dt>Código de comercio</dt><dd>{{ payment.merchant.code }}</dd></div>
+    <div><dt>Fecha y hora</dt><dd>{{ payment.created_at|date:'d/m/Y · H:i:s' }}</dd></div>
+    <div><dt>Cuenta</dt><dd>Terminada en {{ account.number_suffix }}</dd></div>
+    <div><dt>Saldo después del pago</dt><dd>${{ payment.balance_after|clp }}</dd></div>
+    <div class="receipt-reference"><dt>Referencia de prueba</dt><dd>{{ payment.id }}</dd></div>
+  </dl>
+  <div class="receipt-notice"><strong>Comprobante académico, sin valor comercial.</strong><p>Registro local de una operación de demostración.</p></div>
+  <div class="receipt-actions">
+    <a class="button button-full" href="{% url 'movimientos' %}">Ver el movimiento</a>
+    <a class="button button-secondary button-full" href="{% url 'inicio' %}">Volver al inicio</a>
+  </div>
+</section>
 {% endblock %}

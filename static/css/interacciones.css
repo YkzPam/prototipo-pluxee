@@ -1,0 +1,112 @@
+/* Respuestas visuales asociadas al estado de cada operación. */
+[data-balance-state="loading"] .balance-status::before,
+[data-movements-busy="true"] .movements-section .section-heading h2::after {
+  display: inline-block;
+  inline-size: .75em;
+  block-size: .75em;
+  vertical-align: -.05em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  content: "";
+}
+
+[data-balance-state="loading"] .balance-status::before { margin-inline-end: .45em; }
+[data-movements-busy="true"] .movements-section .section-heading h2::after { margin-inline-start: .45em; }
+
+.button[data-retry-waiting] {
+  cursor: wait;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-content :is(.button, .home-action, .help-shortcut, .favorite-button):focus-visible,
+.login-form .button:focus-visible,
+.faq-item > summary:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .query-status-actions { inline-size: 100%; }
+  .query-status-actions .button { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .query-status:not([hidden]),
+  .session-alert:not([hidden]),
+  .messages > .notice { animation: notice-enter 200ms ease-out; }
+
+  .login-story-copy,
+  .login-heading { animation: content-enter 260ms ease-out; }
+
+  .faq-item[open] > p,
+  .movement-filter-panel[open] > .movement-filters,
+  .followup-event-reference[open] > code { animation: content-enter 180ms ease-out; }
+
+  :is(.desktop-nav, .bottom-nav) > a[aria-current="page"] > .ui-icon {
+    animation: nav-icon-select 200ms ease-out;
+  }
+
+  [data-balance-state="current"] .balance-status { animation: balance-confirm 220ms ease-out; }
+  .button[data-retry-waiting] { animation: balance-confirm 180ms ease-out; }
+
+  [data-balance-state="loading"] .balance-status::before,
+  [data-movements-busy="true"] .movements-section .section-heading h2::after {
+    animation: query-spin 750ms linear infinite;
+  }
+
+  .receipt-success .ui-icon {
+    stroke-dasharray: 24;
+    animation: receipt-check 320ms ease-out both;
+  }
+
+  .page-content :is(.button, .home-action, .help-shortcut, .favorite-button),
+  .login-form .button,
+  :is(.desktop-nav, .bottom-nav) > a {
+    transition: transform 140ms ease-out, background-color 140ms ease-out, border-color 140ms ease-out;
+  }
+
+  .home-action .action-arrow { transition: transform 140ms ease-out; }
+  .home-action:focus-visible .action-arrow { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .page-content :is(.button, .home-action, .help-shortcut, .favorite-button):not(:disabled, [aria-disabled="true"]):hover {
+    transform: translateY(-1px);
+  }
+  .home-action:hover .action-arrow { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-content :is(.button, .home-action, .help-shortcut, .favorite-button):not(:disabled, [aria-disabled="true"]):active,
+  .login-form .button:active,
+  .bottom-nav > a:active {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes notice-enter {
+  from { opacity: .65; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes content-enter {
+  from { opacity: .82; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nav-icon-select {
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes balance-confirm {
+  from { transform: scale(.97); }
+  to { transform: scale(1); }
+}
+
+@keyframes query-spin { to { transform: rotate(1turn); } }
+
+@keyframes receipt-check {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}

@@ -1,25 +1,31 @@
 {% extends 'base.html' %}
 {% block title %}Mi perfil{% endblock %}
 {% block content %}
-<div class="page-heading"><div><span class="eyebrow">MI CUENTA</span><h1>Mi perfil</h1><p>Administra la información y el acceso de la cuenta de prueba.</p></div></div>
-<div class="profile-layout">
-  <section class="surface profile-form-card">
-    <div class="profile-summary">
-      <span class="profile-avatar" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span>
-      <div><h2>{{ request.user.get_full_name|default:request.user.username }}</h2><p>Beneficiario de prueba · {{ request.user.username }}</p></div>
-    </div>
+<header class="pluxee-section-hero">
+  <div>
+    <span class="pluxee-section-badge">Cuenta de demostración</span>
+    <h1>Mi perfil</h1>
+    <p class="pluxee-profile-name">{{ request.user.get_full_name|default:request.user.username }}</p>
+  </div>
+  <span class="pluxee-section-symbol pluxee-profile-avatar" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span>
+</header>
+<div class="profile-layout pluxee-profile-layout">
+  <section class="surface profile-form-card" aria-labelledby="profile-data-heading">
+    <h2 id="profile-data-heading">Mis datos</h2>
+    <p class="muted pluxee-profile-account">Usuario de prueba · {{ request.user.username }}</p>
     <form method="post" class="standard-form profile-form">
       {% csrf_token %}
       {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
       <div class="field"><label for="id_first_name">Nombre ficticio</label>{{ form.first_name }}{% if form.first_name.errors %}<div class="field-errors" role="alert">{{ form.first_name.errors }}</div>{% endif %}</div>
       <div class="field"><label for="id_last_name">Apellido ficticio</label>{{ form.last_name }}{% if form.last_name.errors %}<div class="field-errors" role="alert">{{ form.last_name.errors }}</div>{% endif %}</div>
-      <p class="field-hint">Se deben utilizar nombres de prueba. Esta edición no verifica ni modifica una identidad real.</p>
+      <p class="field-hint">Usa nombres ficticios para la demostración.</p>
       <button class="button" type="submit">Guardar cambios</button>
     </form>
   </section>
   <section class="surface profile-options" aria-labelledby="profile-options-heading">
     <h2 id="profile-options-heading">Configuración y ayuda</h2>
-    <div class="profile-options-list">
+    <h3 class="pluxee-profile-group" id="profile-security-heading">Tarjeta y seguridad</h3>
+    <div class="profile-options-list" role="group" aria-labelledby="profile-security-heading">
       <a href="{% url 'tarjeta' %}" class="profile-option">
         <svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg>
         <span>Mi tarjeta<small>Consultar y cambiar el estado de prueba</small></span>
@@ -28,6 +34,19 @@
       <a href="{% url 'cambiar_clave' %}" class="profile-option">
         <svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg>
         <span>Cambiar contraseña<small>Actualizar el acceso a esta cuenta</small></span>
+        <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
+      </a>
+      <a href="{% url 'actividad_cuenta' %}" class="profile-option">
+        <svg class="ui-icon" aria-hidden="true"><use href="#icon-tracking"/></svg>
+        <span>Actividad de mi cuenta<small>Revisar ingresos y cierres de sesión</small></span>
+        <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
+      </a>
+    </div>
+    <h3 class="pluxee-profile-group" id="profile-help-heading">Soporte y seguimiento</h3>
+    <div class="profile-options-list" role="group" aria-labelledby="profile-help-heading">
+      <a href="{% url 'reportar_problema' %}#mis-reportes" class="profile-option">
+        <svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg>
+        <span>Mis reportes<small>Consultar el estado y las respuestas</small></span>
         <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
       </a>
       <a href="{% url 'ayuda' %}" class="profile-option">

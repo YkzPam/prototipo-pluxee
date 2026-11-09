@@ -36,6 +36,34 @@ class ServiceInterruption(models.Model):
     service_code = models.CharField(max_length=20, choices=SERVICE_CODES)
     started_at = models.DateTimeField(db_index=True)
     restored_at = models.DateTimeField(null=True, blank=True)
+    verification_note = EncryptedCharField(max_length=400, null=True, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class SupportReport(models.Model):
+    class Category(models.TextChoices):
+        BALANCE = 'balance', 'Consulta de saldo'
+        MOVEMENTS = 'movements', 'Consulta de movimientos'
+        SESSION = 'session', 'Cierre de sesión'
+        OTHER = 'other', 'Otro problema'
+
+    class Status(models.TextChoices):
+        RECEIVED = 'received', 'Recibido'
+        REVIEW = 'review', 'En revisión'
+        RESOLVED = 'resolved', 'Resuelto'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    category = models.CharField(max_length=12, choices=Category.choices)
+    description = EncryptedCharField(max_length=360)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.RECEIVED)
+    response = EncryptedCharField(max_length=400, default='', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
 
 
 class ServiceState(models.Model):
@@ -125,6 +153,8 @@ class DemoCard(models.Model):
     status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE)
     pin_hash = EncryptedCharField(max_length=128)
     changed_at = models.DateTimeField(auto_now=True)
+    dynamic_code_digest = models.CharField(max_length=64, blank=True, default='', db_default='')
+    dynamic_expires_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def is_blocked(self):
@@ -145,6 +175,12 @@ class DemoCard(models.Model):
 
 class Payment(models.Model):
     """Comprobante persistido; cada pago académico corresponde a un único cargo."""
+    class Method(models.TextChoices):
+        ONLINE = 'online', 'Pago online'
+        QR = 'qr', 'Pago QR'
+        DYNAMIC = 'dynamic', 'Clave dinámica'
+        CARD = 'card', 'Tarjeta física o virtual'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='demo_payments')
     account = models.ForeignKey(BenefitAccount, on_delete=models.PROTECT, related_name='payments')
@@ -153,6 +189,7 @@ class Payment(models.Model):
     amount = EncryptedIntegerField(min_value=1)
     balance_after = EncryptedIntegerField()
     idempotency_key = models.UUIDField()
+    method = models.CharField(max_length=8, choices=Method.choices, default=Method.ONLINE, db_default=Method.ONLINE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

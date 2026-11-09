@@ -1,0 +1,78 @@
+/* Estilos de la vista principal de la demostración Junaeb. */
+.pluxee-home-heading {
+  align-items: center;
+  padding: clamp(1.1rem, 4vw, 2rem);
+  border-radius: 1.1rem;
+  background: var(--purple);
+  color: #fff;
+}
+
+.pluxee-home-heading :is(h1, div > p) { color: #fff; }
+.pluxee-home-heading .eyebrow { color: var(--lime); }
+.pluxee-home-heading .help-shortcut { flex: 0 0 auto; inline-size: 44px; block-size: 44px; }
+
+.benefit-masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .65rem;
+  padding: .85rem 1.05rem;
+  border-radius: .8rem;
+  background: var(--lime);
+  color: var(--purple);
+}
+
+.benefit-masthead small { display: block; font-size: .65rem; font-weight: 700; letter-spacing: .04em; }
+.benefit-masthead strong { display: block; margin-top: .12rem; font-size: 1.35rem; line-height: 1.2; }
+.benefit-masthead .ui-icon { flex: 0 0 auto; inline-size: 2rem; block-size: 2rem; }
+
+.pluxee-home .home-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pluxee-home .home-action {
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  min-block-size: 76px;
+  padding: .9rem 1rem;
+  background: #fff;
+}
+.pluxee-home .home-action:hover { background: #f6f2fa; }
+.pluxee-home .home-action > span:nth-child(2) { overflow-wrap: anywhere; }
+.pluxee-home .home-action-movements .action-icon { background: #eaf5bb; }
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-section-transition] :is(.pluxee-home-heading, .pluxee-section-hero) {
+    animation: main-section-enter 320ms cubic-bezier(.2, .75, .3, 1);
+  }
+
+  [data-section-transition="inicio"] .balance-card-unified,
+  [data-section-transition="pagar"] .payment-methods,
+  [data-section-transition="comercios"] .pluxee-merchant-search,
+  [data-section-transition="perfil"] .pluxee-profile-layout {
+    animation: main-section-content-enter 360ms cubic-bezier(.2, .75, .3, 1);
+  }
+}
+
+@keyframes main-section-enter {
+  from { opacity: .72; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes main-section-content-enter {
+  from { opacity: .84; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .app-beneficiary .bottom-nav > a.active { background: #e9f4bb; }
+  .pluxee-home .home-actions { gap: .5rem; }
+  .pluxee-home .home-action {
+    flex-direction: column;
+    justify-content: center;
+    gap: .38rem;
+    min-block-size: 90px;
+    padding: .55rem .2rem;
+    text-align: center;
+  }
+  .pluxee-home .home-action > span:nth-child(2) { font-size: .72rem; }
+  .benefit-masthead { padding: .75rem .85rem; }
+}

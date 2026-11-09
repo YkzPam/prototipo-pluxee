@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Reportar un problema{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><span class="eyebrow">AYUDA · PROTOTIPO</span><h1>Reportar un problema</h1><p>Registra un problema de la demostración y revisa su estado con el folio.</p></div>
+</div>
+<div class="report-workspace">
+  <section class="surface report-section" aria-labelledby="report-form-heading">
+    <h2 id="report-form-heading">Nuevo reporte</h2>
+    <p class="muted">El reporte queda en el entorno académico y se revisa dentro del prototipo.</p>
+    <form method="post" action="{% url 'reportar_problema' %}" class="standard-form report-form">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="field">
+        {{ field.label_tag }}{{ field }}
+        {% if field.help_text %}<p class="field-hint" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+        {% if field.errors %}<div class="field-errors" role="alert">{{ field.errors }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <button class="button" type="submit">Registrar reporte</button>
+    </form>
+  </section>
+  <section class="surface report-section" id="mis-reportes" aria-labelledby="my-reports-heading">
+    <h2 id="my-reports-heading">Mis reportes</h2>
+    <p class="muted">Aquí aparecen los reportes registrados con esta cuenta de prueba.</p>
+    {% include 'includes/reportes_lista.html' with list_anchor='mis-reportes' %}
+  </section>
+</div>
+{% endblock %}

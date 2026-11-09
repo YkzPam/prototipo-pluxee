@@ -35,8 +35,12 @@ def session_return_path(target):
     """Solo se retoman vistas de lectura y filtros de movimientos válidos."""
     if not target or len(target) > 1024 or not target.startswith('/') or target.startswith('//'):
         return ''
-    parsed = urlsplit(target)
-    readable = ('inicio', 'saldo', 'movimientos', 'seguimiento', 'comercios', 'perfil', 'tarjeta', 'ayuda')
+    try:
+        parsed = urlsplit(target)
+    except ValueError:
+        return ''
+    readable = ('inicio', 'saldo', 'movimientos', 'seguimiento', 'comercios', 'perfil', 'tarjeta', 'ayuda',
+                'actividad_cuenta', 'reportar_problema', 'reportes_admin')
     if parsed.path not in {reverse(name) for name in readable}:
         return ''
     if parsed.path != reverse('movimientos') or not parsed.query:
