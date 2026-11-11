@@ -101,14 +101,22 @@ def download_archive(name, url, sha256):
     downloads = RUNTIME / 'downloads'
     downloads.mkdir(parents=True, exist_ok=True)
     archive_path = downloads / f'{name}.zip'
+    manual = (f'Se puede descargar {name}.zip en un navegador (archivo de versiones de dev.mysql.com) y copiarlo en '
+              f'{downloads}; el inicio comprobará su SHA-256 antes de usarlo.')
     if not archive_path.is_file():
         partial = archive_path.with_suffix('.zip.part')
-        with urlopen(url, timeout=30) as response, partial.open('wb') as output:
-            shutil.copyfileobj(response, output, 1024 * 1024)
+        try:
+            with urlopen(url, timeout=30) as response, partial.open('wb') as output:
+                shutil.copyfileobj(response, output, 1024 * 1024)
+        except OSError as error:  # incluye URLError, HTTPError y tiempos de espera
+            partial.unlink(missing_ok=True)
+            raise RuntimeError(f'No fue posible descargar {name}.zip ({error}). {manual}') from None
         partial.replace(archive_path)
     with archive_path.open('rb') as stream:
         if hashlib.file_digest(stream, 'sha256').hexdigest() != sha256:
-            raise RuntimeError('La descarga de MySQL no coincide con el archivo verificado.')
+            # Se elimina para que el siguiente intento descargue de nuevo en lugar de fallar siempre.
+            archive_path.unlink(missing_ok=True)
+            raise RuntimeError(f'La descarga de {name}.zip no coincide con el archivo verificado. {manual}')
     return archive_path
 
 

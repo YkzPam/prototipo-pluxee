@@ -2,15 +2,74 @@
 
 Aplicación web funcional de la evaluación 3 de Ingeniería de Software. La evaluación 4 corresponde al informe de diagramas y pruebas. Este proyecto continúa el caso académico de consultas interrumpidas y cierres de sesión; no modifica ni se conecta a los sistemas reales de Pluxee.
 
-## 1. Inicio en este equipo
+## 1. Instalación paso a paso (descarga desde GitHub)
 
-1. Ejecutar `iniciar.cmd` dentro de esta carpeta.
-2. Abrir **https://127.0.0.1:8443** en el navegador después de configurar la confianza del certificado local.
-3. Mantener abierta la ventana del servidor durante la demostración. `Ctrl+C` lo detiene.
+### Requisitos del computador
 
-El inicio está preparado para Windows con Python 3.12 o superior. `preparar.cmd` instala las dependencias de Python. En el primer inicio se descarga y comprueba el archivo oficial de MySQL Community 8.4.13. La instancia queda en este equipo, sin instalar un servicio de Windows y sin aceptar tráfico de la red. Los archivos de la base de datos y las claves se generan localmente y quedan fuera del ZIP.
+- Windows 10 u 11 de 64 bits.
+- **Python 3.12 o superior** desde [python.org](https://www.python.org/downloads/). En el instalador, marcar **«Add python.exe to PATH»**.
+- Conexión a internet **solo en el primer inicio** (dependencias de Python y MySQL Community 8.4.13, 281 MB).
+- Unos 2,5 GB libres en el disco.
+- Chrome o Edge.
 
-El certificado público se genera en `.runtime/security/web_tls/Pluxee_Prototipo_Local.crt`, válido para `127.0.0.1` y `localhost`. El inicio no modifica la confianza de Windows ni del navegador. Para verificar la conexión sin cambiar esa configuración, se puede usar `curl.exe --cacert .runtime/security/web_tls/Pluxee_Prototipo_Local.crt https://127.0.0.1:8443/ingresar/` con un cliente compatible, o el cliente de Python indicado en la verificación. Para detener también MySQL al terminar, ejecutar `python scripts/mysql_local.py detener` con el Python del entorno virtual.
+### Paso 1. Descargar el prototipo
+
+1. Abrir **https://github.com/YkzPam/prototipo-pluxee** y comprobar que esté seleccionada la rama **`evaluacion-3`**.
+2. Botón verde **Code → Download ZIP**.
+
+Alternativa con Git: `git clone --branch evaluacion-3 https://github.com/YkzPam/prototipo-pluxee.git`
+
+### Paso 2. Extraer el ZIP
+
+Clic derecho sobre el ZIP → **Extraer todo…**, de preferencia en una ruta corta, por ejemplo `C:\Pluxee`. Los archivos no se deben ejecutar desde dentro del ZIP sin extraer.
+
+### Paso 3. Iniciar (la primera vez tarda entre 3 y 10 minutos)
+
+Abrir la carpeta extraída y hacer doble clic en **`iniciar.cmd`**. Si Windows pide confirmación porque el archivo viene de internet, elegir **Ejecutar** (o **Más información → Ejecutar de todas formas**).
+
+En el primer inicio el proceso, sin intervención:
+
+1. Crea el entorno de Python (`.venv`) e instala las dependencias (`preparar.cmd`).
+2. Descarga MySQL 8.4.13, comprueba su huella SHA-256 y lo inicia solo en este equipo (puerto local 3307 o 13306, sin instalar un servicio de Windows ni aceptar conexiones de la red).
+3. Genera las claves cifradas, el certificado HTTPS, la base de datos y las cuentas de demostración en la carpeta `.runtime`, que nunca se sube a GitHub.
+
+Queda listo cuando la ventana muestra `Prototipo académico Pluxee Chile: https://127.0.0.1:8443/`. Desde ese momento muestra una línea por cada página atendida. **La ventana debe quedar abierta** mientras se usa el prototipo.
+
+### Paso 4. Confiar en el certificado local (una vez por equipo)
+
+Sin este paso el navegador muestra «La conexión no es privada».
+
+1. Abrir la carpeta `.runtime\security\web_tls\` y hacer doble clic en `Pluxee_Prototipo_Local.crt`.
+2. **Instalar certificado… → Usuario actual → Siguiente**.
+3. **Colocar todos los certificados en el siguiente almacén → Examinar… → Entidades de certificación raíz de confianza → Aceptar → Siguiente → Finalizar**, y aceptar la advertencia de Windows.
+4. Cerrar el navegador por completo y volver a abrirlo.
+
+El certificado solo es válido para `127.0.0.1` y `localhost`. Para retirarlo: `certmgr.msc` → Entidades de certificación raíz de confianza → Certificados → «Prototipo Pluxee local» → Eliminar.
+
+### Paso 5. Usar el prototipo
+
+Abrir **https://127.0.0.1:8443** e ingresar con una de las cuentas de la tabla de abajo.
+
+### Paso 6 (opcional). Comprobar la instalación
+
+Doble clic en **`verificar.cmd`**: ejecuta las 149 pruebas automatizadas y exige más de 80 % de cobertura.
+
+### Las veces siguientes
+
+Basta con `iniciar.cmd`; arranca en segundos y conserva los datos. Para detener el servidor: `Ctrl+C` en su ventana. Para detener también MySQL: `.venv\Scripts\python.exe scripts\mysql_local.py detener`.
+
+### Problemas frecuentes
+
+| Mensaje o situación | Qué hacer |
+|---|---|
+| «Se necesita Python 3.12 o superior» | Instalar Python desde python.org marcando «Add python.exe to PATH» y ejecutar de nuevo `iniciar.cmd`. |
+| «No se pudieron instalar las dependencias» | Revisar la conexión a internet y ejecutar de nuevo. |
+| «No fue posible descargar mysql-8.4.13-winx64.zip» | En un navegador, descargar ese archivo desde el archivo de versiones de MySQL (dev.mysql.com → MySQL Community Server → Archives → 8.4.13, Windows ZIP) y copiarlo en `.runtime\downloads`. El inicio comprueba su SHA-256 antes de usarlo. |
+| «Los puertos locales 3307 y 13306 están ocupados» | Cerrar el otro programa MySQL que usa esos puertos. |
+| Error al abrir el puerto 8443 | Ya hay otra ventana de `iniciar.cmd` abierta: cerrarla o reiniciar el equipo. |
+| «La conexión no es privada», o en la ventana: «AVISO El navegador rechazó el certificado local» | Completar el paso 4 y volver a abrir el navegador. |
+
+Para comprobar la conexión cifrada sin instalar el certificado: `curl.exe --cacert .runtime/security/web_tls/Pluxee_Prototipo_Local.crt https://127.0.0.1:8443/ingresar/`.
 
 | Usuario de prueba | Contraseña inicial | Función |
 |---|---|---|

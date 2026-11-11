@@ -1,0 +1,4 @@
+# Los .cmd se guardan con CRLF: cmd.exe puede no encontrar etiquetas (goto) en archivos con solo LF,
+# y el ZIP que entrega GitHub conserva los finales de línea guardados en el repositorio.
+*.cmd -text
+*.bat -text
