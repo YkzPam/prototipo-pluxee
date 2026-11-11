@@ -1,255 +1,301 @@
 # Prototipo académico Pluxee Chile
 
-Aplicación web funcional de la evaluación 3 de Ingeniería de Software. La evaluación 4 corresponde al informe de diagramas y pruebas. Este proyecto continúa el caso académico de consultas interrumpidas y cierres de sesión; no modifica ni se conecta a los sistemas reales de Pluxee.
+Este es el prototipo web que construimos para la **Evaluación 3 de Ingeniería de Software**. Simula el portal de beneficios de alimentación Junaeb: un beneficiario puede consultar su saldo y sus movimientos, buscar comercios y pagar, y un administrador puede hacer seguimiento de todo lo que pasa en el sistema.
 
-## 1. Instalación paso a paso (descarga desde GitHub)
+Partimos del caso que trabajamos en la unidad anterior: qué debería pasar cuando una consulta de saldo se interrumpe o la sesión se cierra a mitad de camino. Todo funciona con datos inventados y en tu propio computador; **no se conecta a los sistemas reales de Pluxee**.
 
-### Requisitos del computador
+> El informe con los diagramas y el reporte de pruebas corresponde a la Evaluación 4 y va por separado.
 
-- Windows 10 u 11 de 64 bits.
-- **Python 3.12 o superior** desde [python.org](https://www.python.org/downloads/). En el instalador, marcar **«Add python.exe to PATH»**.
-- Conexión a internet **solo en el primer inicio** (dependencias de Python y MySQL Community 8.4.13, 281 MB).
-- Unos 2,5 GB libres en el disco.
-- Chrome o Edge.
+---
 
-### Paso 1. Descargar el prototipo
+## 1. Cómo instalarlo en tu computador
 
-1. Abrir **https://github.com/YkzPam/prototipo-pluxee** y comprobar que esté seleccionada la rama **`evaluacion-3`**.
-2. Botón verde **Code → Download ZIP**.
+Lo armamos para que funcione con un doble clic. La primera vez tarda unos minutos porque se prepara solo; después arranca en segundos.
 
-Alternativa con Git: `git clone --branch evaluacion-3 https://github.com/YkzPam/prototipo-pluxee.git`
+### Lo que necesitas
 
-### Paso 2. Extraer el ZIP
+- **Windows 10 u 11** (64 bits).
+- **Python 3.12 o superior**. Si no lo tienes, descárgalo de [python.org](https://www.python.org/downloads/) y, en el instalador, **marca la casilla «Add python.exe to PATH»**. Es el error más común, así que vale la pena revisarlo.
+- **Internet, solo la primera vez**: se descargan las librerías de Python y MySQL (unos 281 MB).
+- Unos **2,5 GB libres** en el disco.
+- **Chrome o Edge**.
 
-Clic derecho sobre el ZIP → **Extraer todo…**, de preferencia en una ruta corta, por ejemplo `C:\Pluxee`. Los archivos no se deben ejecutar desde dentro del ZIP sin extraer.
+### Paso 1. Descarga el proyecto
 
-### Paso 3. Iniciar (la primera vez tarda entre 3 y 10 minutos)
+1. Entra a **https://github.com/YkzPam/prototipo-pluxee** y fíjate en que esté seleccionada la rama **`evaluacion-3`**.
+2. Haz clic en el botón verde **Code** y luego en **Download ZIP**.
 
-Abrir la carpeta extraída y hacer doble clic en **`iniciar.cmd`**. Si Windows pide confirmación porque el archivo viene de internet, elegir **Ejecutar** (o **Más información → Ejecutar de todas formas**).
+Si usas Git, también puedes clonarlo: `git clone --branch evaluacion-3 https://github.com/YkzPam/prototipo-pluxee.git`
 
-En el primer inicio el proceso, sin intervención:
+### Paso 2. Extrae el ZIP
 
-1. Crea el entorno de Python (`.venv`) e instala las dependencias (`preparar.cmd`).
-2. Descarga MySQL 8.4.13, comprueba su huella SHA-256 y lo inicia solo en este equipo (puerto local 3307 o 13306, sin instalar un servicio de Windows ni aceptar conexiones de la red).
-3. Genera las claves cifradas, el certificado HTTPS, la base de datos y las cuentas de demostración en la carpeta `.runtime`, que nunca se sube a GitHub.
+Clic derecho sobre el archivo → **Extraer todo…**. Te recomendamos una carpeta con una ruta corta, como `C:\Pluxee`. Importante: no lo ejecutes desde dentro del ZIP sin extraerlo, porque no va a funcionar.
 
-Queda listo cuando la ventana muestra `Prototipo académico Pluxee Chile: https://127.0.0.1:8443/`. Desde ese momento muestra una línea por cada página atendida. **La ventana debe quedar abierta** mientras se usa el prototipo.
+### Paso 3. Inícialo
 
-### Paso 4. Confiar en el certificado local (una vez por equipo)
+Abre la carpeta y haz doble clic en **`iniciar.cmd`**. Como el archivo viene de internet, puede que Windows te pida confirmación: elige **Ejecutar** (o **Más información → Ejecutar de todas formas**).
 
-Sin este paso el navegador muestra «La conexión no es privada».
+La primera vez vas a ver bastante texto en la ventana. Es normal: el programa está haciendo esto por su cuenta, sin que tengas que tocar nada:
 
-1. Abrir la carpeta `.runtime\security\web_tls\` y hacer doble clic en `Pluxee_Prototipo_Local.crt`.
-2. **Instalar certificado… → Usuario actual → Siguiente**.
-3. **Colocar todos los certificados en el siguiente almacén → Examinar… → Entidades de certificación raíz de confianza → Aceptar → Siguiente → Finalizar**, y aceptar la advertencia de Windows.
-4. Cerrar el navegador por completo y volver a abrirlo.
+1. **Instala lo que necesita Python** en una carpeta `.venv` dentro del proyecto (no toca el resto de tu computador). De esto se encarga `preparar.cmd`, que `iniciar.cmd` ejecuta por ti.
+2. **Descarga MySQL 8.4.13**, revisa que el archivo sea el original (comprueba su huella SHA-256) y lo deja funcionando solo para este prototipo. No instala nada en Windows ni acepta conexiones desde otros equipos.
+3. **Crea las claves, el certificado de seguridad, la base de datos y las cuentas de prueba** en la carpeta `.runtime`. Esa carpeta es solo tuya: nunca se sube a GitHub.
 
-El certificado solo es válido para `127.0.0.1` y `localhost`. Para retirarlo: `certmgr.msc` → Entidades de certificación raíz de confianza → Certificados → «Prototipo Pluxee local» → Eliminar.
+Sabrás que está listo cuando aparezca esta línea:
 
-### Paso 5. Usar el prototipo
+```
+Prototipo académico Pluxee Chile: https://127.0.0.1:8443/
+```
 
-Abrir **https://127.0.0.1:8443** e ingresar con una de las cuentas de la tabla de abajo.
+Desde ese momento, la ventana va mostrando cada página que visitas, como un registro en vivo. **No la cierres mientras uses el prototipo.**
 
-### Paso 6 (opcional). Comprobar la instalación
+### Paso 4. Haz que el navegador confíe en el certificado (solo una vez)
 
-Doble clic en **`verificar.cmd`**: ejecuta las 149 pruebas automatizadas y exige más de 80 % de cobertura.
+El prototipo usa HTTPS, igual que un sitio real. Como el certificado lo creó tu propio computador, el navegador no lo conoce y va a mostrar «La conexión no es privada». Para que confíe en él:
 
-### Las veces siguientes
+1. Abre la carpeta `.runtime\security\web_tls\` y haz doble clic en `Pluxee_Prototipo_Local.crt`.
+2. Elige **Instalar certificado… → Usuario actual → Siguiente**.
+3. Marca **Colocar todos los certificados en el siguiente almacén → Examinar… → Entidades de certificación raíz de confianza → Aceptar → Siguiente → Finalizar**. Windows te mostrará una advertencia: acéptala.
+4. **Cierra el navegador por completo** y vuelve a abrirlo.
 
-Basta con `iniciar.cmd`; arranca en segundos y conserva los datos. Para detener el servidor: `Ctrl+C` en su ventana. Para detener también MySQL: `.venv\Scripts\python.exe scripts\mysql_local.py detener`.
+Tranquilo: este certificado solo sirve para `127.0.0.1` y `localhost`, es decir, para tu propio computador. Si después quieres quitarlo: abre `certmgr.msc` → Entidades de certificación raíz de confianza → Certificados → «Prototipo Pluxee local» → Eliminar.
 
-### Problemas frecuentes
+### Paso 5. ¡A usarlo!
 
-| Mensaje o situación | Qué hacer |
-|---|---|
-| «Se necesita Python 3.12 o superior» | Instalar Python desde python.org marcando «Add python.exe to PATH» y ejecutar de nuevo `iniciar.cmd`. |
-| «No se pudieron instalar las dependencias» | Revisar la conexión a internet y ejecutar de nuevo. |
-| «No fue posible descargar mysql-8.4.13-winx64.zip» | En un navegador, descargar ese archivo desde el archivo de versiones de MySQL (dev.mysql.com → MySQL Community Server → Archives → 8.4.13, Windows ZIP) y copiarlo en `.runtime\downloads`. El inicio comprueba su SHA-256 antes de usarlo. |
-| «Los puertos locales 3307 y 13306 están ocupados» | Cerrar el otro programa MySQL que usa esos puertos. |
-| Error al abrir el puerto 8443 | Ya hay otra ventana de `iniciar.cmd` abierta: cerrarla o reiniciar el equipo. |
-| «La conexión no es privada», o en la ventana: «AVISO El navegador rechazó el certificado local» | Completar el paso 4 y volver a abrir el navegador. |
+Abre **https://127.0.0.1:8443** y entra con cualquiera de estas cuentas:
 
-Para comprobar la conexión cifrada sin instalar el certificado: `curl.exe --cacert .runtime/security/web_tls/Pluxee_Prototipo_Local.crt https://127.0.0.1:8443/ingresar/`.
-
-| Usuario de prueba | Contraseña inicial | Función |
+| Usuario | Contraseña | Para qué sirve |
 |---|---|---|
-| `beneficiario` | `Prototipo2026!` | Cuenta de Camila para consultar saldo y movimientos, buscar comercios y realizar pagos académicos. |
-| `beneficiario2` | `Prototipo2026!` | Cuenta de Diego para comprobar la separación entre cuentas. |
-| `sinmovimientos` | `Prototipo2026!` | Cuenta sin operaciones que muestra un resultado vacío válido. |
-| `administrador` | `AdminPluxee2026!` | Bitácora y escenarios controlados de disponibilidad. |
+| `beneficiario` | `Prototipo2026!` | Es Camila: consulta su saldo y movimientos, busca comercios y paga. |
+| `beneficiario2` | `Prototipo2026!` | Es Diego: sirve para comprobar que nadie puede ver la cuenta de otra persona. |
+| `sinmovimientos` | `Prototipo2026!` | Una cuenta nueva, sin operaciones, para ver cómo se muestra un historial vacío. |
+| `administrador` | `AdminPluxee2026!` | Ve el panel de seguimiento, la bitácora, los usuarios, los comercios y los informes. |
 
-Las cuentas de demostración permiten ingresar directamente con su usuario y contraseña. Si se personalizó la contraseña, se utiliza la vigente. El PIN de pago ficticio es **`4826`**. La tabla contiene credenciales públicas del ejercicio. El cambio voluntario está disponible en **Mi perfil** para beneficiarios y en el menú de administración para el administrador.
+El **PIN para pagar es `4826`**. Estas claves son públicas a propósito: son parte del ejercicio. Si alguien cambió una contraseña desde **Mi perfil** (o desde el menú del administrador), usa la nueva.
 
-## 2. Funciones disponibles
+### Paso 6 (opcional). Comprueba que todo esté bien
 
-La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo y los movimientos provienen de MySQL. Los filtros se comprueban en el servidor y las operaciones del beneficiario se limitan a su propia cuenta.
+Haz doble clic en **`verificar.cmd`**. Corre las 149 pruebas automáticas y te avisa si la cobertura baja de 80 %.
 
-- **Acceso y sesión:** ingreso, bloqueo temporal por intentos fallidos y aviso antes del vencimiento. Si la sesión termina durante una consulta, al autenticarse nuevamente se vuelve a la vista de consulta, con sus filtros de movimientos cuando corresponda.
-- **Crear usuario:** en la pantalla de ingreso, el enlace abre el registro de un beneficiario con tarjeta, PIN y un abono inicial de demostración de $48.000, registrado en sus movimientos.
-- **Saldo y movimientos:** consulta actualizada, filtros, historial vacío, interrupción diferenciada y reintento. El inicio indica qué consultas están interrumpidas y permite reintentarlas. La tarjeta de saldo reúne el importe, su estado, la hora de confirmación y la acción disponible. Durante una interrupción muestra «Saldo sin actualizar» si la sesión tiene un valor previo o «Saldo no disponible» si aún no lo tiene.
-- **Comercios:** catálogo ficticio, búsqueda por nombre o código, categoría, comuna y favoritos por usuario.
-- **Pago académico:** Pago Online, Pago QR con selección o ingreso del código del comercio ficticio, Clave Dinámica de cuatro dígitos y tarjeta de prueba. La clave se genera con el PIN del ejercicio, tiene una vigencia de hasta 90 minutos y se consume con un único cargo confirmado en la sesión que la generó. El comprobante privado muestra el medio utilizado. Repetir una confirmación conserva un único cargo.
-- **Mi tarjeta y perfil:** bloqueo o activación de la tarjeta ficticia, edición del nombre de prueba y acceso al cambio de contraseña.
-- **Actividad de mi cuenta y reportes:** desde Mi perfil se pueden revisar los ingresos y cierres de sesión de la propia cuenta. Ayuda y el aviso de interrupción enlazan al formulario de reportes. La cuenta recibe un folio y puede consultar su estado y la respuesta del administrador.
-- **Seguimiento y Bitácora:** el panel de Seguimiento reúne los indicadores de las últimas 24 horas (ingresos rechazados, accesos sin permiso, sesiones vencidas), el estado de los servicios, las interrupciones recientes y los últimos eventos. La sección Bitácora concentra todos los eventos con filtros, el detalle de cada interrupción con sus consultas pendientes y la descarga de los registros filtrados como CSV con fecha y hora, tipo de evento, resultado y duración registrada.
-- **Bandeja y comprobaciones:** el administrador filtra los reportes por problema y estado, los pasa de Recibido a En revisión y luego a Resuelto. Cuando comprueba la recuperación de una interrupción ya restablecida, puede dejar una nota fechada en su ficha.
-- **Administrar usuarios:** en «Usuarios» se pueden crear beneficiarios, buscarlos por nombre de usuario, filtrarlos por estado y ordenarlos por usuario, fecha de alta o último ingreso. La tabla muestra estado, tarjeta, saldo y último ingreso. La ficha resume la cuenta y permite editar nombre y apellido, asignar una contraseña temporal que el usuario debe cambiar al ingresar, bloquear o activar la tarjeta y desactivar o reactivar el acceso. La desactivación conserva el historial e invalida las sesiones anteriores.
-- **Parámetros del sistema:** el administrador ajusta, dentro de rangos validados en el servidor, el abono inicial de registro, los intentos de ingreso antes del bloqueo, los minutos de inactividad de la sesión y el monto máximo por compra. Los cambios se aplican sin reiniciar el servidor y la bitácora registra el valor anterior y el nuevo.
-- **Gráficos y avisos:** el panel muestra los eventos por hora de las últimas 24 horas y el informe muestra abonos y compras por día o por semana. Los mensajes de éxito aparecen como avisos flotantes que se cierran solos; los errores permanecen en la página.
-- **Abonos y cargos:** el administrador puede registrar un abono ficticio y ver los últimos movimientos de cada cuenta. Los abonos y los cargos de pagos confirmados quedan en MySQL y aparecen en la terminal del servidor con su ID y tipo de movimiento.
-- **Resumen semanal y tarjeta:** Inicio muestra los gastos por bloques de días del mes con enlaces a las compras correspondientes. Mi perfil muestra la tarjeta y su estado, además del acceso a las sesiones vigentes.
-- **Notificaciones:** la campana abre los avisos de movimientos nuevos y respuestas de administración. Cada cuenta puede marcar sus propios avisos como leídos.
-- **Revisión del pago:** el formulario permite revisar el comercio, importe y saldo resultante antes de confirmar el cargo. La autorización vence y el servidor vuelve a comprobar el saldo al confirmar.
-- **Movimiento visual:** el pie permite pausar las animaciones. La página respeta la preferencia de movimiento reducido del sistema.
-- **Identidad visual:** texto en Manrope (licencia OFL, servida desde el propio sitio) y títulos en Raleway; cada área (beneficio, pagos, comercios, cuenta, ayuda, monitoreo, usuarios, informes y ajustes) tiene un color y una ilustración propios. La tarjeta de saldo imita una tarjeta física con brillo que sigue al puntero, Inicio saluda según la hora, cada compra muestra el ícono de su comercio y el historial suma las compras y abonos de cada día. El gasto semanal indica la proporción del mes, los gráficos muestran el valor de cada barra y los indicadores del panel incluyen su tendencia por hora y la variación respecto de las 24 horas anteriores. Folios y referencias se copian con un botón. Todo efecto se desactiva con «Pausar animaciones» o con el movimiento reducido del sistema.
-- **Apariencia:** el acceso superior abre los temas claro, oscuro y del sistema, contraste, intensidad de movimiento y avatar. Estas preferencias se guardan en el navegador; el avatar y la privacidad de importes se distinguen por cuenta.
-- **Navegación:** Buscar o Ctrl + K abre las acciones disponibles. El recorrido inicial es opcional y puede abrirse nuevamente desde Apariencia. Los movimientos se agrupan por día y abren un panel de detalle.
-- **Gestión administrativa:** Comercios permite altas, edición y cambios de estado conservando el historial. Las incidencias admiten prioridad, responsable e historial de actualizaciones. Informes permite consultar movimientos por fechas y descargar el CSV con los mismos filtros.
+### Las próximas veces
 
-## 3. Recorrido para la presentación
+Solo abre `iniciar.cmd`: arranca en segundos y tus datos siguen ahí. Para apagarlo, presiona `Ctrl+C` en su ventana. Si además quieres apagar MySQL: `.venv\Scripts\python.exe scripts\mysql_local.py detener`.
 
-1. Ingresar como `beneficiario`, consultar el saldo y revisar los movimientos.
-2. Buscar un comercio, marcarlo como favorito y abrir «Pagar aquí».
-3. Confirmar un monto de prueba con el PIN `4826`, revisar el comprobante y comprobar el nuevo movimiento.
-4. Bloquear la tarjeta de prueba y comprobar que un nuevo pago sea rechazado sin generar un cargo. Activarla nuevamente.
-5. Mantener la sesión del beneficiario en una ventana y abrir administración en un perfil de navegador independiente. Consultar el saldo como beneficiario, inducir una interrupción como administrador y reintentar como beneficiario en la misma sesión. Revisar el aviso «Saldo sin actualizar» y la fecha del último valor confirmado. Restablecer el servicio, repetir la consulta y revisar el intervalo registrado en el panel administrativo.
-6. Mostrar el rechazo del panel administrativo al usar un beneficiario. La prueba automatizada también verifica intentos de consultar otra cuenta y de reutilizar una sesión cerrada.
+### Si algo sale mal
 
-Para demostrar la espera entre reintentos, consultar el saldo durante la interrupción y observar la cuenta regresiva informada por el servidor. Después de restablecer el servicio y terminar la espera, el botón permite solicitar un saldo actualizado. Las pruebas automatizadas también comprueban que una solicitud directa anticipada recibe HTTP 429. El fallo original y su comprobación están registrados en `beneficios/tests/EVIDENCIA_PRUEBAS.md`.
-
-## 4. Organización técnica
-
-El modelo es incremental: acceso y sesión, consultas, seguimiento y funciones adicionales comparten usuarios, permisos y persistencia. Django controla autenticación, sesiones, formularios, ORM y CSRF. Las vistas coordinan el recorrido; `services.py` adapta los datos académicos; `responses.py` construye respuestas diferenciadas; `events.py` notifica el registro de eventos. `policies.py` conserva únicamente configuración inmutable por proceso, sin un usuario compartido.
-
-El saldo se calcula como abonos menos cargos. MySQL confirma el movimiento y el comprobante en una transacción que bloquea la cuenta durante el pago y utiliza una referencia única por usuario. Una falla de auditoría obligatoria revierte el cargo. La cuenta SQL de consulta solo puede leer las tablas de saldo, movimientos y disponibilidad que necesita ese recorrido. La cuenta de la aplicación escribe en las tablas y columnas que necesita para operar. El aprovisionamiento de esquemas utiliza una credencial distinta.
-
-El informe de la evaluación 2 dejó la estructura física sujeta al gestor académico que se eligiera (p. 64). El borrador posterior consideró SQLite. En la implementación se seleccionó MySQL para demostrar permisos diferenciados en el propio motor; SQLite se conserva para desarrollo y pruebas aisladas.
-
-### 4.1 Tres servicios al usuario: entrada, proceso y resultado
-
-La guía de la actividad pide al menos tres servicios que reflejen entradas, procesos y resultados.
-
-| Servicio | Entrada | Proceso en el servidor | Resultado |
-|---|---|---|---|
-| Consulta de saldo y movimientos | Sesión del beneficiario; filtros de fecha y tipo | Valida tipo, rango y largo de los filtros, comprueba que la cuenta sea la propia y que el servicio esté disponible, y calcula el saldo como abonos menos cargos con la cuenta SQL de solo lectura | Saldo con hora de confirmación, movimientos agrupados por día o aviso diferenciado de interrupción |
-| Pago (QR, clave dinámica, online o tarjeta) | Comercio, monto y PIN o clave dinámica | Comprueba tarjeta activa, saldo suficiente, monto máximo y vigencia de la clave; registra el cargo y el comprobante en una transacción con referencia única | Comprobante privado, nuevo movimiento, aviso en la terminal y en la bitácora |
-| Reportes y seguimiento | Categoría y descripción del problema; respuesta y estado del administrador | Rechaza caracteres peligrosos, asigna folio y estado (Recibido → En revisión → Resuelto) y registra cada cambio | Folio y estado visibles para la cuenta, respuesta del administrador y bandeja con filtros |
-
-### 4.2 Estructura del código y su equivalencia con la guía
-
-| Ejemplo de la guía | En este proyecto (Django) |
+| Si ves esto… | Haz esto |
 |---|---|
-| `/src/controllers` | `beneficios/views*.py`, una vista por dominio (usuarios, comercios, informes, parámetros, reportes) |
+| «Se necesita Python 3.12 o superior» | Instala Python desde python.org marcando «Add python.exe to PATH» y vuelve a abrir `iniciar.cmd`. |
+| «No se pudieron instalar las dependencias» | Revisa tu conexión a internet e inténtalo de nuevo. |
+| «No fue posible descargar mysql-8.4.13-winx64.zip» | Descárgalo desde tu navegador (dev.mysql.com → MySQL Community Server → Archives → versión 8.4.13, Windows ZIP) y cópialo en la carpeta `.runtime\downloads`. Al iniciar, el programa revisa que sea el archivo correcto antes de usarlo. |
+| «Los puertos locales 3307 y 13306 están ocupados» | Hay otro MySQL corriendo en tu computador. Ciérralo y vuelve a intentar. |
+| Un error al abrir el puerto 8443 | Seguramente ya tienes otra ventana de `iniciar.cmd` abierta. Ciérrala (o reinicia el computador). |
+| «La conexión no es privada», o en la ventana aparece «AVISO El navegador rechazó el certificado local» | Te falta el paso 4. Hazlo y vuelve a abrir el navegador. |
+
+¿Quieres comprobar la conexión cifrada sin instalar el certificado? Puedes usar: `curl.exe --cacert .runtime/security/web_tls/Pluxee_Prototipo_Local.crt https://127.0.0.1:8443/ingresar/`.
+
+---
+
+## 2. Qué puedes hacer en el prototipo
+
+Todo lo que ves sale de la base de datos MySQL, y el servidor revisa cada filtro y cada permiso. Un beneficiario solo puede ver y mover su propia cuenta.
+
+### Como beneficiario
+
+- **Entrar y mantener la sesión segura.** Si te equivocas varias veces con la contraseña, la cuenta se bloquea por un rato. Antes de que la sesión venza, te avisa. Y si la sesión se cerró justo mientras consultabas algo, al volver a entrar regresas a esa misma consulta, con tus filtros.
+- **Crear tu cuenta.** Desde la pantalla de ingreso puedes registrarte como beneficiario: recibes una tarjeta, un PIN y un abono de bienvenida de $48.000 que aparece en tus movimientos.
+- **Ver tu saldo y tus movimientos.** La tarjeta de saldo muestra el monto, si está actualizado y a qué hora se confirmó. Si el servicio se cae, no te muestra un error frío: te dice «Saldo sin actualizar» con el último valor conocido (o «Saldo no disponible» si todavía no hay uno) y te deja reintentar. Los movimientos se agrupan por día, con el total de cada día, y cada compra muestra el ícono de su comercio.
+- **Buscar comercios.** Por nombre, código, categoría o comuna, y puedes guardar tus favoritos.
+- **Pagar.** Hay cuatro formas: Pago Online, Pago QR, Clave Dinámica (un código de 4 dígitos que dura hasta 90 minutos y sirve para una sola compra) y tarjeta. Antes de confirmar puedes revisar el comercio, el monto y cómo quedaría tu saldo. Si por error confirmas dos veces, se cobra una sola vez.
+- **Tu tarjeta y tu perfil.** Bloquea o activa tu tarjeta, cambia tu nombre o tu contraseña y revisa tus inicios de sesión y las sesiones abiertas.
+- **Pedir ayuda.** Si algo falla, puedes reportarlo. Recibes un folio (que puedes copiar con un botón) para seguir el estado de tu reporte y leer la respuesta del administrador.
+- **Notificaciones.** La campana te avisa de movimientos nuevos y de respuestas a tus reportes.
+
+### Como administrador
+
+- **Panel de seguimiento.** Indicadores de las últimas 24 horas: inicios de sesión rechazados, accesos sin permiso, sesiones vencidas y más. Cada uno trae un pequeño gráfico de su tendencia y te dice si subió o bajó respecto del día anterior. También muestra el estado de los servicios y las interrupciones recientes.
+- **Bitácora.** Todo lo que pasa queda registrado. Puedes filtrarlo, ver el detalle de cada interrupción y descargarlo en CSV.
+- **Reportes.** Recibes los reportes de los usuarios, les asignas prioridad y responsable, y los pasas de Recibido a En revisión y luego a Resuelto.
+- **Usuarios.** Crear beneficiarios, buscarlos, ordenarlos y abrir su ficha: editar datos, asignar una contraseña temporal (que deben cambiar al entrar), bloquear la tarjeta, registrar un abono o desactivar el acceso. Desactivar no borra nada: el historial se conserva.
+- **Comercios e informes.** Crear y editar comercios, y consultar los movimientos entre dos fechas, con un gráfico y descarga en CSV.
+- **Parámetros.** Ajustar el abono de bienvenida, los intentos de ingreso antes del bloqueo, los minutos de inactividad y el monto máximo por compra, sin reiniciar el servidor. La bitácora guarda el valor anterior y el nuevo.
+
+### Detalles de la experiencia
+
+- **Apariencia.** Tema claro, oscuro o el del sistema, contraste, cantidad de movimiento y avatar. Se guarda en tu navegador.
+- **Cada sección tiene su identidad.** Un color y una ilustración propios: beneficio, pagos, comercios, cuenta, ayuda, monitoreo, usuarios, informes y ajustes. El texto usa la fuente Manrope y los títulos, Raleway.
+- **Pequeños gestos.** Inicio te saluda según la hora del día, la tarjeta de saldo brilla y se inclina levemente al pasar el mouse y los gráficos muestran el valor exacto de cada barra.
+- **Atajos.** `Ctrl + K` abre un buscador de opciones, y hay un recorrido guiado opcional que puedes volver a abrir desde Apariencia.
+- **Sin mareos.** Si prefieres menos movimiento, el botón «Pausar animaciones» del pie de página (o la opción de movimiento reducido de tu sistema) apaga todos los efectos.
+- **Avisos que se entienden.** Los mensajes de éxito aparecen flotando y se van solos; los errores se quedan en la página hasta que los resuelvas.
+
+---
+
+## 3. Recorrido sugerido para la presentación
+
+1. Entra como `beneficiario`, mira el saldo y revisa los movimientos.
+2. Busca un comercio, márcalo como favorito y toca «Pagar aquí».
+3. Paga un monto pequeño con el PIN `4826`, revisa el comprobante y fíjate en que aparezca el nuevo movimiento.
+4. Bloquea la tarjeta y comprueba que un nuevo pago se rechaza sin cobrar nada. Después vuelve a activarla.
+5. Abre otra ventana del navegador, con otro perfil, y entra como administrador. Con el beneficiario consulta el saldo; con el administrador provoca una interrupción del servicio; vuelve al beneficiario y reintenta. Verás el aviso «Saldo sin actualizar» con la hora del último valor confirmado. Restablece el servicio, consulta de nuevo y revisa en el panel cuánto duró la interrupción.
+6. Intenta abrir el panel de administración con la cuenta del beneficiario: el sistema lo rechaza.
+
+Mientras el servicio está interrumpido, el botón de reintento muestra una cuenta regresiva. Si alguien intenta saltársela con una solicitud directa, el servidor responde con HTTP 429 («demasiadas solicitudes»). Ese fue un error real que encontramos y corregimos (caso CF01), y está documentado en `beneficios/tests/EVIDENCIA_PRUEBAS.md`.
+
+---
+
+## 4. Cómo está construido
+
+Elegimos un **desarrollo incremental**: primero el ingreso y la sesión, después las consultas, luego el seguimiento y, al final, los pagos, los comercios, los reportes y la gestión de usuarios. Cada etapa se construyó sobre la anterior y todas comparten los mismos usuarios, permisos y base de datos.
+
+Usamos **Django**, que ya trae resueltas cosas delicadas: autenticación, sesiones, formularios, consultas seguras a la base de datos y protección CSRF. En el código, las vistas coordinan cada recorrido; `services.py` obtiene los datos; `responses.py` arma las respuestas según el caso; `events.py` avisa a la bitácora de lo que ocurre, y `policies.py` guarda reglas fijas, como los tiempos de sesión.
+
+El saldo es simplemente abonos menos cargos. Cuando pagas, MySQL guarda el movimiento y el comprobante en una sola transacción y bloquea la cuenta mientras tanto, para que dos pagos simultáneos no se pisen. Si la bitácora no logra registrar el pago, el cobro se deshace. Además, cada parte del sistema entra a la base de datos con su propio usuario y solo con los permisos que necesita: la consulta de saldo solo puede leer, la aplicación escribe únicamente en lo suyo y la creación de tablas usa una credencial aparte.
+
+¿Por qué MySQL? En la Evaluación 2 dejamos abierta la elección del motor (p. 64) y en un borrador pensamos en SQLite. Al implementarlo elegimos MySQL porque permite mostrar permisos distintos por usuario dentro del propio motor. SQLite lo seguimos usando para desarrollar y para las pruebas automáticas, porque es rápido y desechable.
+
+### 4.1 Los tres servicios: qué entra, qué hace el servidor y qué sale
+
+La guía pide al menos tres servicios que muestren claramente su entrada, su proceso y su resultado:
+
+| Servicio | Qué entra | Qué hace el servidor | Qué obtienes |
+|---|---|---|---|
+| Consulta de saldo y movimientos | Tu sesión y los filtros de fecha y tipo | Revisa el tipo, el rango y el largo de los filtros; comprueba que la cuenta sea tuya y que el servicio esté disponible, y calcula el saldo (abonos menos cargos) con un usuario de solo lectura | El saldo con su hora de confirmación, los movimientos por día o un aviso claro si el servicio está interrumpido |
+| Pago (QR, clave dinámica, online o tarjeta) | Comercio, monto y PIN o clave dinámica | Comprueba que la tarjeta esté activa, que te alcance el saldo, que no superes el monto máximo y que la clave siga vigente; guarda el cargo y el comprobante en una sola transacción | El comprobante, el nuevo movimiento y su registro en la terminal y en la bitácora |
+| Reportes y seguimiento | Tipo y descripción del problema; luego, la respuesta y el estado que pone el administrador | Rechaza caracteres peligrosos, asigna un folio y un estado (Recibido → En revisión → Resuelto) y registra cada cambio | El folio y el estado de tu reporte, la respuesta del administrador y una bandeja con filtros para él |
+
+### 4.2 Cómo se ordena el código
+
+La guía propone una estructura de carpetas de ejemplo. Django organiza las cosas con otros nombres, pero la idea es la misma:
+
+| En la guía | En este proyecto |
+|---|---|
+| `/src/controllers` | `beneficios/views*.py`: una vista por tema (usuarios, comercios, informes, parámetros, reportes) |
 | `/src/models` | `beneficios/models.py`, `identidad/models.py` y las migraciones |
-| `/src/services` | `beneficios/services.py` (consultas), `events.py` (auditoría), `responses.py` (respuestas) |
+| `/src/services` | `beneficios/services.py` (consultas), `events.py` (bitácora), `responses.py` (respuestas) |
 | `/src/utils` | `validators.py`, `charts.py`, `csv_export.py`, `receipt_pdf.py`, `parameters.py` |
-| `/tests` | `beneficios/tests/` (149 pruebas y evidencia de correcciones) |
+| `/tests` | `beneficios/tests/`: 149 pruebas y la evidencia de cada corrección |
 | `/docs` | `docs/` (revisión de código y guía de presentación) y este README |
-| `/config` | `config/` (entornos de desarrollo, pruebas y producción, cifrado y TLS) |
+| `/config` | `config/`: entornos de desarrollo, pruebas y producción, cifrado y HTTPS |
 
 ### 4.3 Principios SOLID y código limpio
 
-- **Responsabilidad única:** cada dominio tiene sus propias vistas y formularios (`views_users.py`, `forms_users.py`, etc.); la validación de caracteres peligrosos vive en un único validador reutilizado por todos los formularios.
-- **Abierto/cerrado (Factory Method):** `responses.py` define `ResponseCreator` y sus variantes actualizada, pendiente y rechazada; una respuesta nueva se agrega como subclase sin modificar las vistas.
-- **Sustitución e inversión de dependencias (Adapter):** las consultas dependen de la interfaz `IBenefitServiceAdapter`; `MockDataServiceAdapter` la implementa con la base académica y podría reemplazarse por una fuente real sin cambiar las vistas.
-- **Segregación de interfaces:** la interfaz de consulta expone solo `balance` y `movements`.
-- **Observer:** `events.py` notifica los eventos de dominio a la bitácora sin acoplar las vistas al almacenamiento de auditoría.
-- **Código limpio:** nombres descriptivos, credenciales fuera del código, sin listas de negocio escritas en el código (categorías y ayuda en tablas) y una prueba automatizada por cada corrección.
+- **Cada pieza hace una sola cosa.** Cada tema tiene sus propias vistas y formularios (`views_users.py`, `forms_users.py`, etc.), y la revisión de caracteres peligrosos vive en un único validador que usan todos los formularios.
+- **Se puede ampliar sin romper lo que existe (patrón Factory Method).** `responses.py` define `ResponseCreator` con sus variantes «actualizada», «pendiente» y «rechazada». Si mañana necesitamos otro tipo de respuesta, se agrega una clase nueva sin tocar las vistas.
+- **Las vistas no dependen de dónde vienen los datos (patrón Adapter).** Las consultas usan la interfaz `IBenefitServiceAdapter`. Hoy la implementa `MockDataServiceAdapter` con nuestra base académica, pero podría cambiarse por una fuente real sin modificar las vistas.
+- **Interfaces pequeñas.** La interfaz de consulta solo pide dos cosas: `balance` y `movements`.
+- **Avisar sin acoplar (patrón Observer).** `events.py` le avisa a la bitácora de cada evento, sin que las vistas sepan cómo se guarda.
+- **Código limpio.** Nombres que se entienden, ninguna contraseña escrita en el código, ninguna lista de negocio fija en el código (las categorías y las preguntas de ayuda están en tablas) y una prueba automática por cada error corregido.
 
-### 4.4 Decisiones técnicas y compromisos (trade-offs)
+### 4.4 Decisiones que tomamos (y lo que nos costaron)
 
-| Decisión | Ventaja | Costo aceptado |
+Toda decisión técnica tiene un costo. Estas son las principales:
+
+| Decisión | Lo que ganamos | Lo que aceptamos a cambio |
 |---|---|---|
-| Django en lugar de un framework mínimo | Autenticación, sesiones, CSRF, ORM parametrizado y escape de salidas ya probados | Mayor tamaño del proyecto |
-| MySQL para la presentación y SQLite para desarrollo y pruebas | Permisos por cuenta en el motor y pruebas rápidas aisladas | Diferencias entre motores; se detectó una (CF05) y se corrigió |
-| Montos y datos personales cifrados (AES-256-GCM) | Datos ilegibles si se copia la base | Los totales no se suman en SQL; se calculan en el servidor |
-| Gráficos SVG generados en el servidor | Compatibles con la política de seguridad de contenido (sin scripts ni estilos en línea) | Menos interacción que una biblioteca de gráficos |
-| Bloqueo temporal tras intentos fallidos (umbral configurable) | Frena la adivinación de contraseñas sin dejar cuentas inutilizables | Requiere esperar 15 minutos en vez de una reactivación manual |
-| Desactivar en lugar de borrar cuentas y comercios | Conserva la bitácora y el historial (Ley N.º 21.459) | Los registros inactivos permanecen en la base |
-| Despliegue local con HTTPS | Demostrable sin servicios pagados ni datos reales en internet | No hay una URL pública del prototipo |
+| Django en vez de un framework mínimo | Autenticación, sesiones, CSRF, consultas seguras y salidas protegidas ya probadas | Un proyecto más grande |
+| MySQL para la presentación, SQLite para desarrollar y probar | Permisos por usuario en el motor y pruebas rápidas | Los motores no son idénticos; encontramos una diferencia (CF05) y la corregimos |
+| Montos y datos personales cifrados (AES-256-GCM) | Si alguien copia la base, no puede leerla | Los totales no se pueden sumar en SQL; se calculan en el servidor |
+| Gráficos dibujados en el servidor | Cumplen la política de seguridad del sitio, que no permite scripts ni estilos incrustados | Son menos interactivos que los de una librería de gráficos |
+| Bloqueo temporal tras varios intentos fallidos (configurable) | Frena a quien intenta adivinar contraseñas sin dejar cuentas inutilizables | Hay que esperar 15 minutos en vez de pedir que un administrador desbloquee |
+| Desactivar en vez de borrar cuentas y comercios | Se conserva el historial y la bitácora (Ley N.º 21.459) | Los registros inactivos siguen en la base |
+| Funcionar en tu computador con HTTPS | Se puede mostrar sin pagar servidores ni exponer datos en internet | No tiene una dirección pública |
 
-Las entradas se validan con listas cerradas cuando es posible (*whitelisting*): estados, categorías, tipos de movimiento, medios de pago y comercios se aceptan solo si pertenecen a las opciones definidas (`ChoiceField` y `ModelChoiceField`), y el nombre de usuario admite solo letras sin tilde, números y `. _ @ -`.
+Además, siempre que se puede, el sistema solo acepta valores de una **lista cerrada** (*whitelisting*): estados, categorías, tipos de movimiento, medios de pago y comercios tienen que ser una de las opciones definidas (`ChoiceField` y `ModelChoiceField`). El nombre de usuario solo admite letras sin tilde, números y `. _ @ -`.
 
-## 5. Verificación y entornos
+---
 
-`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; instala las dependencias sin el cliente de MySQL (las pruebas usan SQLite), comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio público `YkzPam/prototipo-pluxee`. La primera ejecución terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
+## 5. Pruebas, entornos y entrega continua
 
-La rama `evaluacion-3` contiene la entrega de la Evaluación 3 (prototipo). Las etapas siguientes, como el informe de la Evaluación 4, se publicarán en ramas propias sin sustituir esta. La entrega se identifica con la rama y el hash del commit publicado en GitHub.
+`verificar.cmd` revisa el proyecto y corre las pruebas con su cobertura. `.venv\Scripts\python.exe scripts\entregar.py` hace eso mismo y además revisa las migraciones, prepara los archivos del sitio y arma el ZIP; si un paso falla, se detiene ahí. En `beneficios/tests/` están las pruebas, sus resultados y la evidencia de cada corrección.
 
-En Windows, `.venv\Scripts\python.exe scripts\entregar.py --desplegar` ejecuta el proceso completo. El ZIP verificado se extrae en una carpeta que se identifica por su huella. La versión candidata inicia en otro puerto local y se comprueba con HTTPS y MySQL antes de pasar al puerto 8443. Las versiones comparten los datos locales y las claves del equipo. El resultado queda en `dist/verificacion_local.txt` y `dist/despliegue_local.json`.
+Cada vez que subimos cambios a GitHub, **GitHub Actions** repite esta verificación automáticamente (`.github/workflows/verificacion.yml`). Ahí no se instala el cliente de MySQL porque las pruebas usan SQLite. El historial completo está en la pestaña **Actions** del repositorio público `YkzPam/prototipo-pluxee`, y la primera ejecución exitosa fue el 11 de noviembre de 2026.
 
-### 5.1 Pipeline de integración y despliegue continuo (CI/CD)
+La rama **`evaluacion-3`** es la entrega del prototipo. El informe de la Evaluación 4 irá en su propia rama, sin reemplazar esta. Para identificar exactamente lo entregado basta con la rama y el código (hash) del último commit.
 
-El proyecto tiene un pipeline local que se ejecuta con una sola orden y se detiene en el primer paso que falla. Cada etapa corresponde a una práctica de integración o despliegue continuo:
+También hay un despliegue local completo: `.venv\Scripts\python.exe scripts\entregar.py --desplegar`. Arma el ZIP verificado, prueba la versión nueva en otro puerto con HTTPS y MySQL y, solo si todo funciona, la pasa al puerto 8443. Los resultados quedan en `dist/verificacion_local.txt` y `dist/despliegue_local.json`.
 
-| Etapa | Orden | Qué garantiza |
+### 5.1 El pipeline paso a paso (CI/CD)
+
+Se ejecuta con una sola orden y se detiene en el primer paso que falla:
+
+| Etapa | Qué se ejecuta | Para qué sirve |
 |---|---|---|
-| 1. Verificación estática | `manage.py check` | Configuración y modelos sin errores |
-| 2. Pruebas con cobertura | `coverage run manage.py test` | Toda la suite pasa en una base descartable |
-| 3. Umbral de calidad | `coverage report --fail-under=80` | La cobertura no baja de 80 % |
-| 4. Migraciones | `makemigrations --check --dry-run` | Los modelos y las migraciones coinciden |
-| 5. Recursos | `collectstatic --noinput` | Los recursos estáticos se pueden publicar |
-| 6. Paquete | ZIP con comprobación de integridad | Solo código y documentación; sin bases, claves ni certificados |
-| 7. Despliegue candidato (`--desplegar`) | Versión extraída en `.runtime/releases/<huella>` en un puerto libre | La versión nueva se prueba sin detener la que está en uso |
-| 8. Verificación del candidato | `scripts/verificar_https.py` sobre MySQL | TLS, cookies, CSRF, sesiones, permisos y un pago real sin duplicados |
-| 9. Activación con vuelta atrás | Reemplazo en el puerto 8443 | Si la nueva versión no responde, se reactiva la anterior |
+| 1. Revisión general | `manage.py check` | Que la configuración y los modelos no tengan errores |
+| 2. Pruebas | `coverage run manage.py test` | Que todas las pruebas pasen, en una base desechable |
+| 3. Calidad mínima | `coverage report --fail-under=80` | Que la cobertura no baje de 80 % |
+| 4. Migraciones | `makemigrations --check --dry-run` | Que los modelos y la base estén sincronizados |
+| 5. Archivos del sitio | `collectstatic --noinput` | Que estilos, scripts e imágenes se puedan publicar |
+| 6. Paquete | ZIP con comprobación de integridad | Que solo lleve código y documentación: nada de bases, claves ni certificados |
+| 7. Versión candidata (`--desplegar`) | Se extrae en `.runtime/releases/<huella>` y se inicia en un puerto libre | Probar la versión nueva sin apagar la que está funcionando |
+| 8. Revisión de la candidata | `scripts/verificar_https.py` sobre MySQL | HTTPS, cookies, CSRF, sesiones, permisos y un pago real sin duplicados |
+| 9. Activación con respaldo | Reemplazo en el puerto 8443 | Si la nueva versión no responde, vuelve la anterior |
 
-La misma secuencia de las etapas 1 a 6 se ejecuta en GitHub Actions (`.github/workflows/verificacion.yml`) con cada envío al repositorio; el historial está en la pestaña Actions de `YkzPam/prototipo-pluxee`. La revisión de código de la última iteración está en `docs/REVISION_CODIGO.md` y la secuencia de la exposición en `docs/GUIA_PRESENTACION.md`.
+Las etapas 1 a 6 son las mismas que corre GitHub Actions. La revisión de código está en `docs/REVISION_CODIGO.md` y el guion de la presentación, en `docs/GUIA_PRESENTACION.md`.
 
-| Perfil | Configuración y alcance |
-|---|---|
-| Desarrollo local | `config.settings.development`; SQLite separado, servidor ligado a `127.0.0.1` y HTTP local. |
-| Pruebas | `config.settings.testing`; SQLite descartable en memoria, mismas reglas de negocio. |
-| Demostración HTTPS | `config.settings.production`; MySQL local, conexión de consulta de solo lectura, certificado TLS y cookies Secure. |
+### 5.2 Los tres entornos
 
-El perfil de demostración usa HTTPS, HSTS y cookies Secure. Las cuentas de MySQL verifican el certificado del motor y solo aceptan conexiones cifradas. La comprobación automatizada del sitio usa el certificado local de forma explícita, sin desactivar su validación. La prueba de comprensión con cinco participantes y la exposición se realizan por separado.
-
-La salida de `scripts/entregar.py` registra el número de pruebas y la cobertura de la versión empaquetada. El intento anterior de carga en SQLite quedó interrumpido: sus eventos persistidos y las condiciones de la interrupción están en `beneficios/tests/perfil_carga_parcial.json`. Ese resultado no se atribuye a la versión MySQL ni sirve para afirmar que se completaron diez minutos de prueba.
-
-Los campos sensibles se cifran con AES-256-GCM. Las contraseñas y el PIN se someten a hash antes de cifrar ese resultado. Las claves quedan fuera del repositorio, protegidas mediante DPAPI para el usuario de Windows. La separación de permisos SQL no equivale a aislar procesos ejecutados por ese mismo usuario. Las sesiones anteriores a la migración se descartan. Los formularios conservan CSRF y la bitácora excluye contraseñas, PIN e identificadores de sesión reutilizables.
-
-## 6. Evidencia de seguridad para la Evaluación 3
-
-### 6.1 Controles revisados y resultados
-
-La revisión técnica del 9 de noviembre de 2026 examinó los permisos por perfil y por cuenta, los formularios de ingreso y consulta, la expiración de sesiones y la configuración de HTTPS y MySQL. La tabla relaciona los riesgos de OWASP Top 10:2021 solicitados por la guía con pruebas del prototipo (OWASP Foundation, 2021). El control de acceso y el cifrado se vinculan con las áreas descritas por ISO/IEC 27002:2022 (International Organization for Standardization, 2022). El alcance de esa relación corresponde a los controles enumerados y a los recorridos comprobados en el entorno local.
-
-| Riesgo o área de control | Implementación revisada | Resultado comprobado |
+| Entorno | Configuración | Para qué |
 |---|---|---|
-| OWASP A01 y control de acceso | `beneficios/security.py` exige autenticación y comprueba el perfil administrativo. `beneficios/views.py` consulta por identificador de cuenta y usuario autenticado. `beneficios/views_support.py` limita el historial del beneficiario a sus reportes. | En HTTPS, el beneficiario recibió HTTP 403 al solicitar Seguimiento y la cookie invalidada recibió HTTP 401 en la API. Las pruebas de `test_workflows.py` cubren cambios de identificador y acceso administrativo. |
-| Autenticación y sesión | Django almacena el hash de la contraseña. `beneficios/security.py` limita los intentos fallidos y `beneficios/middleware.py` aplica el vencimiento de la sesión y la política de cambio de contraseña temporal. | `test_lockout_rejects_even_correct_password_until_timeout` comprueba el bloqueo temporal. En HTTPS se creó una cuenta sintética con contraseña temporal. El cambio habilitó el acceso y la sesión anterior recibió HTTP 401. `test_user_management.py` comprueba que la contraseña restablecida por el administrador obliga al cambio (hallazgo CF02). |
-| OWASP A02 y criptografía | `config/settings/production.py` configura HTTPS, HSTS y cookies seguras. `config/settings/database_secure.py` verifica la identidad TLS del servidor MySQL. `config/encrypted_fields.py` cifra campos seleccionados con AES-GCM y `config/vault.py` protege las claves mediante DPAPI. | La web y las dos conexiones de aplicación a MySQL usaron TLS 1.3. La verificación HTTPS confirmó Secure, HttpOnly y SameSite=Lax en la cookie de sesión. El motor rechazó el intento de ingreso sin TLS con el error 1045. |
-| OWASP A03 e inyección | Los formularios validan tipo, rango y largo de las entradas. `beneficios/validators.py` rechaza en todos los campos de texto libre los caracteres que lista la pauta (`< > " ' % ( ) & + \` y el carácter nulo). `beneficios/services.py` aplica los filtros de movimientos mediante el ORM de Django. Las categorías de comercio y las preguntas de Ayuda se leen de tablas, no del código. La cuenta SQL de consulta opera con permisos restringidos. | `test_input_validation_rejects_missing_oversized_and_injection_inputs` comprueba el rechazo de entradas de inyección. `test_owasp_inputs.py` comprueba cada carácter de la pauta en cada formulario. `test_invalid_filters_are_rejected_without_query_result` comprueba HTTP 400. En MySQL, la cuenta de consulta recibió error 1142 al intentar escribir o leer tablas restringidas. |
-| Protección de operaciones y registro | El formulario de inicio aplica CSRF. El pago registra el cargo y su comprobante dentro de una transacción. La bitácora registra el resultado de la operación y excluye las credenciales. | En HTTPS, un POST sin token recibió HTTP 403 y la repetición del mismo pago conservó un solo cargo. La prueba `test_database_audit_failure_rolls_back_payment_and_receipt_together` comprueba la reversión cuando falla el registro de auditoría. |
+| Desarrollo | `config.settings.development` | Programar con SQLite y HTTP, solo en `127.0.0.1` |
+| Pruebas | `config.settings.testing` | Correr las pruebas con una base en memoria que se borra al terminar |
+| Demostración (producción) | `config.settings.production` | Presentar con MySQL, HTTPS, HSTS y cookies seguras |
 
-La revisión comprobó el caso CF01. La primera ejecución histórica devolvió HTTP 503 también para el reintento inmediato. La corrección en `beneficios/views.py` guarda la sesión antes de devolver el 503 inicial, de modo que la siguiente solicitud, durante la espera, reciba HTTP 429. La prueba reproduce la interrupción y comprueba que el saldo se recupera al restablecer el servicio y reintentar después de la espera. [Registro de pruebas](beneficios/tests/EVIDENCIA_PRUEBAS.md).
+En la demostración, las conexiones a MySQL también van cifradas y verifican el certificado del motor. La revisión automática del sitio usa el certificado local sin desactivar su validación.
 
-La revisión detectó que el contador de ingresos fallidos podía perder incrementos simultáneos. En una instancia MySQL 8.4.13 desechable, con aislamiento READ COMMITTED y una fila previamente creada, el ensayo controlado del código anterior registró 2 de 5 intentos. La corrección en `beneficios/security.py` bloquea la fila al actualizarla y permite repetir la transacción completa hasta dos veces si MySQL la revierte por un interbloqueo. Con el cambio, se registraron los cinco intentos tanto con la fila existente como al crearla simultáneamente. Un ensayo adicional registró 12 de 12 intentos de cuentas distintas con una IP compartida. Estos ensayos usaron contadores sintéticos y se ejecutaron por separado de la suite automatizada.
+Los datos sensibles se cifran con AES-256-GCM. Las contraseñas y el PIN primero se convierten en un hash y luego se cifra ese resultado. Las claves no están en el repositorio: quedan protegidas con DPAPI, el sistema de Windows que las ata a tu usuario. Un detalle honesto: separar los permisos en MySQL no aísla procesos que corren con ese mismo usuario de Windows. Los formularios usan CSRF y la bitácora nunca guarda contraseñas, PIN ni identificadores de sesión.
 
-El prototipo utiliza cuentas, movimientos y comercios ficticios en un equipo local. La Ley N.º 19.628 (1999, arts. 7 y 11) sirve como referencia para la reserva y el cuidado de los datos en el diseño, y la Ley N.º 21.459 (2022, arts. 2 y 4) orienta la discusión sobre acceso ilícito e integridad de los datos. Las pruebas de acceso denegado, el uso de perfiles separados y la bitácora aportan evidencia técnica dentro de ese alcance académico.
+Sobre las pruebas de carga: un intento anterior con SQLite quedó interrumpido. Sus datos están en `beneficios/tests/perfil_carga_parcial.json`, pero no los usamos para afirmar nada sobre la versión con MySQL ni para decir que se completaron diez minutos de prueba.
 
-Para repetir las comprobaciones desde la carpeta del proyecto con el prototipo iniciado:
+---
+
+## 6. Seguridad: qué revisamos y qué comprobamos
+
+### 6.1 Controles y resultados
+
+El 9 de noviembre de 2026 revisamos los permisos por perfil y por cuenta, los formularios de ingreso y consulta, el vencimiento de las sesiones y la configuración de HTTPS y MySQL. La tabla conecta los riesgos del OWASP Top 10:2021 que pide la guía con lo que hace el prototipo (OWASP Foundation, 2021). El control de acceso y el cifrado se relacionan con los controles de ISO/IEC 27002:2022 (International Organization for Standardization, 2022), dentro del alcance de lo que probamos en el entorno local.
+
+| Riesgo o control | Cómo lo resolvimos | Cómo lo comprobamos |
+|---|---|---|
+| OWASP A01: control de acceso | `beneficios/security.py` exige iniciar sesión y revisa si eres administrador. `beneficios/views.py` busca la cuenta usando tu identidad. `beneficios/views_support.py` solo te muestra tus propios reportes. | Por HTTPS, el beneficiario recibió HTTP 403 al intentar entrar al panel de administración, y una sesión cerrada recibió HTTP 401 en la API. `test_workflows.py` prueba los intentos de ver otra cuenta y de entrar a la administración. |
+| Autenticación y sesión | Django guarda solo el hash de la contraseña. `beneficios/security.py` limita los intentos fallidos y `beneficios/middleware.py` controla el vencimiento de la sesión y el cambio obligatorio de contraseñas temporales. | `test_lockout_rejects_even_correct_password_until_timeout` prueba el bloqueo. Por HTTPS creamos una cuenta con contraseña temporal: después de cambiarla se pudo entrar y la sesión anterior quedó invalidada (HTTP 401). `test_user_management.py` prueba que la clave restablecida por el administrador obliga a cambiarla (caso CF02). |
+| OWASP A02: cifrado | `config/settings/production.py` activa HTTPS, HSTS y cookies seguras. `config/settings/database_secure.py` verifica la identidad de MySQL. `config/encrypted_fields.py` cifra los campos sensibles con AES-GCM y `config/vault.py` protege las claves con DPAPI. | La web y las dos conexiones a MySQL usaron TLS 1.3. La cookie de sesión salió con Secure, HttpOnly y SameSite=Lax. MySQL rechazó un intento de conexión sin cifrar (error 1045). |
+| OWASP A03: inyección | Los formularios revisan el tipo, el rango y el largo de lo que escribes. `beneficios/validators.py` rechaza en todos los campos de texto los caracteres que indica la pauta (`< > " ' % ( ) & + \` y el carácter nulo). Las consultas usan el ORM de Django. Las categorías y las preguntas de ayuda vienen de tablas. La cuenta de consulta tiene permisos mínimos. | `test_input_validation_rejects_missing_oversized_and_injection_inputs` prueba entradas maliciosas. `test_owasp_inputs.py` prueba cada carácter en cada formulario. `test_invalid_filters_are_rejected_without_query_result` comprueba el HTTP 400. En MySQL, la cuenta de consulta recibió el error 1142 al intentar escribir o leer donde no le corresponde. |
+| Operaciones protegidas y registro | El ingreso usa CSRF. El pago guarda el cargo y el comprobante en una sola transacción. La bitácora registra el resultado sin guardar credenciales. | Por HTTPS, un envío sin token recibió HTTP 403 y repetir el mismo pago generó un solo cargo. `test_database_audit_failure_rolls_back_payment_and_receipt_together` prueba que el cobro se deshace si falla la bitácora. |
+
+**Dos errores reales que encontramos y corregimos:**
+
+- **CF01.** Al principio, cuando el servicio estaba interrumpido, reintentar de inmediato devolvía HTTP 503 en vez de pedir que esperaras. Lo corregimos en `beneficios/views.py`: ahora la sesión se guarda antes del primer 503, así que el siguiente intento durante la espera recibe HTTP 429. La prueba reproduce la interrupción y comprueba que el saldo se recupera al restablecer el servicio. Detalles en el [registro de pruebas](beneficios/tests/EVIDENCIA_PRUEBAS.md).
+- **Intentos simultáneos.** El contador de ingresos fallidos podía «perder» intentos si llegaban al mismo tiempo. En una prueba controlada con MySQL, el código antiguo registró solo 2 de 5 intentos. Ahora `beneficios/security.py` bloquea el registro mientras lo actualiza y reintenta si MySQL detecta un conflicto: se registraron los 5 intentos, y en otra prueba, 12 de 12 desde cuentas distintas. Estas pruebas se hicieron aparte de la suite automática.
+
+**Leyes que consideramos.** Todo el prototipo usa datos inventados y funciona en un computador local. La Ley N.º 19.628 (1999, arts. 7 y 11) nos sirvió de guía para cuidar la reserva de los datos, y la Ley N.º 21.459 (2022, arts. 2 y 4), para pensar en el acceso indebido y la integridad de la información. Las pruebas de acceso denegado, los perfiles separados y la bitácora son la evidencia técnica, dentro de un alcance académico.
+
+Para repetir estas comprobaciones con el prototipo encendido, desde la carpeta del proyecto:
 
 ```powershell
 .\.venv\Scripts\python.exe -X utf8 scripts\verificar_https.py
 .\.venv\Scripts\python.exe -X utf8 scripts\mysql_local.py verificar
 ```
 
-### 6.2 Secuencia de exposición y comprobación del equipo
+### 6.2 Cómo lo mostramos en la presentación
 
-La exposición comienza con la decisión de construir un prototipo incremental. El acceso, las consultas y el seguimiento se incorporaron por etapas y operan sobre una base compartida. La demostración abre con el ingreso del beneficiario y continúa con tres servicios completos. Para mostrar la interfaz y la experiencia de uso, el recorrido incluye el mensaje de interrupción, el último saldo confirmado con su hora y la recuperación de la consulta. En una vista móvil del navegador se puede comprobar que la navegación, los avisos y los botones siguen visibles y utilizables.
+Empezamos explicando por qué elegimos un prototipo incremental: el acceso, las consultas y el seguimiento se sumaron por etapas sobre la misma base. Después entramos como beneficiario y mostramos los tres servicios completos. Para la parte de interfaz y experiencia, mostramos qué pasa cuando el servicio se cae: el aviso, el último saldo confirmado con su hora y cómo se recupera. Y en la vista móvil del navegador se puede ver que el menú, los avisos y los botones siguen funcionando.
 
-| Servicio | Entrada y proceso | Resultado que se muestra |
+| Servicio | Qué hacemos | Qué se ve |
 |---|---|---|
-| Consulta de saldo | Consultar el saldo, interrumpir el servicio desde un perfil de navegador separado con la cuenta administradora y reintentar. Restablecer el servicio al concluir la espera. | Saldo confirmado, aviso «Saldo sin actualizar» y recuperación del dato. El intervalo de la interrupción aparece en Seguimiento. |
-| Consulta de movimientos | Seleccionar un tipo de movimiento o rango de fechas. El servidor valida los filtros y consulta los registros de la cuenta autenticada. | Lista filtrada. Con un intervalo válido sin registros, la pantalla muestra un estado vacío. |
-| Pago académico | Elegir Pago QR, ingresar un código del catálogo de prueba y confirmar un monto con el PIN ficticio. El servidor comprueba el comercio y el saldo antes de registrar el cargo. | Comprobante y nuevo movimiento de la cuenta. La verificación HTTPS comprueba que repetir la confirmación conserva un único cargo. |
+| Consulta de saldo | Consultamos el saldo; desde otra ventana, el administrador interrumpe el servicio; reintentamos y, al terminar la espera, restablecemos el servicio | El saldo confirmado, el aviso «Saldo sin actualizar» y la recuperación. La duración de la interrupción aparece en el panel. |
+| Consulta de movimientos | Elegimos un tipo de movimiento o un rango de fechas; el servidor revisa los filtros y busca solo en la cuenta propia | La lista filtrada, o un mensaje claro si en esas fechas no hubo movimientos |
+| Pago | Elegimos Pago QR, escribimos el código de un comercio de prueba y confirmamos un monto con el PIN | El comprobante y el nuevo movimiento. Si se confirma dos veces, se cobra una sola |
 
-Para cerrar el ensayo, el grupo puede intentar abrir Seguimiento desde la sesión beneficiaria, mostrar el rechazo y contrastarlo con la bitácora de la cuenta administradora. Al cerrar la sesión, la aplicación pide autenticarse para volver a una vista protegida. La persona que revise el código puede repetir el caso CF01, consultar el cambio y dejar una nota con su nombre, fecha, versión revisada, caso ejecutado y resultado observado. La guía asigna al grupo la definición de su representante y evalúa los pasos durante la presentación.
+Para cerrar, intentamos abrir el panel de administración con la cuenta del beneficiario, mostramos el rechazo y lo vemos registrado en la bitácora del administrador. Al cerrar sesión, el sistema pide volver a entrar para ver cualquier página protegida. Quien haya revisado el código puede repetir el caso CF01 y dejar registrado su nombre, la fecha, la versión revisada y el resultado.
 
-## 7. Referencias del diseño y la implementación
+La guía pide que el grupo defina un representante como interlocutor con el docente, y los pasos 1, 2 y 3 del prototipo se evalúan durante esta presentación.
 
-La organización visual toma como referencia las funciones públicas de la aplicación Pluxee Chile y su manual Junaeb. La implementación, el catálogo y los datos del ejercicio son independientes; no se reproducen promociones vigentes ni se presentan comercios ficticios como adheridos reales.
+---
+
+## 7. Referencias
+
+El diseño se inspira en las funciones públicas de la aplicación Pluxee Chile y en su manual para usuarios Junaeb. El código, el catálogo de comercios y todos los datos son nuestros e independientes: no copiamos promociones reales ni presentamos comercios inventados como si estuvieran adheridos.
 
 - Pluxee Chile. (s. f.). [Pluxee App](https://www.pluxee.cl/productos/descarga-pluxee-app/).
 - Pluxee Chile. (2026). [Manual guía usuario Junaeb](https://lp.pluxee.cl/hubfs/JUNAEB%202026/ARCHIVOS/2026_MANUAL%20GU%C3%8DA%20USUARIO.pdf).
@@ -264,4 +310,4 @@ La organización visual toma como referencia las funciones públicas de la aplic
 - OWASP Foundation. (2021). [OWASP Top 10:2021](https://top10.owasp.org/2021/).
 - Python Cryptographic Authority. (s. f.). [Authenticated encryption: AESGCM](https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM).
 
-La fuente Raleway se distribuye localmente bajo SIL Open Font License; su licencia está en `static/fonts/OFL-Raleway.txt`.
+Las fuentes **Raleway** y **Manrope** se incluyen en el proyecto bajo la licencia libre SIL Open Font License; sus licencias están en `static/fonts/OFL-Raleway.txt` y `static/fonts/OFL-Manrope.txt`.
