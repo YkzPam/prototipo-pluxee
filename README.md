@@ -65,9 +65,54 @@ El saldo se calcula como abonos menos cargos. MySQL confirma el movimiento y el 
 
 El informe de la evaluación 2 dejó la estructura física sujeta al gestor académico que se eligiera (p. 64). El borrador posterior consideró SQLite. En la implementación se seleccionó MySQL para demostrar permisos diferenciados en el propio motor; SQLite se conserva para desarrollo y pruebas aisladas.
 
+### 4.1 Tres servicios al usuario: entrada, proceso y resultado
+
+La guía de la actividad pide al menos tres servicios que reflejen entradas, procesos y resultados.
+
+| Servicio | Entrada | Proceso en el servidor | Resultado |
+|---|---|---|---|
+| Consulta de saldo y movimientos | Sesión del beneficiario; filtros de fecha y tipo | Valida tipo, rango y largo de los filtros, comprueba que la cuenta sea la propia y que el servicio esté disponible, y calcula el saldo como abonos menos cargos con la cuenta SQL de solo lectura | Saldo con hora de confirmación, movimientos agrupados por día o aviso diferenciado de interrupción |
+| Pago (QR, clave dinámica, online o tarjeta) | Comercio, monto y PIN o clave dinámica | Comprueba tarjeta activa, saldo suficiente, monto máximo y vigencia de la clave; registra el cargo y el comprobante en una transacción con referencia única | Comprobante privado, nuevo movimiento, aviso en la terminal y en la bitácora |
+| Reportes y seguimiento | Categoría y descripción del problema; respuesta y estado del administrador | Rechaza caracteres peligrosos, asigna folio y estado (Recibido → En revisión → Resuelto) y registra cada cambio | Folio y estado visibles para la cuenta, respuesta del administrador y bandeja con filtros |
+
+### 4.2 Estructura del código y su equivalencia con la guía
+
+| Ejemplo de la guía | En este proyecto (Django) |
+|---|---|
+| `/src/controllers` | `beneficios/views*.py`, una vista por dominio (usuarios, comercios, informes, parámetros, reportes) |
+| `/src/models` | `beneficios/models.py`, `identidad/models.py` y las migraciones |
+| `/src/services` | `beneficios/services.py` (consultas), `events.py` (auditoría), `responses.py` (respuestas) |
+| `/src/utils` | `validators.py`, `charts.py`, `csv_export.py`, `receipt_pdf.py`, `parameters.py` |
+| `/tests` | `beneficios/tests/` (140 pruebas y evidencia de correcciones) |
+| `/docs` | `docs/` (revisión de código y guía de presentación) y este README |
+| `/config` | `config/` (entornos de desarrollo, pruebas y producción, cifrado y TLS) |
+
+### 4.3 Principios SOLID y código limpio
+
+- **Responsabilidad única:** cada dominio tiene sus propias vistas y formularios (`views_users.py`, `forms_users.py`, etc.); la validación de caracteres peligrosos vive en un único validador reutilizado por todos los formularios.
+- **Abierto/cerrado (Factory Method):** `responses.py` define `ResponseCreator` y sus variantes actualizada, pendiente y rechazada; una respuesta nueva se agrega como subclase sin modificar las vistas.
+- **Sustitución e inversión de dependencias (Adapter):** las consultas dependen de la interfaz `IBenefitServiceAdapter`; `MockDataServiceAdapter` la implementa con la base académica y podría reemplazarse por una fuente real sin cambiar las vistas.
+- **Segregación de interfaces:** la interfaz de consulta expone solo `balance` y `movements`.
+- **Observer:** `events.py` notifica los eventos de dominio a la bitácora sin acoplar las vistas al almacenamiento de auditoría.
+- **Código limpio:** nombres descriptivos, credenciales fuera del código, sin listas de negocio escritas en el código (categorías y ayuda en tablas) y una prueba automatizada por cada corrección.
+
+### 4.4 Decisiones técnicas y compromisos (trade-offs)
+
+| Decisión | Ventaja | Costo aceptado |
+|---|---|---|
+| Django en lugar de un framework mínimo | Autenticación, sesiones, CSRF, ORM parametrizado y escape de salidas ya probados | Mayor tamaño del proyecto |
+| MySQL para la presentación y SQLite para desarrollo y pruebas | Permisos por cuenta en el motor y pruebas rápidas aisladas | Diferencias entre motores; se detectó una (CF05) y se corrigió |
+| Montos y datos personales cifrados (AES-256-GCM) | Datos ilegibles si se copia la base | Los totales no se suman en SQL; se calculan en el servidor |
+| Gráficos SVG generados en el servidor | Compatibles con la política de seguridad de contenido (sin scripts ni estilos en línea) | Menos interacción que una biblioteca de gráficos |
+| Bloqueo temporal tras intentos fallidos (umbral configurable) | Frena la adivinación de contraseñas sin dejar cuentas inutilizables | Requiere esperar 15 minutos en vez de una reactivación manual |
+| Desactivar en lugar de borrar cuentas y comercios | Conserva la bitácora y el historial (Ley N.º 21.459) | Los registros inactivos permanecen en la base |
+| Despliegue local con HTTPS | Demostrable sin servicios pagados ni datos reales en internet | No hay una URL pública del prototipo |
+
+Las entradas se validan con listas cerradas cuando es posible (*whitelisting*): estados, categorías, tipos de movimiento, medios de pago y comercios se aceptan solo si pertenecen a las opciones definidas (`ChoiceField` y `ModelChoiceField`), y el nombre de usuario admite solo letras sin tilde, números y `. _ @ -`.
+
 ## 5. Verificación y entornos
 
-`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio privado `YkzPam/prototipo-pluxee`. La primera ejecución terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
+`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio público `YkzPam/prototipo-pluxee`. La primera ejecución terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
 
 La rama `evaluacion-3` contiene la entrega de la Evaluación 3 (prototipo). Las etapas siguientes, como el informe de la Evaluación 4, se publicarán en ramas propias sin sustituir esta. La entrega se identifica con la rama y el hash del commit publicado en GitHub.
 
