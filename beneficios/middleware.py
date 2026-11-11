@@ -1,5 +1,7 @@
 import json
+import time
 import uuid
+from logging import getLogger
 from datetime import datetime, timezone as dt_timezone
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -10,6 +12,33 @@ from django.utils import timezone
 from .events import record
 from .policies import session_policy, session_return_path
 from .responses import RejectedResponseCreator
+
+request_logger = getLogger('beneficios.peticiones')
+
+
+class RequestLogMiddleware:
+    """Muestra en la terminal cada página que se atiende: método, ruta, estado, tiempo y perfil.
+
+    Sin parámetros de consulta, formularios, cookies ni nombres de usuario. Omite archivos
+    estáticos y las comprobaciones periódicas de la sesión para que el registro se pueda leer.
+    """
+    QUIET_PREFIXES = ('/static/', '/favicon.ico', '/api/sesion/actividad/', '/api/consultas/estado/')
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        started = time.perf_counter()
+        response = self.get_response(request)
+        if not request.path.startswith(self.QUIET_PREFIXES):
+            user = getattr(request, 'user', None)
+            if user is not None and user.is_authenticated:
+                profile = f"{'administrador' if user.is_staff else 'beneficiario'} #{user.pk}"
+            else:
+                profile = 'visitante'
+            request_logger.info('%-6s %-38s %s  %4d ms  %s', request.method, request.path[:38],
+                                response.status_code, (time.perf_counter() - started) * 1000, profile)
+        return response
 
 
 class SessionPolicyMiddleware:

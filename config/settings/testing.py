@@ -11,3 +11,6 @@ DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memor
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.PBKDF2PasswordHasher']
 ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 ENVIRONMENT_LABEL = 'Pruebas automatizadas'
+
+# Las pruebas no imprimen una línea por petición.
+LOGGING['loggers']['beneficios.peticiones']['level'] = 'WARNING'

@@ -17,6 +17,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'beneficios.middleware.RequestLogMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'beneficios.middleware.SecurityHeadersMiddleware',
     'beneficios.middleware.SessionPolicyMiddleware',
@@ -83,6 +84,10 @@ X_FRAME_OPTIONS = 'DENY'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 65536
 FILE_UPLOAD_MAX_MEMORY_SIZE = 65536
 LOGGING = {'version': 1, 'disable_existing_loggers': False,
-           'handlers': {'console': {'class': 'logging.StreamHandler'}},
-           'loggers': {'beneficios.movimientos': {'handlers': ['console'], 'level': 'INFO', 'propagate': False}},
+           'formatters': {'hora': {'format': '%(asctime)s  %(message)s', 'datefmt': '%H:%M:%S'}},
+           'handlers': {'console': {'class': 'logging.StreamHandler'},
+                        'terminal': {'class': 'logging.StreamHandler', 'formatter': 'hora'}},
+           'loggers': {'beneficios.movimientos': {'handlers': ['terminal'], 'level': 'INFO', 'propagate': False},
+                       # Una línea por página atendida (ver RequestLogMiddleware).
+                       'beneficios.peticiones': {'handlers': ['terminal'], 'level': 'INFO', 'propagate': False}},
            'root': {'handlers': ['console'], 'level': 'WARNING'}}
