@@ -67,7 +67,7 @@ El informe de la evaluación 2 dejó la estructura física sujeta al gestor acad
 
 ## 5. Verificación y entornos
 
-`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio privado `YkzPam/prototipo-pluxee`. La primera ejecución (#1, commit `d4c9a02`) terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
+`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio privado `YkzPam/prototipo-pluxee`. La primera ejecución terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
 
 La rama `evaluacion-3` contiene la entrega de la Evaluación 3 (prototipo). Las etapas siguientes, como el informe de la Evaluación 4, se publicarán en ramas propias sin sustituir esta. La entrega se identifica con la rama y el hash del commit publicado en GitHub.
 
