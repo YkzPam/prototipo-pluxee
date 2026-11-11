@@ -61,4 +61,4 @@ Un integrante distinto del autor debe revisar los cambios y registrar su conform
 
 | Revisor | Fecha | Versión o paquete revisado | Resultado | Observaciones |
 |---|---|---|---|---|
-| | | | | |
+| Pablo Doussang | 11-11-2026 | Rama `evaluacion-3`, commit `01c8a57` | Aprobado | Revisó este registro y probó el prototipo completo, como beneficiario y como administrador. Sin observaciones. |
