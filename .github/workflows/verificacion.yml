@@ -11,17 +11,13 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Instalar bibliotecas del sistema (con reintentos)
-        # Un repositorio de paquetes caído no debe fallar la verificación del prototipo.
+      - name: Instalar dependencias de Python
+        # Las pruebas usan SQLite (config.settings.testing). El cliente de MySQL se compila con bibliotecas
+        # del sistema operativo y solo se usa en el modo de presentación local, así que el CI no depende
+        # del repositorio de paquetes de Ubuntu.
         run: |
-          for intento in 1 2 3; do
-            sudo apt-get -o Acquire::Retries=3 update && \
-              sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends pkg-config default-libmysqlclient-dev && exit 0
-            echo "Intento $intento: el repositorio de paquetes no respondió; se reintenta en 20 segundos."
-            sleep 20
-          done
-          exit 1
-      - run: pip install -r requirements.txt
+          grep -v -i '^mysqlclient' requirements.txt > requisitos-ci.txt
+          pip install -r requisitos-ci.txt
       - run: python manage.py check --settings=config.settings.testing
       - run: python -m coverage run manage.py test --settings=config.settings.testing
       - run: python -m coverage report --fail-under=80
