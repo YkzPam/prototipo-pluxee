@@ -246,7 +246,8 @@ def health(port, *, check_assets=False):
             if response.status != 200 or not content:
                 raise RuntimeError(f'Respuesta inesperada en {path}.')
             if path == '/ingresar/':
-                if b'Prototipo Pluxee' not in content or not response.headers.get('Strict-Transport-Security'):
+                # Marca del título del sitio (base.html); debe coincidir si se cambia el nombre del portal.
+                if b'Portal de beneficios' not in content or not response.headers.get('Strict-Transport-Security'):
                     raise RuntimeError('La respuesta no corresponde al prototipo HTTPS.')
                 if check_assets:
                     parser = LoginAssets()
