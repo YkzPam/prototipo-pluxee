@@ -8,6 +8,7 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from .forms_support import SupportReportFilterForm, SupportReportForm, SupportReportUpdateForm
 from .models import SupportReport
 from .security import protected
+from .support_history import capture_report, save_report_change
 
 
 NEXT_STATUS = {
@@ -27,7 +28,7 @@ def reportar_problema(request):
         form = SupportReportForm(request.POST)
         if form.is_valid():
             SupportReport.objects.create(reporter=request.user, **form.cleaned_data)
-            messages.success(request, 'El reporte de prueba quedó registrado. El folio está en Mis reportes.')
+            messages.success(request, 'El reporte quedó registrado. El folio está en Mis reportes.')
             return redirect(reverse('reportar_problema', fragment='mis-reportes'))
         status = 400
     else:
@@ -46,13 +47,20 @@ def reportar_problema(request):
 @protected(administrator=True)
 def reportes_admin(request):
     filters = SupportReportFilterForm(request.GET)
-    reports = SupportReport.objects.select_related('reporter')
+    reports = SupportReport.objects.select_related('reporter', 'assigned_to')
     valid_filters = filters.is_valid()
     if valid_filters:
         if filters.cleaned_data['categoria']:
             reports = reports.filter(category=filters.cleaned_data['categoria'])
         if filters.cleaned_data['estado']:
             reports = reports.filter(status=filters.cleaned_data['estado'])
+        if filters.cleaned_data['prioridad']:
+            reports = reports.filter(priority=filters.cleaned_data['prioridad'])
+        responsible = filters.cleaned_data['responsable']
+        if responsible == 'none':
+            reports = reports.filter(assigned_to__isnull=True)
+        elif responsible:
+            reports = reports.filter(assigned_to_id=int(responsible))
     else:
         reports = reports.none()
     return render(request, 'reportes_admin.html', {
@@ -73,12 +81,13 @@ def reportes_admin_actualizar(request, report_id):
         elif NEXT_STATUS.get(report.status) != form.cleaned_data['status']:
             messages.error(request, 'Ese cambio de estado no está disponible. Revisa el estado actual del reporte.')
         else:
+            previous = capture_report(report)
             report.status = form.cleaned_data['status']
-            fields = ['status', 'updated_at']
+            fields = ['status']
             if form.cleaned_data['response']:
                 report.response = form.cleaned_data['response']
                 fields.append('response')
-            report.save(update_fields=fields)
+            save_report_change(report, previous, request.user, update_fields=fields)
             messages.success(request, 'El estado del reporte de prueba se actualizó.')
 
     filters = SupportReportFilterForm(request.GET)

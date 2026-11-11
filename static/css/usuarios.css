@@ -1,0 +1,73 @@
+.login-registration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .35rem .65rem;
+  padding: .85rem 0;
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+.login-password-row { display: flex; gap: .5rem; align-items: stretch; }
+.login-password-row input { flex: 1; min-width: 0; }
+.login-password-row button { flex-shrink: 0; }
+
+.registration-layout {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: clamp(1rem, 4vw, 3rem);
+  align-items: start;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: clamp(1rem, 5vw, 4rem);
+}
+
+.registration-intro {
+  display: grid;
+  gap: 1.15rem;
+  padding: clamp(1.4rem, 4vw, 2.5rem);
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, var(--purple), #422373);
+  color: white;
+}
+
+.registration-intro .brand { margin-bottom: 1rem; }
+.registration-intro :is(h1, p, .eyebrow) { margin: 0; }
+.registration-intro p { color: #efe7fb; line-height: 1.6; }
+.registration-back { color: #fff; font-weight: 600; width: fit-content; }
+.user-back { display: inline-block; margin-bottom: 1rem; }
+.user-panel { min-width: 0; padding: clamp(1rem, 3vw, 1.8rem); }
+.user-panel h2 { margin: 0 0 .9rem; }
+.user-panel p { line-height: 1.55; }
+.user-narrow { max-width: 42rem; }
+.user-form { display: grid; gap: .9rem; }
+.user-form .button { justify-self: start; }
+.user-field-help { font-size: .78rem; line-height: 1.45; }
+.user-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; margin-bottom: 1.15rem; }
+.user-filters .field { flex: 1 1 10rem; }
+.user-page-heading h1 { overflow-wrap: anywhere; }
+.user-admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.user-history { margin-top: 1rem; }
+.user-list { list-style: none; margin: 0; padding: 0; }
+.user-list > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .7rem;
+  padding: .9rem .35rem;
+  border-top: 1px solid var(--line);
+}
+.user-list-identity { display: grid; gap: .25rem; overflow-wrap: anywhere; }
+.user-list > .user-list-empty { display: block; color: var(--muted); }
+.user-movement-list > li { grid-template-columns: minmax(0, 1fr) auto; }
+
+@media (max-width: 740px) {
+  .registration-layout, .user-admin-grid { grid-template-columns: minmax(0, 1fr); }
+  .registration-intro .brand { margin-bottom: 0; }
+}
+
+@media (max-width: 480px) {
+  .user-page-heading { align-items: flex-start; flex-direction: column; }
+  .user-list:not(.user-movement-list) > li { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .user-list:not(.user-movement-list) > li > a { grid-column: 2 / -1; justify-self: start; }
+}

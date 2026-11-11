@@ -1,6 +1,18 @@
 /* Las operaciones protegidas se autorizan en el servidor. No se guardan credenciales en el navegador. */
 (() => {
   'use strict';
+  const passwordToggle = document.querySelector('[data-password-toggle]');
+  if (passwordToggle) {
+    const password = document.getElementById(passwordToggle.getAttribute('aria-controls'));
+    if (password) {
+      passwordToggle.hidden = false;
+      passwordToggle.addEventListener('click', () => {
+        const show = password.type === 'password';
+        password.type = show ? 'text' : 'password';
+        passwordToggle.textContent = show ? 'Ocultar' : 'Mostrar';
+      });
+    }
+  }
   const money = new Intl.NumberFormat('es-CL', {style: 'currency', currency: 'CLP', maximumFractionDigits: 0});
   const date = new Intl.DateTimeFormat('es-CL', {day: '2-digit', month: 'short', year: 'numeric'});
   const dateTime = new Intl.DateTimeFormat('es-CL', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'});
@@ -90,7 +102,7 @@
       continueButton.hidden = absoluteLimit;
       const message = absoluteLimit
         ? 'Se acerca el límite de duración. Cuando venza, vuelve a ingresar para continuar.'
-        : 'Si sigues usando el prototipo, confirma para continuar con la sesión.';
+        : 'Confirma si quieres continuar con la sesión.';
       describeWarning(message);
     } else {
       warningMessage.textContent = '';

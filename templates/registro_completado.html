@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static moneda %}
+{% block title %}Cuenta creada{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="{% static 'css/registro.css' %}">{% endblock %}
+{% block public_content %}
+<main id="contenido" class="registration-complete" tabindex="-1">
+  <section class="surface registration-complete-card" aria-labelledby="registration-complete-title">
+    <div class="receipt-success" aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"/></svg></div>
+    <h1 id="registration-complete-title">Cuenta creada</h1>
+    <p>Ya puedes iniciar sesión con los datos que elegiste.</p>
+    <dl>
+      <div><dt>Usuario</dt><dd>{{ username }}</dd></div>
+      {% if initial_credit %}<div><dt>Abono inicial</dt><dd data-private-amount>${{ initial_credit|clp }}</dd></div>{% endif %}
+    </dl>
+    <a class="button" href="{% url 'ingresar' %}">Ir a iniciar sesión <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+  </section>
+</main>
+{% endblock %}

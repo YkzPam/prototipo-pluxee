@@ -1,0 +1,30 @@
+.merchant-card { position: relative; overflow: hidden; }
+.merchant-cover { position: relative; margin: calc(-1 * clamp(1rem, 2.5vw, 1.6rem)) calc(-1 * clamp(1rem, 2.5vw, 1.6rem)) 1rem; border-bottom: 1px solid #e7dfee; border-radius: 1rem 1rem 0 0; background: #f1e9f8; overflow: hidden; }
+.merchant-cover img { display: block; width: 100%; height: clamp(8.25rem, 18vw, 11rem); object-fit: cover; }
+.merchant-card:nth-child(3n + 2) .merchant-cover { background: #ecf2d6; }
+.merchant-card:nth-child(3n + 3) .merchant-cover { background: #eee6f7; }
+.merchant-card-head { position: relative; }
+.merchant-card .merchant-avatar { border: 3px solid #fff; box-shadow: 0 4px 10px #32154b13; }
+.merchant-card .merchant-category { letter-spacing: .015em; }
+.login-layer-scene { display: block; aspect-ratio: 36 / 23; position: relative; }
+.login-layer-scene > img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.section-empty-art { display: block; width: min(100%, 13rem); margin-inline: auto; margin-block-end: .6rem; pointer-events: none; }
+.section-empty-art img { display: block; width: 100%; height: auto; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .merchant-cover img { transition: transform .4s cubic-bezier(.2,.7,.3,1); }
+  .login-layer-scene .login-layer-backdrop { animation: layer-orbit 9s ease-in-out infinite; }
+  .login-layer-scene .login-layer-card { animation: layer-card 7s ease-in-out infinite; }
+  .login-layer-scene .login-layer-wallet { animation: layer-wallet 7s ease-in-out infinite; }
+  .login-layer-scene .login-layer-sparks { animation: layer-sparks 4.5s ease-in-out infinite; }
+  .section-empty-art img { animation: empty-arrive .35s ease-out both; }
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .merchant-card:hover .merchant-cover img { transform: scale(1.035) translateY(-2px); }
+}
+@keyframes layer-orbit { 0%,100% { transform: rotate(0) scale(1); } 50% { transform: rotate(3deg) scale(1.035); } }
+@keyframes layer-card { 0%,100% { transform: translateY(0) rotate(-1deg); } 45% { transform: translate(3px,-10px) rotate(2deg); } }
+@keyframes layer-wallet { 0%,100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+@keyframes layer-sparks { 0%,100% { opacity: .65; transform: scale(.97); } 50% { opacity: 1; transform: scale(1.035); } }
+@keyframes empty-arrive { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+html[data-motion="off"] .login-layer-scene img, html[data-motion="off"] .section-empty-art img { animation: none !important; transition: none !important; }

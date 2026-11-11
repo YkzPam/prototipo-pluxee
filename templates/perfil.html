@@ -1,34 +1,50 @@
 {% extends 'base.html' %}
 {% block title %}Mi perfil{% endblock %}
 {% block content %}
-<header class="pluxee-section-hero">
+<header class="page-heading illustrated-heading profile-personal-heading">
   <div>
-    <span class="pluxee-section-badge">Cuenta de demostración</span>
+    <span class="eyebrow">MI CUENTA</span>
     <h1>Mi perfil</h1>
     <p class="pluxee-profile-name">{{ request.user.get_full_name|default:request.user.username }}</p>
-  </div>
-  <span class="pluxee-section-symbol pluxee-profile-avatar" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span>
+    <span class="status-badge {% if request.user.is_active %}status-success{% else %}status-neutral{% endif %}">{% if request.user.is_active %}Cuenta activa{% else %}Cuenta desactivada{% endif %}</span>
+  </div>{% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+  <span class="pluxee-section-symbol pluxee-profile-avatar" data-personal-avatar data-avatar-initial="{{ request.user.get_short_name|default:request.user.username|first|upper }}" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span>
 </header>
 <div class="profile-layout pluxee-profile-layout">
   <section class="surface profile-form-card" aria-labelledby="profile-data-heading">
     <h2 id="profile-data-heading">Mis datos</h2>
-    <p class="muted pluxee-profile-account">Usuario de prueba · {{ request.user.username }}</p>
+    <p class="muted pluxee-profile-account">Usuario · {{ request.user.username }}</p>
     <form method="post" class="standard-form profile-form">
       {% csrf_token %}
       {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-      <div class="field"><label for="id_first_name">Nombre ficticio</label>{{ form.first_name }}{% if form.first_name.errors %}<div class="field-errors" role="alert">{{ form.first_name.errors }}</div>{% endif %}</div>
-      <div class="field"><label for="id_last_name">Apellido ficticio</label>{{ form.last_name }}{% if form.last_name.errors %}<div class="field-errors" role="alert">{{ form.last_name.errors }}</div>{% endif %}</div>
-      <p class="field-hint">Usa nombres ficticios para la demostración.</p>
+      <div class="field"><label for="id_first_name">Nombre</label>{{ form.first_name }}{% if form.first_name.errors %}<div class="field-errors" role="alert">{{ form.first_name.errors }}</div>{% endif %}</div>
+      <div class="field"><label for="id_last_name">Apellido</label>{{ form.last_name }}{% if form.last_name.errors %}<div class="field-errors" role="alert">{{ form.last_name.errors }}</div>{% endif %}</div>
+      <p class="field-hint">Usa un alias para identificar tu cuenta.</p>
       <button class="button" type="submit">Guardar cambios</button>
     </form>
+    {% if account and card %}
+    <section class="profile-card-preview" aria-labelledby="profile-card-title">
+      <div class="section-heading"><h3 id="profile-card-title">Tu tarjeta</h3><span class="status-badge {% if card.is_blocked %}status-pending{% else %}status-success{% endif %}">{{ card.get_status_display }}</span></div>
+      <a class="virtual-card-link" href="{% url 'tarjeta' %}" aria-label="Administrar la tarjeta terminada en {{ account.number_suffix }}">
+        <span class="virtual-card-art" data-tilt-card>
+          <span class="virtual-card-shine" aria-hidden="true"></span>
+          <span class="virtual-card-top"><strong>pluxee</strong><svg class="ui-icon" aria-hidden="true"><use href="#icon-wallet"/></svg></span>
+          <span class="virtual-card-chip" aria-hidden="true"></span>
+          <span class="virtual-card-number">•••• &nbsp; •••• &nbsp; {{ account.number_suffix }}</span>
+          <span class="virtual-card-bottom"><span>{{ account.public_label }}</span><span>Mi tarjeta ↗</span></span>
+        </span>
+      </a>
+    </section>
+    {% endif %}
   </section>
   <section class="surface profile-options" aria-labelledby="profile-options-heading">
     <h2 id="profile-options-heading">Configuración y ayuda</h2>
+    <a class="profile-option" href="{% url 'apariencia' %}"><svg class="ui-icon" aria-hidden="true"><use href="#icon-sun"/></svg><span>Apariencia y privacidad<small>Tema, avatar y movimiento</small></span><svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
     <h3 class="pluxee-profile-group" id="profile-security-heading">Tarjeta y seguridad</h3>
     <div class="profile-options-list" role="group" aria-labelledby="profile-security-heading">
       <a href="{% url 'tarjeta' %}" class="profile-option">
         <svg class="ui-icon" aria-hidden="true"><use href="#icon-card"/></svg>
-        <span>Mi tarjeta<small>Consultar y cambiar el estado de prueba</small></span>
+        <span>Mi tarjeta<small>Consultar y cambiar el estado</small></span>
         <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
       </a>
       <a href="{% url 'cambiar_clave' %}" class="profile-option">
@@ -41,6 +57,11 @@
         <span>Actividad de mi cuenta<small>Revisar ingresos y cierres de sesión</small></span>
         <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
       </a>
+      <a href="{% url 'sesiones_abiertas' %}" class="profile-option">
+        <svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg>
+        <span>Sesiones abiertas<small>Revisar accesos y cerrar otras sesiones</small></span>
+        <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
+      </a>
     </div>
     <h3 class="pluxee-profile-group" id="profile-help-heading">Soporte y seguimiento</h3>
     <div class="profile-options-list" role="group" aria-labelledby="profile-help-heading">
@@ -51,7 +72,7 @@
       </a>
       <a href="{% url 'ayuda' %}" class="profile-option">
         <svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg>
-        <span>Centro de ayuda<small>Consultar preguntas del prototipo</small></span>
+        <span>Centro de ayuda<small>Ver preguntas frecuentes</small></span>
         <svg class="ui-icon profile-option-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
       </a>
     </div>

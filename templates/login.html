@@ -2,32 +2,35 @@
 {% block title %}Ingresar{% endblock %}
 {% block public_content %}
 <main id="contenido" class="login-layout">
-  <section class="login-story" aria-label="Presentación del prototipo">
-    <a class="brand brand-light" href="{% url 'ingresar' %}" aria-label="Prototipo Pluxee"><span class="brand-mark" aria-hidden="true">p<span></span></span><span>pluxee<small>PROTOTIPO ACADÉMICO</small></span></a>
+  <section class="login-story" aria-label="Presentación del portal">
+    <a class="brand brand-light" href="{% url 'ingresar' %}" aria-label="Ir al ingreso"><span class="brand-mark" aria-hidden="true">p<span></span></span><span>pluxee</span></a>
     <div class="login-story-copy">
-      <span class="eyebrow eyebrow-light">BENEFICIO DE ALIMENTACIÓN JUNAEB · DEMO</span>
+      <span class="eyebrow eyebrow-light">BENEFICIO DE ALIMENTACIÓN JUNAEB</span>
       <h1>Tu beneficio,<br> a un toque.</h1>
-      <p>Consulta tu saldo, revisa tus movimientos y encuentra comercios de prueba.</p>
+      <p>Consulta tu saldo, revisa tus movimientos y encuentra comercios.</p>
     </div>
-    <div class="demo-card" aria-hidden="true"><div class="demo-card-top"><span>BENEFICIO DE PRUEBA</span><span class="demo-card-symbol">p.</span></div><div class="demo-card-center">Consulta tu beneficio<br>con información clara.</div><div class="demo-card-bottom"><span>•••• &nbsp; •••• &nbsp; ••••</span><span>DEMO</span></div></div>
-    <p class="story-footnote">Proyecto académico de Ingeniería de Software. No corresponde al sitio oficial de Pluxee Chile.</p>
+    {% include 'includes/login_layers.html' %}
   </section>
   <section class="login-form-area">
     <div class="login-form-wrap">
-      <span class="academic-pill"><span aria-hidden="true"></span> Prototipo académico · Datos ficticios</span>
-      <div class="login-heading"><span class="eyebrow">ACCESO AL PROTOTIPO</span><h2>Bienvenido</h2><p>Ingresa con una cuenta de prueba habilitada.</p></div>
-      {% if messages %}{% for message in messages %}<div class="notice {% if message.tags == 'error' %}notice-error{% else %}notice-success{% endif %}" role="status">{{ message }}</div>{% endfor %}{% endif %}
+      <div class="login-heading"><span class="eyebrow">INICIO DE SESIÓN</span><h2>Bienvenido</h2><p>Ingresa para consultar tu cuenta.</p></div>
+      {% include 'includes/flash_messages.html' %}
       {% if reason %}<div class="notice notice-info" role="status">{{ reason }}</div>{% endif %}
       <form class="login-form" method="post" action="{% url 'ingresar' %}">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next|default:'' }}">
         {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
         <div class="field"><label for="id_username">Usuario</label>{{ form.username }}{% if form.username.errors %}<div class="field-errors" role="alert">{{ form.username.errors }}</div>{% endif %}</div>
-        <div class="field"><label for="id_password">Contraseña</label>{{ form.password }}{% if form.password.errors %}<div class="field-errors" role="alert">{{ form.password.errors }}</div>{% endif %}</div>
+        <div class="field">
+          <label for="id_password">Contraseña</label>
+          <div class="login-password-row">{{ form.password }}<button class="button button-secondary button-small" type="button" data-password-toggle aria-controls="id_password" hidden>Mostrar</button></div>
+          {% if form.password.errors %}<div class="field-errors" role="alert">{{ form.password.errors }}</div>{% endif %}
+        </div>
         <button class="button button-full" type="submit">Ingresar a la cuenta <span aria-hidden="true">→</span></button>
       </form>
-      <div class="login-help"><span class="help-icon" aria-hidden="true">i</span><p>Las cuentas de acceso se entregan con el proyecto. No se deben utilizar credenciales ni datos reales de Pluxee.</p></div>
-      <div class="login-services"><span>Mi beneficio</span><span>Pago de prueba</span><span>Comercios</span></div>
+      <div class="login-registration"><span>¿Todavía no tienes cuenta?</span><a class="text-link" href="{% url 'crear_usuario' %}">Crear usuario</a></div>
+      <div class="login-help"><span class="help-icon" aria-hidden="true">i</span><p>Usa un alias y una contraseña exclusiva para este portal.</p></div>
+      <div class="login-services"><span>Mi beneficio</span><span>Pagos</span><span>Comercios</span></div>
     </div>
   </section>
 </main>

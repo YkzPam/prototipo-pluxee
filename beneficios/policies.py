@@ -1,4 +1,4 @@
-"""Singleton de configuración inmutable por proceso, nunca de usuarios o sesiones."""
+"""Política de sesión con los parámetros vigentes; nunca depende de usuarios o sesiones."""
 from functools import lru_cache
 from dataclasses import dataclass
 from urllib.parse import urlencode, urlsplit
@@ -28,7 +28,8 @@ def _session_policy(idle_seconds, max_seconds):
 
 
 def session_policy():
-    return _session_policy(settings.SESSION_IDLE_SECONDS, settings.SESSION_MAX_SECONDS)
+    from .parameters import current
+    return _session_policy(current().session_idle_seconds, settings.SESSION_MAX_SECONDS)
 
 
 def session_return_path(target):
@@ -40,7 +41,7 @@ def session_return_path(target):
     except ValueError:
         return ''
     readable = ('inicio', 'saldo', 'movimientos', 'seguimiento', 'comercios', 'perfil', 'tarjeta', 'ayuda',
-                'actividad_cuenta', 'reportar_problema', 'reportes_admin')
+                'actividad_cuenta', 'reportar_problema', 'reportes_admin', 'admin_usuarios')
     if parsed.path not in {reverse(name) for name in readable}:
         return ''
     if parsed.path != reverse('movimientos') or not parsed.query:

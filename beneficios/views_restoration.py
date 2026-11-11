@@ -9,10 +9,11 @@ from django.views.decorators.http import require_POST
 from .events import record
 from .models import AuditEvent, ServiceInterruption
 from .security import protected
+from .validators import reject_dangerous_characters
 
 
 class VerificationNoteForm(forms.Form):
-    verification_note = forms.CharField(max_length=400)
+    verification_note = forms.CharField(max_length=400, validators=[reject_dangerous_characters])
 
 
 @require_POST
@@ -20,7 +21,7 @@ class VerificationNoteForm(forms.Form):
 @transaction.atomic
 def interrupcion_verificar(request, interruption_id):
     interruption = get_object_or_404(ServiceInterruption.objects.select_for_update(), pk=interruption_id)
-    detail_url = f"{reverse('seguimiento')}?interruption={interruption.pk}"
+    detail_url = f"{reverse('bitacora')}?interruption={interruption.pk}"
     form = VerificationNoteForm(request.POST)
 
     if interruption.restored_at is None:

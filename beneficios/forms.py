@@ -3,7 +3,7 @@ from django import forms
 
 class LoginForm(forms.Form):
     username = forms.RegexField(
-        r'^[A-Za-z0-9_.@+-]{3,150}$', max_length=150, label='Usuario de prueba',
+        r'^[A-Za-z0-9_.@-]{3,150}$', max_length=150, label='Usuario',
         error_messages={'invalid': 'El usuario debe tener entre 3 y 150 caracteres válidos.'},
         widget=forms.TextInput(attrs={'autocomplete': 'username', 'autocapitalize': 'none', 'spellcheck': 'false'}),
     )

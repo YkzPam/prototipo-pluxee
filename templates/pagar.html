@@ -1,12 +1,20 @@
-{% extends 'base.html' %}{% load moneda %}
+{% extends 'base.html' %}{% load moneda static %}
 {% block title %}Pagar{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="{% static 'css/payment-review.css' %}">{% endblock %}
 {% block content %}
 <div{% if request.method == 'GET' and request.GET.metodo == method %} data-payment-change{% endif %}>
-<header class="pluxee-section-hero">
-  <div><span class="pluxee-section-badge">Beneficio Junaeb · Demo</span><h1>Pagar</h1><p>Elige cómo realizar una compra con tu saldo ficticio.</p></div>
+<header class="page-heading illustrated-heading">
+  <div><span class="eyebrow">MI BENEFICIO</span><h1>{% if review %}Revisar pago{% else %}Pagar{% endif %}</h1><p>{% if review %}Comprueba el comercio y el monto antes de confirmar.{% else %}Selecciona el medio de pago de la compra.{% endif %}</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-payment.svg' only %}
   <a class="help-shortcut" href="{% url 'ayuda' %}" aria-label="Abrir ayuda"><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg></a>
 </header>
 
+{% if review %}
+{% include 'includes/payment_journey.html' with stage='review' %}
+{% else %}
+{% include 'includes/payment_journey.html' with stage='data' %}
+{% endif %}
+
+{% if not review %}
 <section class="payment-methods" aria-labelledby="payment-methods-title">
   <h2 id="payment-methods-title">Medios de pago disponibles</h2>
   <nav class="payment-method-grid" aria-label="Medios de pago">
@@ -24,31 +32,36 @@
     </a>
     <a class="payment-method-link payment-method-card" href="{% url 'pagar' %}?metodo=card{% if selected_merchant_id %}&amp;comercio={{ selected_merchant_id|urlencode }}{% endif %}"{% if method == 'card' %} aria-current="page"{% endif %}>
       <span class="payment-method-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-card"/></svg></span>
-      <span><strong>Tarjeta física o virtual</strong><small>Tarjeta ficticia y PIN</small></span>
+      <span><strong>Tarjeta física o virtual</strong><small>Número de tarjeta y PIN</small></span>
     </a>
   </nav>
 </section>
+{% endif %}
 
 <div class="notice notice-info payment-disclaimer">
-  <p><strong>Simulación académica.</strong> Las operaciones de esta pantalla se registran con datos y saldo de prueba dentro del prototipo.</p>
+  <p><strong>Simulación de pagos.</strong> Las operaciones se registran en la cuenta sin cargos reales.</p>
 </div>
+{% if payment_error %}<div class="notice notice-error" role="alert">{{ payment_error }}</div>{% endif %}
 
 <div class="payment-layout">
+  {% if review %}
+  {% include 'includes/payment_review.html' %}
+  {% else %}
   <section class="surface payment-form-card" aria-labelledby="payment-form-title">
     <div class="section-heading">
       <div>
         {% if method == 'qr' %}
-        <h2 id="payment-form-title">Pago QR de prueba</h2>
-        <p class="muted">Selecciona o escribe el código del comercio, revisa el monto y autoriza con el PIN de demostración.</p>
+        <h2 id="payment-form-title">Pago con QR</h2>
+        <p class="muted">Selecciona o escribe el código del comercio, revisa el monto y autoriza con tu PIN.</p>
         {% elif method == 'dynamic' %}
         <h2 id="payment-form-title">Pago con clave dinámica</h2>
-        <p class="muted">Genera una clave con el PIN de prueba y úsala para autorizar una compra ficticia.</p>
+        <p class="muted">Genera una clave con tu PIN y úsala para autorizar la compra.</p>
         {% elif method == 'card' %}
         <h2 id="payment-form-title">Pago con tarjeta</h2>
-        <p class="muted">Usa la tarjeta de prueba terminada en {{ account.number_suffix }} y confirma con el PIN de demostración.</p>
+        <p class="muted">Usa la tarjeta terminada en {{ account.number_suffix }} y confirma con tu PIN.</p>
         {% else %}
-        <h2 id="payment-form-title">Pago online de prueba</h2>
-        <p class="muted">Selecciona el comercio, indica el monto de la compra y autoriza con el PIN de demostración.</p>
+        <h2 id="payment-form-title">Pago en línea</h2>
+        <p class="muted">Selecciona el comercio, indica el monto de la compra y autoriza con tu PIN.</p>
         {% endif %}
       </div>
       <span class="section-icon" aria-hidden="true"><svg class="ui-icon"><use href="{% if method == 'qr' %}#icon-pay{% elif method == 'dynamic' %}#icon-lock{% elif method == 'card' %}#icon-card{% else %}#icon-wallet{% endif %}"/></svg></span>
@@ -57,10 +70,10 @@
     {% if method == 'dynamic' %}
     <section class="payment-code-panel" aria-labelledby="payment-code-title">
       <h3 id="payment-code-title">Generar clave dinámica</h3>
-      <p>La clave de prueba tiene cuatro dígitos y sirve para una compra. Su vigencia máxima es de 90 minutos.</p>
+      <p>La clave dinámica tiene cuatro dígitos y sirve para una compra. Su vigencia máxima es de 90 minutos.</p>
       {% if issued_code %}
       <div class="payment-issued-code" role="status">
-        <strong>Clave de prueba</strong>
+        <strong>Clave dinámica</strong>
         <code>{{ issued_code }}</code>
         {% if issued_expires_at %}<span>Vence el <time datetime="{{ issued_expires_at|date:'c' }}">{{ issued_expires_at|date:'d/m/Y H:i' }}</time></span>{% endif %}
         <span>Ingresa este código en los datos de la compra.</span>
@@ -71,17 +84,18 @@
         {% if selected_merchant_id %}<input type="hidden" name="comercio" value="{{ selected_merchant_id }}">{% endif %}
         {% if dynamic_form.non_field_errors %}<div class="notice notice-error" role="alert">{{ dynamic_form.non_field_errors }}</div>{% endif %}
         <div class="field">
-          <label for="{{ dynamic_form.pin.id_for_label }}">PIN de compra de prueba</label>{{ dynamic_form.pin }}
+          <label for="{{ dynamic_form.pin.id_for_label }}">PIN de compra</label>{{ dynamic_form.pin }}
           {% if dynamic_form.pin.errors %}<div class="field-errors" role="alert">{{ dynamic_form.pin.errors }}</div>{% endif %}
-          <span class="field-hint">PIN del ejercicio <strong>4826</strong>.</span>
+          <span class="field-hint">Ingresa el PIN de tu tarjeta.</span>
         </div>
-        <button class="button button-secondary" type="submit"{% if card.is_blocked %} disabled{% endif %}>Generar clave de prueba</button>
+        <button class="button button-secondary" type="submit"{% if card.is_blocked %} disabled{% endif %}>Generar clave dinámica</button>
       </form>
     </section>
     {% endif %}
 
     <form method="post" action="{% url 'pagar' %}" class="payment-form">
       {% csrf_token %}
+      <input type="hidden" name="payment_step" value="review">
       {% for hidden in form.hidden_fields %}{{ hidden }}{% if hidden.errors %}<div class="field-errors" role="alert">{{ hidden.errors }}</div>{% endif %}{% endfor %}
       {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 
@@ -89,7 +103,7 @@
       <div class="payment-step">
         <span class="step-number" aria-hidden="true">1</span>
         <div class="field">
-          <label for="{{ form.qr_code.id_for_label }}">Código del comercio de prueba</label>{{ form.qr_code }}
+          <label for="{{ form.qr_code.id_for_label }}">Código del comercio</label>{{ form.qr_code }}
           <datalist id="qr-commerce-options">
             {% for merchant in merchants %}<option value="{{ merchant.code }}" label="{{ merchant.name }}">{% endfor %}
           </datalist>
@@ -105,7 +119,7 @@
       <div class="payment-step">
         <span class="step-number" aria-hidden="true">1</span>
         <div class="field">
-          <label for="{{ form.merchant.id_for_label }}">Comercio de prueba</label>{{ form.merchant }}
+          <label for="{{ form.merchant.id_for_label }}">Comercio</label>{{ form.merchant }}
           {% if form.merchant.errors %}<div class="field-errors" role="alert">{{ form.merchant.errors }}</div>{% endif %}
           <span class="field-hint">También se puede elegir desde el <a href="{% url 'comercios' %}">buscador de comercios</a>.</span>
         </div>
@@ -126,35 +140,36 @@
         <span class="step-number" aria-hidden="true">3</span>
         <div class="field">
           {% if method == 'dynamic' %}
-          <label for="{{ form.dynamic_code.id_for_label }}">Clave dinámica de prueba</label>{{ form.dynamic_code }}
+          <label for="{{ form.dynamic_code.id_for_label }}">Clave dinámica</label>{{ form.dynamic_code }}
           {% if form.dynamic_code.errors %}<div class="field-errors" role="alert">{{ form.dynamic_code.errors }}</div>{% endif %}
-          <span class="field-hint">Usa los cuatro dígitos generados para esta demostración.</span>
+          <span class="field-hint">Ingresa los cuatro dígitos de la clave recién generada.</span>
           {% else %}
-          <label for="{{ form.pin.id_for_label }}">PIN de compra de prueba</label>{{ form.pin }}
+          <label for="{{ form.pin.id_for_label }}">PIN de compra</label>{{ form.pin }}
           {% if form.pin.errors %}<div class="field-errors" role="alert">{{ form.pin.errors }}</div>{% endif %}
-          <span class="field-hint">PIN del ejercicio <strong>4826</strong>.</span>
+          <span class="field-hint">Ingresa el PIN de tu tarjeta.</span>
           {% endif %}
         </div>
       </div>
 
       <div class="payment-submit">
-        <button class="button button-full" type="submit"{% if card.is_blocked %} disabled{% endif %}>Confirmar pago de prueba <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button>
+        <button class="button button-full" type="submit"{% if card.is_blocked %} disabled{% endif %}>Revisar pago <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button>
       </div>
     </form>
   </section>
+  {% endif %}
 
-  <aside class="payment-summary" aria-label="Saldo y tarjeta de prueba">
+  <aside class="payment-summary" aria-label="Saldo y tarjeta">
     <section class="balance-card balance-card-compact">
       <div class="card-topline"><span>Saldo disponible</span><span class="card-brand" aria-hidden="true">p.</span></div>
-      <div class="balance-amount">{% if balance is not None %}${{ balance|clp }}{% else %}—{% endif %}</div>
-      <p class="balance-caption">{% if balance is not None %}Pesos chilenos · Saldo ficticio{% else %}Saldo no disponible{% endif %}</p>
+      <div class="balance-amount" data-private-amount>{% if balance is not None %}${{ balance|clp }}{% else %}—{% endif %}</div>
+      <p class="balance-caption">{% if balance is not None %}Pesos chilenos{% else %}Saldo no disponible{% endif %}</p>
       <div class="balance-card-bottom">
         <span>{{ account.public_label }}<small>Terminada en {{ account.number_suffix }}</small></span>
         <span class="status-badge {% if card.is_blocked %}status-pending{% else %}status-success{% endif %}">{% if card.is_blocked %}Bloqueada{% else %}Activa{% endif %}</span>
       </div>
     </section>
     {% if card.is_blocked %}
-    <div class="notice notice-error"><div><strong>La tarjeta de prueba está bloqueada</strong><p>Para pagar, primero se debe habilitar en <a href="{% url 'tarjeta' %}">Mi tarjeta</a>.</p></div></div>
+    <div class="notice notice-error"><div><strong>La tarjeta está bloqueada</strong><p>Para pagar, primero se debe habilitar en <a href="{% url 'tarjeta' %}">Mi tarjeta</a>.</p></div></div>
     {% endif %}
     <div class="account-note"><span aria-hidden="true">i</span><p>El pago requiere una tarjeta activa y saldo suficiente. La misma confirmación conserva un único cargo.</p></div>
   </aside>

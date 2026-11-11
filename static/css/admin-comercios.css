@@ -1,0 +1,18 @@
+.merchant-admin-panel { min-width: 0; padding: clamp(1rem, 3vw, 1.6rem); }
+.merchant-admin-panel h2 { margin-block: 0 1rem; }
+.merchant-admin-panel .section-heading { flex-wrap: wrap; }
+.merchant-admin-list { list-style: none; margin: 0; padding: 0; }
+.merchant-admin-list > li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: .75rem; padding: 1rem .2rem; border-top: 1px solid var(--line); }
+.merchant-admin-list > li > div { display: grid; gap: .3rem; min-width: 0; overflow-wrap: anywhere; }
+.merchant-admin-edit-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .9fr); gap: 1rem; align-items: start; }
+.merchant-admin-state p { line-height: 1.55; }
+.merchant-admin-confirm > summary { width: fit-content; cursor: pointer; }
+.merchant-admin-confirm-body { margin-block-start: .8rem; padding: 1rem; border: 1px solid #e7d4dd; border-radius: .7rem; background: var(--red-bg); }
+.merchant-admin-confirm-body h3 { margin-block: 0 .5rem; }
+.merchant-admin-confirm-body .button { background: var(--red); color: #fff; border-color: var(--red); }
+html[data-admin-density="compact"] .merchant-admin-list > li { padding-block: .55rem; }
+@media (max-width: 740px) { .merchant-admin-edit-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) {
+  .merchant-admin-list > li { grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; }
+  .merchant-admin-list > li > a { grid-column: 1 / -1; justify-self: start; }
+}

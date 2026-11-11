@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load moneda static %}
+{% block title %}Movimientos de hoy{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="{% static 'css/portal-cuenta.css' %}">{% endblock %}
+{% block content %}
+<a class="text-link user-back" href="{% url 'seguimiento' %}">Volver a seguimiento</a>
+<header class="page-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Movimientos de hoy</h1><p>Abonos y compras del {{ today|date:'d/m/Y' }}.</p></div><span class="tag">{{ movements.paginator.count }} registro{{ movements.paginator.count|pluralize:'s' }}</span></header>
+{% include 'includes/admin_density.html' %}
+<section class="surface portal-session-panel" aria-labelledby="portal-movements-heading">
+  <h2 id="portal-movements-heading">Movimientos registrados</h2>
+  <ul class="portal-ledger-list" role="list">
+    {% for movement in movements %}
+    <li>
+      <div><strong>{{ movement.description }}</strong><small class="muted"><a href="{% url 'admin_usuario' movement.account.user_id %}?seccion=movimientos">{{ movement.account.user.username }}</a> · {{ movement.get_kind_display }} · <time datetime="{{ movement.occurred_at|date:'c' }}">{{ movement.occurred_at|date:'H:i:s' }}</time></small></div>
+      <strong>{% if movement.kind == 'cargo' %}−{% else %}+{% endif %}${{ movement.amount|clp }}</strong>
+    </li>
+    {% empty %}<li>No hay movimientos registrados para hoy.</li>{% endfor %}
+  </ul>
+  {% if movements.has_other_pages %}
+  <nav class="portal-ledger-pagination" aria-label="Páginas de movimientos de hoy">
+    {% if movements.has_previous %}<a class="button button-secondary button-small" href="?page={{ movements.previous_page_number }}">Anterior</a>{% endif %}
+    <span class="muted">Página {{ movements.number }} de {{ movements.paginator.num_pages }}</span>
+    {% if movements.has_next %}<a class="button button-secondary button-small" href="?page={{ movements.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

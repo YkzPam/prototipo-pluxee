@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load moneda static %}
+{% block title %}Gestionar usuario{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="{% static 'css/admin-usuario.css' %}">
+<script src="{% static 'js/admin-usuario.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+<a class="text-link user-back" href="{% url 'admin_usuarios' %}">Volver a usuarios</a>
+<header class="page-heading user-page-heading illustrated-heading">
+  <div><span class="eyebrow">GESTIÓN DE USUARIOS</span><h1>{{ target.get_full_name|default:target.username }}</h1><p>Usuario {{ target.username }}</p></div>
+  {% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+  {% if target.is_active %}<span class="status-badge status-success">Cuenta activa</span>{% else %}<span class="status-badge status-neutral">Cuenta desactivada</span>{% endif %}
+</header>
+{% include 'includes/admin_density.html' %}
+<dl class="user-summary-strip" aria-label="Resumen de la cuenta">
+  <div class="surface"><dt>Saldo actual</dt><dd>{% if target.balance is None %}—{% else %}${{ target.balance|clp }}{% endif %}</dd></div>
+  <div class="surface"><dt>Tarjeta</dt><dd>{% if target.card_blocked is None %}Sin tarjeta{% elif target.card_blocked %}<span class="status-badge status-denied">Bloqueada</span>{% else %}<span class="status-badge status-success">Activa</span>{% endif %}</dd></div>
+  <div class="surface"><dt>Último ingreso</dt><dd>{% if target.last_login %}{{ target.last_login|date:'d/m/Y H:i' }}{% else %}Nunca{% endif %}</dd></div>
+  <div class="surface"><dt>Alta</dt><dd>{{ target.date_joined|date:'d/m/Y' }}</dd></div>
+</dl>
+
+<nav class="admin-user-tabs" aria-label="Secciones de la ficha del usuario">
+  <a href="?seccion=datos"{% if section == 'datos' %} aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-user"/></svg>Datos</a>
+  <a href="?seccion=movimientos"{% if section == 'movimientos' %} aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-wallet"/></svg>Movimientos</a>
+  <a href="?seccion=actividad"{% if section == 'actividad' %} aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-tracking"/></svg>Actividad</a>
+</nav>
+
+<div data-admin-user-section>
+  {% if section == 'datos' %}
+  <div class="user-admin-grid">
+    <section class="surface user-panel" aria-labelledby="user-profile-heading">
+      <h2 id="user-profile-heading">Datos de usuario</h2>
+      <form class="user-form" method="post">
+        {% csrf_token %}<input type="hidden" name="action" value="profile">
+        {% include 'includes/user_fields.html' with form=forms.profile %}
+        <button class="button" type="submit">Guardar datos</button>
+      </form>
+    </section>
+    <section class="surface user-panel" aria-labelledby="user-password-heading">
+      <h2 id="user-password-heading">Restablecer contraseña</h2>
+      <p class="muted">La contraseña asignada es temporal. El usuario deberá ingresar con ella y cambiarla antes de continuar.</p>
+      <form class="user-form" method="post">
+        {% csrf_token %}<input type="hidden" name="action" value="password">
+        {% include 'includes/user_fields.html' with form=forms.password %}
+        <button class="button button-secondary" type="submit">Restablecer contraseña</button>
+      </form>
+    </section>
+    <section class="surface user-panel admin-user-access" aria-labelledby="user-access-heading">
+      <h2 id="user-access-heading">Estado de acceso</h2>
+      <p class="muted">La desactivación impide el ingreso y cierra las sesiones previas. El historial de la cuenta se conserva.</p>
+      {% if target.is_active %}
+      <details class="admin-user-deactivation"{% if forms.state.errors %} open{% endif %}>
+        <summary class="button button-secondary">Desactivar acceso</summary>
+        <div class="admin-user-confirmation">
+          <h3>Confirmar desactivación</h3>
+          <p>El usuario {{ target.username }} perderá el acceso hasta que se vuelva a activar su cuenta.</p>
+          <form class="user-form" method="post">
+            {% csrf_token %}<input type="hidden" name="action" value="state">
+            {% include 'includes/user_fields.html' with form=forms.state %}
+            <div class="admin-user-actions">
+              <button class="button admin-user-danger" type="submit" name="confirm_deactivation" value="1">Confirmar desactivación</button>
+              <button class="button button-secondary" type="button" data-admin-cancel hidden>Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </details>
+      {% else %}
+      <form class="user-form" method="post">
+        {% csrf_token %}<input type="hidden" name="action" value="state">
+        {% include 'includes/user_fields.html' with form=forms.state %}
+        <button class="button button-secondary" type="submit">Activar acceso</button>
+      </form>
+      {% endif %}
+    </section>
+    {% if target.card_blocked is not None %}
+    <section class="surface user-panel" aria-labelledby="user-card-heading">
+      <h2 id="user-card-heading">Tarjeta del beneficio</h2>
+      <p class="muted">{% if target.card_blocked %}La tarjeta está bloqueada: no admite pagos, pero el saldo y los movimientos siguen disponibles.{% else %}La tarjeta está activa. Bloquearla impide nuevos pagos e invalida la clave dinámica vigente.{% endif %}</p>
+      <form class="user-form" method="post">
+        {% csrf_token %}<input type="hidden" name="action" value="card">
+        <input type="hidden" name="card-state" value="{% if target.card_blocked %}unblock{% else %}block{% endif %}">
+        {% if forms.card.non_field_errors %}<div class="notice notice-error" role="alert">{{ forms.card.non_field_errors }}</div>{% endif %}
+        <button class="button button-secondary" type="submit"><svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg>{% if target.card_blocked %}Activar tarjeta{% else %}Bloquear tarjeta{% endif %}</button>
+      </form>
+    </section>
+    {% endif %}
+  </div>
+  {% elif section == 'movimientos' %}
+  <div class="user-admin-grid admin-user-movement-layout">
+    <section class="surface user-panel" aria-labelledby="user-history-heading">
+      <h2 id="user-history-heading">Movimientos de la cuenta</h2>
+      <p class="muted">Abonos y compras registrados, desde el más reciente.</p>
+      <ul class="user-list user-movement-list" role="list">
+        {% for movement in movements %}
+        <li>
+          <div class="user-list-identity">
+            <strong>{{ movement.description }}</strong>
+            <small class="muted">{{ movement.get_kind_display }} · <time datetime="{{ movement.occurred_at|date:'c' }}">{{ movement.occurred_at|date:'d/m/Y H:i' }}</time> · N.º {{ movement.pk }}</small>
+          </div>
+          <strong{% if movement.kind == 'abono' %} class="admin-user-credit-amount"{% endif %}>{% if movement.kind == 'cargo' %}−{% else %}+{% endif %}${{ movement.amount|clp }}</strong>
+        </li>
+        {% empty %}<li class="user-list-empty"><p>Esta cuenta todavía no tiene movimientos registrados.</p></li>{% endfor %}
+      </ul>
+      {% include 'includes/admin_usuario_pagination.html' with page=movements section=section label='Páginas de movimientos' only %}
+    </section>
+    <section class="surface user-panel" aria-labelledby="user-credit-heading">
+      <h2 id="user-credit-heading">Abono simulado</h2>
+      {% if account and target.is_active %}
+      <p class="muted">El importe se suma al saldo de la cuenta y queda registrado en el historial.</p>
+      <form class="user-form" method="post">
+        {% csrf_token %}<input type="hidden" name="action" value="credit">
+        {% include 'includes/user_fields.html' with form=forms.credit %}
+        <button class="button" type="submit">Registrar abono</button>
+      </form>
+      {% else %}<p class="muted">El abono requiere una cuenta de beneficio activa.</p>{% endif %}
+    </section>
+  </div>
+  {% else %}
+  <section class="surface user-panel" aria-labelledby="user-activity-heading">
+    <h2 id="user-activity-heading">Actividad de la cuenta</h2>
+    <p class="muted">Operaciones de gestión registradas para esta cuenta.</p>
+    <ul class="user-list admin-user-event-list" role="list">
+      {% for event in activity %}
+      <li>
+        <div class="user-list-identity">
+          <strong>{{ event.operation }}</strong>
+          <small class="muted">{% if event.actor %}Realizado por {{ event.actor.username }}{% else %}Cuenta de origen sin identificar{% endif %}</small>
+        </div>
+        <time datetime="{{ event.created_at|date:'c' }}" class="muted">{{ event.created_at|date:'d/m/Y H:i' }}</time>
+      </li>
+      {% empty %}<li class="user-list-empty"><p>Esta cuenta todavía no tiene operaciones de gestión registradas.</p></li>{% endfor %}
+    </ul>
+    {% include 'includes/admin_usuario_pagination.html' with page=activity section=section label='Páginas de actividad' only %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

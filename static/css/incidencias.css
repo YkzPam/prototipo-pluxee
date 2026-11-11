@@ -1,0 +1,22 @@
+.incident-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: start; gap: 1rem; }
+.incident-panel { padding: clamp(1rem,2.5vw,1.6rem); min-width: 0; }
+.incident-panel h2 { font-size: 1.15rem; margin: 0 0 1rem; }
+.incident-facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem; margin: 0 0 1rem; }
+.incident-facts dt { font-size: .75rem; color: var(--muted); }
+.incident-facts dd { font-size: .84rem; margin: .25rem 0 0; overflow-wrap: anywhere; }
+.incident-form { display: grid; gap: .8rem; padding-block-start: .9rem; border-top: 1px solid var(--line); }
+.incident-form .button { justify-self: start; }
+.incident-priority { display: inline-block; font-size: .75rem; font-weight: 750; padding: .25rem .55rem; border-radius: 999px; background: #eee6f6; color: #51316f; }
+.priority-low { background: #e7efda; color: #3e6029; }
+.priority-high { background: #fff0d7; color: #885812; }
+.priority-urgent { background: #fbe2e9; color: #97314e; }
+.incident-timeline { list-style: none; margin: 0; padding: 0 0 0 .85rem; border-inline-start: 2px solid #dcd0e8; }
+.incident-timeline > li { position: relative; padding: 0 0 1.2rem .8rem; }
+.incident-timeline > li::before { position: absolute; content: ''; left: -1.17rem; top: .25rem; width: .55rem; height: .55rem; border: 2px solid #fff; border-radius: 50%; background: #9471b0; box-shadow: 0 0 0 1px #d8c7e5; }
+.incident-history-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .35rem; }
+.incident-history-top strong { font-size: .85rem; overflow-wrap: anywhere; }
+.incident-history-top time { color: var(--muted); font-size: .72rem; }
+.incident-timeline p { margin: .4rem 0; font-size: .82rem; color: var(--muted); line-height: 1.5; }
+.incident-timeline summary { cursor: pointer; font-size: .8rem; color: var(--purple); }
+@media(max-width: 1000px) { .incident-layout { grid-template-columns: minmax(0,1fr); } }
+@media(max-width: 420px) { .incident-facts { grid-template-columns: minmax(0,1fr); } }

@@ -1,0 +1,73 @@
+.registration-form { gap: 1.2rem; }
+
+.registration-group {
+  min-inline-size: 0;
+  margin: 0;
+  padding: clamp(.8rem, 2.7vw, 1.2rem);
+  border: 1px solid var(--line);
+  border-radius: .8rem;
+}
+
+.registration-group legend {
+  padding-inline: .4rem;
+  color: var(--purple);
+  font-weight: 700;
+}
+
+.registration-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .9rem;
+}
+
+.registration-fields .field { gap: .4rem; min-inline-size: 0; }
+.registration-field-wide { grid-column: 1 / -1; }
+.registration-fields input[aria-invalid="true"] { border-color: var(--red); }
+
+.registration-checks {
+  padding: .75rem .9rem;
+  border-radius: .6rem;
+  background: var(--purple-soft);
+}
+
+.registration-checks p { margin: 0 0 .45rem; font-weight: 700; font-size: .83rem; }
+.registration-checks ul { list-style: none; margin: 0; padding: 0; }
+
+.registration-checks li {
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  padding-block: .16rem;
+  font-size: .8rem;
+}
+
+.registration-checks [data-criterion-status] { color: var(--muted); font-weight: 600; }
+.registration-checks [data-passed] [data-criterion-status] { color: var(--green); }
+.registration-submit { min-height: 44px; }
+
+.registration-complete {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 6vw, 4rem);
+}
+
+.registration-complete-card { padding: clamp(1.25rem, 5vw, 2.5rem); }
+.registration-complete-card p, .registration-complete-card dt { color: var(--muted); }
+
+.registration-complete-card dl {
+  padding: .8rem 1rem;
+  margin: 1.1rem 0;
+  border: 1px solid var(--line);
+  border-radius: .75rem;
+  background: var(--purple-soft);
+}
+
+.registration-complete-card dt { font-size: .8rem; }
+.registration-complete-card dd { margin: .3rem 0 0; font-weight: 700; overflow-wrap: anywhere; }
+
+@media (max-width: 480px) {
+  .registration-fields { grid-template-columns: minmax(0, 1fr); }
+  .registration-fields input { font-size: max(16px, 1rem); }
+  .registration-form .registration-submit { justify-self: stretch; }
+  .registration-complete-card > .button { width: 100%; }
+}

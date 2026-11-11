@@ -1,0 +1,24 @@
+.admin-density-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .45rem .8rem; margin-block: -.15rem 1rem; color: var(--muted); font-size: .78rem; }
+.admin-density-toolbar[hidden] { display: none; }
+.admin-density-buttons { display: inline-flex; gap: .15rem; padding: .2rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--paper, #fff); }
+.admin-density-buttons button { min-height: 2.3rem; padding: .35rem .75rem; border: 1px solid transparent; border-radius: .5rem; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.admin-density-buttons button[aria-pressed="true"] { background: var(--purple-soft); border-color: #dbcee8; color: var(--purple); font-weight: 750; }
+.admin-density-buttons button:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+.app-admin .table-wrap { max-height: min(65vh, 42rem); overflow: auto; scrollbar-width: thin; }
+.app-admin .data-table thead th { position: sticky; top: 0; z-index: 2; background: var(--paper, #fff); box-shadow: 0 1px 0 var(--line); }
+.app-admin .data-table tbody tr:focus-within { background: var(--purple-soft); }
+html[data-admin-density="compact"] .app-admin .data-table :is(td, th) { padding-block: .55rem; }
+html[data-admin-density="compact"] .app-admin .user-list > li,
+html[data-admin-density="compact"] .app-admin .portal-ledger-list > li { padding-block: .55rem; }
+html[data-admin-density="compact"] .app-admin .report-card { padding-block: .8rem; margin-block: .55rem; }
+html[data-admin-density="compact"] .app-admin .report-card h3 { margin-block: 0 .5rem; }
+html[data-admin-density="compact"] .app-admin .report-meta { margin-block: .5rem; }
+html[data-admin-density="compact"] .app-admin .report-text { margin-block: .5rem; }
+
+@media (max-width: 700px) {
+  .admin-density-toolbar { justify-content: space-between; }
+  .app-admin .table-wrap { max-height: none; overflow: visible; }
+  .app-admin .data-table thead th { position: static; box-shadow: none; }
+  html[data-admin-density="compact"] .app-admin .followup-table tbody tr { padding-block: .7rem; }
+}

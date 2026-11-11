@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Administrar comercios{% endblock %}
+{% block content %}
+<header class="page-heading illustrated-heading">
+  <div><span class="eyebrow">CATÁLOGO</span><h1>Administrar comercios</h1><p>Gestiona los datos y la disponibilidad de los comercios del portal.</p></div>
+  {% include 'includes/motion_scene.html' with scene='img/motion-commerce.svg' only %}
+  <a href="{% url 'admin_comercio_crear' %}" class="button">Crear comercio</a>
+</header>
+{% include 'includes/admin_density.html' %}
+<section class="surface merchant-admin-panel" aria-labelledby="merchant-admin-list-heading">
+  <div class="section-heading"><h2 id="merchant-admin-list-heading">Comercios registrados</h2><span class="muted">{{ merchants.paginator.count }} registro{{ merchants.paginator.count|pluralize:'s' }}</span></div>
+  <form method="get" class="user-filters">
+    {% include 'includes/user_fields.html' with form=filters %}
+    <button class="button button-small" type="submit">Filtrar</button>
+    {% if filter_query %}<a class="button button-quiet button-small" href="{% url 'admin_comercios' %}">Limpiar filtros</a>{% endif %}
+  </form>
+  <ul class="merchant-admin-list" role="list">
+    {% for merchant in merchants %}
+    <li>
+      <div><strong>{{ merchant.name }}</strong><small class="muted">{{ merchant.code }} · {{ merchant.category }} · {{ merchant.commune }}</small></div>
+      <span class="status-badge {% if merchant.active %}status-success{% else %}status-neutral{% endif %}">{% if merchant.active %}Activo{% else %}Desactivado{% endif %}</span>
+      <a class="button button-secondary button-small" href="{% url 'admin_comercio' merchant.pk %}">Gestionar<span class="sr-only"> {{ merchant.name }}</span></a>
+    </li>
+    {% empty %}<li class="empty-state">No hay comercios para los filtros seleccionados.</li>{% endfor %}
+  </ul>
+  {% if merchants.has_other_pages %}
+  <nav class="pagination" aria-label="Páginas de comercios">
+    {% if merchants.has_previous %}<a class="button button-secondary button-small" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ merchants.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ merchants.number }} de {{ merchants.paginator.num_pages }}</span>
+    {% if merchants.has_next %}<a class="button button-secondary button-small" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ merchants.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

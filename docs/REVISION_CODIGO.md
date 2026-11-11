@@ -1,0 +1,56 @@
+# Registro de revisión de código
+
+La guía de construcción del prototipo pide revisar el código regularmente (*code review*). Este registro documenta la revisión técnica de la última iteración, sus hallazgos y cómo se resolvió cada uno. Cada corrección quedó cubierta por una prueba automatizada que falla con el código anterior y pasa con el corregido.
+
+## Alcance y método
+
+- **Fecha:** 10 y 11 de noviembre de 2026.
+- **Versión revisada:** rama `fix/clave-temporal-admin`, paquete generado por `scripts/entregar.py`.
+- **Modalidad:** revisión técnica con ejecución real del prototipo. La validación final corresponde a un integrante del equipo (sección «Aprobación»).
+- **Qué se revisó:**
+  1. Contraste del código con la *Guía para la construcción del Prototipo Funcional* y con la *Pauta de evaluación de interfaz y seguridad OWASP* del curso, punto por punto.
+  2. Lectura de las vistas, formularios, modelos, migraciones y plantillas modificadas.
+  3. Ejecución de la suite (`manage.py test`) con cobertura.
+  4. Recorrido automatizado de las 37 pantallas en escritorio y móvil, como beneficiario, administrador y visitante, revisando errores de JavaScript, consola, desbordamiento, imágenes rotas, IDs duplicados y enlaces internos.
+  5. Flujos completos en el navegador: reporte y respuesta, alta y baja de comercios, pago con clave dinámica y comprobante PDF, tarjeta bloqueada, cierre de otras sesiones, tema oscuro y descargas CSV.
+  6. Ejecución en el modo de presentación (HTTPS con MySQL) con `scripts/arranque_seguro.py`, `scripts/mysql_local.py verificar` y `scripts/verificar_https.py`.
+
+## Lista de verificación aplicada
+
+| Área | Criterio | Resultado |
+|---|---|---|
+| Control de acceso (A01) | Cada vista administrativa exige el perfil; las consultas filtran por la cuenta autenticada | Cumple |
+| Criptografía (A02) | Contraseñas con hash, campos sensibles cifrados, TLS en web y MySQL | Cumple |
+| Inyección (A03) | ORM parametrizado; entradas validadas por tipo, rango, largo y caracteres | Corregido en CF04 |
+| Autenticación | Bloqueo por intentos, clave temporal con cambio obligatorio, campos de contraseña ocultos | Corregido en CF02 |
+| Sesiones | Identificadores del framework, cierre completo, inactividad configurable | Cumple |
+| Datos y salidas | Listas y resultados desde tablas, no desde el código | Corregido en CF04 |
+| Portabilidad | Las migraciones funcionan en SQLite (pruebas) y en MySQL (presentación) | Corregido en CF05 |
+| Interfaz | Coherencia visual, contraste WCAG en ambos temas, vista móvil | Corregido (contraste en tema oscuro) |
+| Pruebas | Cobertura sobre 80 % y una prueba por corrección | Cumple: 137 pruebas, 87 % |
+
+## Hallazgos y resolución
+
+| N.º | Severidad | Hallazgo | Archivo | Resolución | Prueba |
+|---|---|---|---|---|---|
+| CF02 | Alta | La contraseña restablecida por el administrador no obligaba a cambiarla, contra la pauta («obligar el cambio de contraseñas temporales») | `beneficios/views_users.py` | La clave asignada queda marcada como temporal y el usuario debe cambiarla al ingresar | `test_admin_reset_assigns_temporary_password_that_must_be_changed` |
+| CF03 | Media | Los gráficos no se dibujaban: la configuración `es-cl` escribía coordenadas SVG con coma decimal | `beneficios/charts.py` | Coordenadas emitidas como texto con punto decimal | `test_report_chart_totals_match_the_filtered_movements` |
+| CF04 | Media | Formularios que aceptaban `< > " ' % ( ) & + \`; categorías y preguntas de Ayuda escritas en el código | `beneficios/validators.py`, formularios, migración `0013` | Validador común en todos los campos de texto libre; tablas `MerchantCategory` y `HelpTopic` | `test_owasp_inputs.py` |
+| CF05 | Alta | La migración de parámetros fallaba en MySQL: restricción `CHECK` sobre una columna autoincremental. SQLite la aceptaba, por eso las pruebas no la detectaron | `beneficios/models.py`, migración `0012` | Clave primaria explícita sin autoincremento | Ejecución de `arranque_seguro.py` y `verificar_https.py` sobre MySQL |
+| R-01 | Baja | Cinco elementos con contraste insuficiente en tema oscuro (orden activo, tarjetas de servicios, etiquetas, avatares, «Sin leer») | `static/css/fluidez.css` | Colores específicos para el tema oscuro; contraste medido entre 8,4:1 y 12,9:1 | Medición automatizada de contraste |
+| R-02 | Baja | Una transición entre páginas omitida dejaba un error rojo en la consola | `static/js/preferences-init.js` | Promesas de la transición manejadas y transición omitida cuando el movimiento está pausado | Recorrido sin errores de consola |
+| R-03 | Baja | Con «sin movimiento» en Apariencia, un aviso flotante no se habría cerrado | `static/js/avisos.js` | El aviso se retira de inmediato cuando no hay animación de salida | Revisión del código |
+
+## Decisiones registradas
+
+- **Apóstrofo en nombres:** la pauta lista `'` entre los caracteres a rechazar. Se aplicó al pie de la letra; un nombre como «O'Ryan» ahora se rechaza. Si el equipo prefiere admitirlo en nombres, basta con añadirlo a los caracteres permitidos de `ProfileForm._name`.
+- **Eliminación de cuentas y comercios:** se desactivan en lugar de borrarse, para conservar la bitácora y el historial (Ley N.º 21.459 y trazabilidad de auditoría).
+- **Bloqueo por intentos:** temporal (15 minutos) y con umbral configurable en Parámetros, en vez de una deshabilitación permanente que requeriría intervención manual.
+
+## Aprobación del equipo
+
+Un integrante distinto del autor debe revisar los cambios y registrar su conformidad. Pasos sugeridos: leer este registro, ejecutar `verificar.cmd`, iniciar `iniciar.cmd` y recorrer las secciones de la guía de presentación.
+
+| Revisor | Fecha | Versión o paquete revisado | Resultado | Observaciones |
+|---|---|---|---|---|
+| | | | | |

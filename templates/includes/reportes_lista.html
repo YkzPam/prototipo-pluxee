@@ -20,7 +20,8 @@
       <div><dt>Folio</dt><dd><code>{{ report.pk }}</code></dd></div>
       <div><dt>Registrado</dt><dd><time datetime="{{ report.created_at|date:'c' }}">{{ report.created_at|date:'d/m/Y H:i' }}</time></dd></div>
       {% if report.status != 'received' %}<div><dt>Última actualización</dt><dd><time datetime="{{ report.updated_at|date:'c' }}">{{ report.updated_at|date:'d/m/Y H:i' }}</time></dd></div>{% endif %}
-      {% if admin_actions %}<div><dt>Cuenta de prueba</dt><dd>{{ report.reporter.username }}</dd></div>{% endif %}
+      {% if admin_actions %}<div><dt>Cuenta</dt><dd>{{ report.reporter.username }}</dd></div>{% endif %}
+      {% if admin_actions %}<div><dt>Prioridad</dt><dd>{{ report.get_priority_display }}</dd></div><div><dt>Responsable</dt><dd>{{ report.assigned_to.username|default:'Sin asignar' }}</dd></div>{% endif %}
     </dl>
     <p class="report-text">{{ report.description }}</p>
     {% if report.response %}
@@ -35,12 +36,13 @@
         <div class="field">
           <label for="response-{{ report.pk }}">Respuesta para el beneficiario (opcional)</label>
           <textarea id="response-{{ report.pk }}" name="response" rows="3" maxlength="400" aria-describedby="response-hint-{{ report.pk }}"></textarea>
-          <p class="field-hint" id="response-hint-{{ report.pk }}">Usa solo datos de prueba. Si dejas el campo vacío, se conserva la respuesta anterior.</p>
+          <p class="field-hint" id="response-hint-{{ report.pk }}">Evita incluir datos personales. Si dejas el campo vacío, se conserva la respuesta anterior.</p>
         </div>
         <button class="button button-small" type="submit">{% if report.status == 'received' %}Marcar en revisión{% else %}Marcar resuelto{% endif %}</button>
       </form>
     </details>
     {% endif %}
+    {% if admin_actions %}<a class="button button-secondary button-small" href="{% url 'incidencia_admin' report.pk %}">Gestionar incidencia e historial</a>{% endif %}
   </article>
   {% empty %}
   <div class="empty-state">{% if admin_actions %}No hay reportes para los filtros seleccionados.{% else %}Esta cuenta aún no tiene reportes registrados.{% endif %}</div>

@@ -1,4 +1,4 @@
-<section class="balance-card balance-card-unified" aria-labelledby="balance-heading" data-balance-card data-balance-state="loading">
+<section class="balance-card balance-card-unified" aria-labelledby="balance-heading" data-balance-card data-balance-state="loading" data-balance-empty="true">
   {% if show_balance_link %}
   <div class="benefit-masthead">
     <div><small>BENEFICIO DE ALIMENTACIÓN</small><strong>Junaeb</strong></div>
@@ -7,13 +7,14 @@
   {% endif %}
   <div class="card-topline">
     <h2 id="balance-heading">Mi saldo</h2>
+    <button class="privacy-toggle" type="button" data-toggle-privacy aria-pressed="false" aria-label="Ocultar importes" hidden><svg class="ui-icon" aria-hidden="true"><use href="#icon-eye"/></svg></button>
     <span class="card-brand" aria-hidden="true">p.</span>
   </div>
   <div class="balance-card-body">
     <div class="balance-reading" role="status" aria-atomic="true">
       <p class="balance-status" data-balance-heading>Consultando saldo…</p>
-      <p class="balance-amount" data-balance>—</p>
-      <p class="balance-caption">Pesos chilenos · Monto ficticio</p>
+      <p class="balance-amount" data-balance data-private-amount>—</p>
+      <p class="balance-caption">Pesos chilenos</p>
       <p class="balance-reference" data-balance-reference hidden><span data-balance-reference-label></span> <time data-balance-time></time></p>
       <p class="balance-detail" data-state-detail hidden></p>
     </div>

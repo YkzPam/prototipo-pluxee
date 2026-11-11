@@ -3,7 +3,7 @@ setlocal DisableDelayedExpansion
 cd /d "%~dp0"
 if not exist ".venv\Scripts\python.exe" call preparar.cmd
 if errorlevel 1 goto error
-".venv\Scripts\python.exe" -c "import MySQLdb, cryptography, cheroot" >nul 2>nul
+".venv\Scripts\python.exe" -c "import MySQLdb, cryptography, cheroot, reportlab" >nul 2>nul
 if errorlevel 1 call preparar.cmd
 if errorlevel 1 goto error
 echo.

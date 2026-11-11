@@ -81,7 +81,7 @@ class PaymentMethodTests(TestCase):
                 rejected = self.client.post(self.pay_url, data)
 
                 self.assertContains(
-                    rejected, 'El código ingresado no identifica a un comercio de prueba activo.', status_code=400,
+                    rejected, 'El código ingresado no identifica a un comercio activo.', status_code=400,
                 )
         self.assertFalse(Payment.objects.exists())
 
@@ -174,7 +174,7 @@ class PaymentMethodTests(TestCase):
 
         DemoCard.objects.filter(pk=self.card.pk).update(status=DemoCard.Status.BLOCKED)
         blocked_card = self.client.post(self.issue_url, {'clave-pin': self.pin})
-        self.assertContains(blocked_card, 'La tarjeta de prueba está bloqueada.', status_code=409)
+        self.assertContains(blocked_card, 'La tarjeta está bloqueada.', status_code=409)
         self.card.refresh_from_db()
         self.assertEqual(self.card.dynamic_code_digest, '')
         self.assertIsNone(self.card.dynamic_expires_at)

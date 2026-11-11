@@ -1,18 +1,22 @@
 """Servicios académicos adicionales, sin conexión con la red real de Pluxee."""
 import secrets
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.contrib import messages
 from django.db import OperationalError, transaction
 from django.db.models import F, Q
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare, salted_hmac
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
-from .events import record
+from .events import log_committed_movement, record
 from .forms_extra import CardActionForm, DynamicCodeForm, MerchantSearchForm, PaymentForm, ProfileForm
-from .models import BenefitAccount, DemoCard, Merchant, MerchantFavorite, Movement, Payment, PaymentThrottle
+from .models import (BenefitAccount, DemoCard, HelpTopic, Merchant, MerchantFavorite, Movement, Payment,
+                     PaymentThrottle)
+from .receipt_pdf import receipt_pdf
 from .security import protected
 from .services import MockDataServiceAdapter, SourceUnavailable
 
@@ -23,6 +27,11 @@ class AuditUnavailable(Exception):
 
 DYNAMIC_CODE_VALIDITY = timedelta(minutes=90)
 PAYMENT_LOCKOUT = timedelta(minutes=15)
+PAYMENT_REVIEW_VALIDITY = timedelta(minutes=5)
+LEGACY_MERCHANT_DESCRIPTIONS = {
+    'Cafetería ficticia para realizar pagos de demostración.': 'Cafetería habilitada para pagos de demostración.',
+    'Panadería ficticia para las funciones del prototipo.': 'Panadería del catálogo de demostración.',
+}
 
 
 def _beneficiary(request):
@@ -60,6 +69,9 @@ def comercios(request):
     items = list(merchants)
     for item in items:
         item.is_favorite = item.pk in favorite_ids
+        if item.address.startswith('Dirección ficticia ') and item.address.endswith(', sin ubicación real'):
+            item.address = 'Ubicación de referencia para la demostración'
+        item.description = LEGACY_MERCHANT_DESCRIPTIONS.get(item.description, item.description)
     return render(request, 'comercios.html', {
         'form': form, 'merchants': items, 'favorite_ids': favorite_ids, 'account': account,
         'q': request.GET.get('q', ''), 'categoria': request.GET.get('categoria', ''),
@@ -80,10 +92,10 @@ def favorito(request, merchant_id):
     existing = MerchantFavorite.objects.filter(user=request.user, merchant=merchant)
     if existing.exists():
         existing.delete()
-        messages.success(request, 'El comercio de prueba se quitó de favoritos.')
+        messages.success(request, 'El comercio se quitó de favoritos.')
     else:
         MerchantFavorite.objects.get_or_create(user=request.user, merchant=merchant)
-        messages.success(request, 'El comercio de prueba se agregó a favoritos.')
+        messages.success(request, 'El comercio se agregó a favoritos.')
     form = MerchantSearchForm(request.GET)
     query = {name: value for name, value in form.cleaned_data.items() if value} if form.is_valid() else {}
     if request.GET.get('favoritos') == '1':
@@ -129,7 +141,15 @@ def _dynamic_digest(request, card, code):
     return salted_hmac('pluxee.demo.dynamic-payment', value, algorithm='sha256').hexdigest()
 
 
-def _payment_result(request, values, account, card):
+def _payment_authorization(request, values, card):
+    credential = card.dynamic_code_digest if values['method'] == Payment.Method.DYNAMIC else card.pin_hash
+    fields = (request.user.pk, request.session.session_key, card.pk, card.changed_at.isoformat(),
+              values['merchant'].pk, values['amount'], values['method'], values['idempotency_key'], credential)
+    return salted_hmac('pluxee.payment-review', ':'.join(map(str, fields)), algorithm='sha256').hexdigest()
+
+
+def _payment_result(request, values, account, card, *, review_only=False, authorization=None,
+                    expected_balance=None):
     """Serializa cargos de una cuenta y confirma libro y comprobante juntos."""
     with transaction.atomic():
         _lock_payment_card(card)
@@ -142,7 +162,7 @@ def _payment_result(request, values, account, card):
             record(request, 'payment', 'denied', 'Referencia de pago ya utilizada con datos distintos.')
             return None, 'La referencia ya se utilizó para otra compra. Se debe iniciar un nuevo pago.', 409
         if not Merchant.objects.filter(pk=values['merchant'].pk, active=True).exists():
-            return None, 'El comercio de prueba ya no está disponible.', 400
+            return None, 'El comercio ya no está disponible.', 400
         try:
             MockDataServiceAdapter.check_service('movements', database='default')
             balance = MockDataServiceAdapter(use_primary=True).balance(account)['balance']
@@ -150,10 +170,20 @@ def _payment_result(request, values, account, card):
             record(request, 'payment', 'pending', 'Pago académico sin procesar por interrupción de la fuente de datos.')
             return None, 'El servicio de consulta está interrumpido. No se realizó ningún cargo. Se puede reintentar cuando vuelva a estar disponible.', 503
         if card.is_blocked:
-            record(request, 'payment', 'denied', 'Pago académico rechazado por tarjeta de prueba bloqueada.')
-            return None, 'La tarjeta de prueba está bloqueada. Se debe activar antes de pagar.', 409
+            record(request, 'payment', 'denied', 'Pago rechazado por tarjeta bloqueada.')
+            return None, 'La tarjeta está bloqueada. Se debe activar antes de pagar.', 409
         now = timezone.now()
-        if method == Payment.Method.DYNAMIC:
+        if authorization is not None:
+            def matches():
+                dynamic_valid = method != Payment.Method.DYNAMIC or (
+                    card.dynamic_expires_at and now < card.dynamic_expires_at and card.dynamic_code_digest
+                )
+                return bool(dynamic_valid) and constant_time_compare(
+                    authorization, _payment_authorization(request, values, card),
+                )
+
+            invalid = 'La autorización cambió o venció. Revisa el pago nuevamente.'
+        elif method == Payment.Method.DYNAMIC:
             def matches():
                 return (request.session.session_key and card.dynamic_expires_at and now < card.dynamic_expires_at
                         and constant_time_compare(card.dynamic_code_digest, _dynamic_digest(request, card, values['dynamic_code'])))
@@ -168,12 +198,16 @@ def _payment_result(request, values, account, card):
         if failure:
             return None, failure, status
         if values['amount'] > balance:
-            record(request, 'payment', 'denied', 'Pago académico rechazado por saldo de prueba insuficiente.')
+            record(request, 'payment', 'denied', 'Pago rechazado por saldo insuficiente.')
             return None, 'El monto supera el saldo disponible. No se realizó ningún cargo.', 400
+        if expected_balance is not None and balance != expected_balance:
+            return None, 'El saldo cambió desde la revisión. Revisa los datos del pago nuevamente.', 409
         _reset_payment_attempts(throttle, now)
+        if review_only:
+            return {'balance': balance, 'authorization': _payment_authorization(request, values, card)}, None, 200
         movement = Movement.objects.create(
             account=account, kind=Movement.Kind.DEBIT, amount=values['amount'],
-            description=f'Pago de prueba: {values["merchant"].name}'[:120], occurred_at=now)
+            description=f'Compra en {values["merchant"].name}'[:120], occurred_at=now)
         payment = Payment.objects.create(
             user=request.user, account=account, merchant=values['merchant'], movement=movement,
             amount=values['amount'], balance_after=balance - values['amount'],
@@ -186,15 +220,19 @@ def _payment_result(request, values, account, card):
             # La excepción sale de atomic: nunca conservar solo una parte de
             # cargo, comprobante y registro obligatorio del pago.
             raise AuditUnavailable
+        log_committed_movement(movement)
         return payment, None, 200
 
 
 def _payment_page(request, form, account, card, method, *, status=200, dynamic_form=None,
-                  issued_code=None, issued_expires_at=None):
-    try:
-        balance = MockDataServiceAdapter().balance(account)['balance']
-    except SourceUnavailable:
-        balance = None
+                  issued_code=None, issued_expires_at=None, review=None, payment_error=None):
+    if review is not None:
+        balance = review['balance']
+    else:
+        try:
+            balance = MockDataServiceAdapter().balance(account)['balance']
+        except SourceUnavailable:
+            balance = None
     selected_merchant = getattr(form, 'cleaned_data', {}).get('merchant') or form['merchant'].value()
     selected_merchant_id = getattr(selected_merchant, 'pk', selected_merchant)
     return render(request, 'pagar.html', {
@@ -203,6 +241,8 @@ def _payment_page(request, form, account, card, method, *, status=200, dynamic_f
         'selected_merchant_id': selected_merchant_id, 'active_page': 'pagar',
         'dynamic_form': dynamic_form if dynamic_form is not None else DynamicCodeForm(prefix='clave'),
         'issued_code': issued_code, 'issued_expires_at': issued_expires_at,
+        'review': review,
+        'payment_error': payment_error,
     }, status=status)
 
 
@@ -215,8 +255,76 @@ def _payment_initial(method, merchant_id):
     return initial
 
 
+def _store_payment_review(request, values, checked, account):
+    now = timezone.now()
+    reviews = {key: value for key, value in request.session.get('payment_reviews', {}).items()
+               if value['expires_at'] > now.timestamp()}
+    # Acotar el estado de las pestañas abiertas sin conservar credenciales.
+    reviews = dict(list(reviews.items())[-4:])
+    token = secrets.token_urlsafe(32)
+    reviews[token] = {
+        'user_id': request.user.pk, 'account_id': account.pk,
+        'merchant_id': values['merchant'].pk, 'amount': values['amount'], 'method': values['method'],
+        'idempotency_key': str(values['idempotency_key']), 'balance': checked['balance'],
+        'authorization': checked['authorization'], 'expires_at': (now + PAYMENT_REVIEW_VALIDITY).timestamp(),
+    }
+    request.session['payment_reviews'] = reviews
+    return token
+
+
+def _payment_review_details(token, stored, values):
+    return {
+        'token': token, 'merchant': values['merchant'], 'amount': stored['amount'],
+        'balance': stored['balance'], 'balance_after': stored['balance'] - stored['amount'],
+        'method_label': dict(Payment.Method.choices)[stored['method']],
+        'expires_at': datetime.fromtimestamp(stored['expires_at'], tz=timezone.get_current_timezone()),
+    }
+
+
+def _review_payment_action(request, account, card):
+    token = request.POST.get('review_token', '') if request.method == 'POST' else request.GET.get('revision', '')
+    stored = request.session.get('payment_reviews', {}).get(token)
+    form = PaymentForm(initial=_payment_initial(Payment.Method.ONLINE, ''))
+    if (not stored or stored['user_id'] != request.user.pk or stored['account_id'] != account.pk
+            or stored['expires_at'] <= timezone.now().timestamp()):
+        return _payment_page(request, form, account, card, Payment.Method.ONLINE, status=409,
+                             payment_error='La revisión venció o ya no está disponible. Ingresa los datos del pago nuevamente.')
+    merchant = Merchant.objects.filter(pk=stored['merchant_id'], active=True).first()
+    values = {'merchant': merchant, 'amount': stored['amount'], 'method': stored['method'],
+              'idempotency_key': uuid.UUID(stored['idempotency_key'])}
+    initial = {**values, 'merchant': stored['merchant_id']}
+    if stored['method'] == Payment.Method.QR and merchant:
+        initial['qr_code'] = merchant.code
+    form = PaymentForm(initial=initial)
+    if request.method == 'GET' and merchant is not None:
+        return _payment_page(request, form, account, card, stored['method'],
+                             review=_payment_review_details(token, stored, values))
+    if request.POST.get('payment_step') == 'edit':
+        reviews = request.session['payment_reviews']
+        reviews.pop(token)
+        request.session['payment_reviews'] = reviews
+        return _payment_page(request, form, account, card, stored['method'])
+    if merchant is None:
+        return _payment_page(request, form, account, card, stored['method'], status=409,
+                             payment_error='El comercio ya no está disponible. Elige otro comercio.')
+    try:
+        payment, failure, status = _payment_result(
+            request, values, account, card, authorization=stored['authorization'], expected_balance=stored['balance'],
+        )
+    except (AuditUnavailable, OperationalError):
+        payment, failure, status = None, 'No fue posible confirmar el pago. Puedes volver a intentar esta misma confirmación.', 503
+    if payment:
+        return redirect('comprobante', payment_id=payment.pk)
+    if status >= 500:
+        request.session.save()
+        return _payment_page(request, form, account, card, stored['method'], status=status,
+                             review=_payment_review_details(token, stored, values), payment_error=failure)
+    return _payment_page(request, form, account, card, stored['method'], status=status, payment_error=failure)
+
+
 @require_http_methods(['GET', 'POST'])
 @protected()
+@never_cache
 def pagar(request):
     account, error = _beneficiary(request)
     if error is not None:
@@ -225,6 +333,10 @@ def pagar(request):
     if card is None:
         return render(request, 'error.html', {'title': 'Tarjeta no disponible', 'status': 404,
             'message': 'La cuenta no tiene una tarjeta de demostración disponible.'}, status=404)
+    if request.method == 'POST' and request.POST.get('payment_step') in ('confirm', 'edit'):
+        return _review_payment_action(request, account, card)
+    if request.method == 'GET' and request.GET.get('revision'):
+        return _review_payment_action(request, account, card)
     method = (request.POST.get('method') if request.method == 'POST' else request.GET.get('metodo'))
     if method not in Payment.Method.values:
         method = Payment.Method.ONLINE
@@ -233,13 +345,19 @@ def pagar(request):
     http_status = 200
     if request.method == 'POST':
         if form.is_valid():
+            review_only = request.POST.get('payment_step') == 'review'
             try:
-                payment, failure, http_status = _payment_result(request, form.cleaned_data, account, card)
+                payment, failure, http_status = _payment_result(
+                    request, form.cleaned_data, account, card, review_only=review_only,
+                )
             except AuditUnavailable:
                 payment, failure, http_status = None, 'No fue posible completar el registro del pago. No se realizó ningún cargo. Se puede reintentar la misma solicitud.', 503
             except OperationalError:
                 payment, failure, http_status = None, 'La operación está ocupada. Se puede reintentar la misma solicitud sin generar un cargo duplicado.', 503
             if payment:
+                if review_only and isinstance(payment, dict):
+                    token = _store_payment_review(request, form.cleaned_data, payment, account)
+                    return redirect(reverse('pagar', query={'revision': token}))
                 return redirect('comprobante', payment_id=payment.pk)
             form.add_error(None, failure)
             if http_status >= 500:
@@ -255,9 +373,9 @@ def _issue_dynamic_code(request, card, pin):
     with transaction.atomic():
         _lock_payment_card(card)
         if card.is_blocked:
-            return None, None, 'La tarjeta de prueba está bloqueada. Se debe activar para generar una clave.', 409
+            return None, None, 'La tarjeta está bloqueada. Se debe activar para generar una clave.', 409
         if not request.session.session_key:
-            return None, None, 'Ingresa nuevamente para generar una clave de prueba.', 403
+            return None, None, 'Ingresa nuevamente para generar una clave.', 403
         now = timezone.now()
         throttle, failure, status = _payment_credential(
             request, now, lambda: card.check_pin(pin), 'El PIN de demostración no es válido.',
@@ -300,7 +418,7 @@ def generar_clave_dinamica(request):
 
 @require_GET
 @protected()
-def comprobante(request, payment_id):
+def comprobante(request, payment_id, *, download=False):
     account, error = _beneficiary(request)
     if error is not None:
         return error
@@ -309,6 +427,9 @@ def comprobante(request, payment_id):
         record(request, 'access', 'denied', 'Comprobante de pago ajeno o inexistente rechazado.')
         return render(request, 'error.html', {'title': 'Comprobante no disponible', 'status': 404,
             'message': 'No se encontró un comprobante disponible para esta cuenta.'}, status=404)
+    if download:
+        return FileResponse(receipt_pdf(payment, account), as_attachment=True,
+                            filename=f'comprobante-{payment.pk}.pdf', content_type='application/pdf')
     return render(request, 'comprobante.html', {'payment': payment, 'account': account, 'active_page': 'pagar'})
 
 
@@ -325,10 +446,11 @@ def perfil(request):
         request.user.last_name = form.cleaned_data['last_name']
         with transaction.atomic():
             request.user.save(update_fields=['first_name', 'last_name'])
-            record(request, 'profile', 'success', 'Nombres ficticios del perfil actualizados.')
+            record(request, 'profile', 'success', 'Nombre y apellido del perfil actualizados.')
         messages.success(request, 'El perfil de demostración se actualizó correctamente.')
         return redirect('perfil')
-    return render(request, 'perfil.html', {'form': form, 'account': account, 'active_page': 'perfil'},
+    return render(request, 'perfil.html', {'form': form, 'account': account,
+                  'card': DemoCard.objects.filter(account=account).first(), 'active_page': 'perfil'},
                   status=400 if request.method == 'POST' and not form.is_valid() else 200)
 
 
@@ -348,8 +470,8 @@ def tarjeta(request):
                 if new_status == DemoCard.Status.BLOCKED:
                     updates.update(dynamic_code_digest='', dynamic_expires_at=None)
                 DemoCard.objects.filter(pk=card.pk).update(**updates)
-                record(request, 'card', 'success', 'Tarjeta de prueba ' + ('bloqueada.' if new_status == DemoCard.Status.BLOCKED else 'activada.'))
-            messages.success(request, 'El estado de la tarjeta de prueba se actualizó.')
+                record(request, 'card', 'success', 'Tarjeta ' + ('bloqueada.' if new_status == DemoCard.Status.BLOCKED else 'activada.'))
+            messages.success(request, 'El estado de la tarjeta se actualizó.')
             return redirect('tarjeta')
         messages.error(request, 'La acción enviada no es válida.')
         return render(request, 'tarjeta.html', {'card': card, 'account': account, 'active_page': 'tarjeta'}, status=400)
@@ -362,12 +484,5 @@ def ayuda(request):
     account, error = _beneficiary(request)
     if error is not None:
         return error
-    faqs = [
-        {'question': '¿Este prototipo utiliza dinero real?', 'answer': 'No. Las cuentas, los saldos, los comercios y los pagos son ficticios y pertenecen al ejercicio académico. No existe conexión con los servicios de Pluxee.'},
-        {'question': '¿Qué ocurre si una consulta se interrumpe?', 'answer': 'La consulta queda pendiente y permite reintentar. Una interrupción no cambia el saldo ni se muestra como un saldo cero.'},
-        {'question': '¿Cómo funciona el pago de demostración?', 'answer': 'Se selecciona un medio de pago, un comercio ficticio y un monto entero en pesos. El pago online, QR y con tarjeta se confirman con el PIN de prueba 4826. Para usar una clave dinámica, se genera con el PIN y se ingresa el código de un solo uso. Cada compra confirmada genera un cargo de prueba y un comprobante.'},
-        {'question': '¿Se puede bloquear la tarjeta de prueba?', 'answer': 'La opción Mi tarjeta permite bloquearla y activarla. Mientras está bloqueada no admite pagos académicos, pero permite consultar saldo y movimientos.'},
-        {'question': '¿Cuándo finaliza la sesión?', 'answer': 'El acceso finaliza al cerrar la sesión o al alcanzar los límites de inactividad o duración configurados. La navegación activa conserva el acceso mientras la sesión siga vigente.'},
-        {'question': '¿Qué información puede editarse?', 'answer': 'Mi perfil permite cambiar únicamente el nombre y el apellido ficticios de esta cuenta. No se requieren datos personales ni credenciales de servicios reales.'},
-    ]
+    faqs = HelpTopic.objects.filter(active=True).values('question', 'answer')
     return render(request, 'ayuda.html', {'faqs': faqs, 'account': account, 'active_page': 'ayuda'})

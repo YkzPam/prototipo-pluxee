@@ -1,0 +1,16 @@
+.payment-review h2 { margin-bottom: 1rem; }
+.payment-review-details { display: grid; gap: .9rem; margin: 0 0 1.2rem; }
+.payment-review-details > div { display: flex; justify-content: space-between; gap: 1rem; }
+.payment-review-details dt { color: var(--muted); font-size: .85rem; }
+.payment-review-details dd { margin: 0; text-align: right; font-weight: 650; overflow-wrap: anywhere; }
+.payment-review-details dd small { display: block; margin-top: .2rem; color: var(--muted); font-weight: 400; }
+.payment-review-amount { font-size: 1.35rem; color: var(--purple); font-variant-numeric: tabular-nums; }
+.payment-review-details .payment-review-balance { padding-top: 1rem; border-top: 1px solid var(--line); }
+.payment-review-balance dd { color: var(--purple); font-variant-numeric: tabular-nums; }
+.payment-review-actions { display: grid; gap: .65rem; margin-top: 1.25rem; }
+.payment-review > .muted { line-height: 1.6; }
+
+@media (max-width: 420px) {
+  .payment-review-details > div { flex-wrap: wrap; gap: .25rem .7rem; }
+  .payment-review-details dd { margin-left: auto; }
+}

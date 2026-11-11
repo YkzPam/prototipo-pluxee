@@ -1,0 +1,36 @@
+<form class="user-form registration-form" method="post" data-registration-form>
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>
+  {% endif %}
+  <fieldset class="registration-group">
+    <legend>Datos de la cuenta</legend>
+    <div class="registration-fields">
+      {% include 'includes/registration_field.html' with field=form.username wide=True only %}
+      {% include 'includes/registration_field.html' with field=form.first_name only %}
+      {% include 'includes/registration_field.html' with field=form.last_name only %}
+    </div>
+  </fieldset>
+  <fieldset class="registration-group">
+    <legend>Seguridad</legend>
+    <div class="registration-fields">
+      {% include 'includes/registration_field.html' with field=form.password1 only %}
+      {% include 'includes/registration_field.html' with field=form.password2 only %}
+      <div class="registration-checks registration-field-wide" data-password-criteria aria-labelledby="password-criteria-heading" role="group">
+        <p id="password-criteria-heading">Requisitos de la contraseña</p>
+        <ul role="list">
+          {% if form.minimum_password_length %}
+          <li data-criterion="length" data-min-length="{{ form.minimum_password_length }}">Al menos {{ form.minimum_password_length }} caracteres<span data-criterion-status hidden></span></li>
+          {% endif %}
+          <li data-criterion="letter">Una letra<span data-criterion-status hidden></span></li>
+          <li data-criterion="digit">Un número<span data-criterion-status hidden></span></li>
+          <li data-criterion="symbol">Un símbolo<span data-criterion-status hidden></span></li>
+          <li data-criterion="match">Confirmación idéntica<span data-criterion-status hidden></span></li>
+        </ul>
+        <p class="sr-only" data-password-progress aria-live="polite" aria-atomic="true"></p>
+      </div>
+      {% include 'includes/registration_field.html' with field=form.pin wide=True only %}
+    </div>
+  </fieldset>
+  <button class="button registration-submit" type="submit">Crear usuario</button>
+</form>

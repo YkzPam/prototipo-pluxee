@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static moneda %}
+{% block title %}Crear usuario{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="{% static 'css/registro.css' %}">
+<script src="{% static 'js/registro.js' %}" defer></script>
+{% endblock %}
+{% block public_content %}
+<main id="contenido" class="registration-layout" tabindex="-1">
+  <section class="registration-intro">
+    <a class="brand brand-light" href="{% url 'ingresar' %}" aria-label="Ir al ingreso">
+      <span class="brand-mark" aria-hidden="true">p<span></span></span><span>pluxee</span>
+    </a>
+    <span class="eyebrow eyebrow-light">REGISTRO DE BENEFICIARIOS</span>
+    <h1>Crear usuario</h1>
+    <p>La cuenta incluye un abono inicial de ${{ initial_credit|clp }} y una tarjeta para simular compras con el PIN que elijas.</p>
+    <p>Usa un alias y una contraseña exclusiva para este portal.</p>
+    {% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+    <a class="registration-back" href="{% url 'ingresar' %}">Volver al inicio de sesión</a>
+  </section>
+  <section class="surface user-panel registration-panel" aria-label="Formulario de registro">
+    {% include 'includes/user_registration_form.html' %}
+  </section>
+</main>
+{% endblock %}
+{% block content %}
+<header class="page-heading illustrated-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Crear usuario</h1><p>Crea una cuenta de beneficiario con tarjeta y un abono inicial de ${{ initial_credit|clp }}.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}</header>
+<a class="text-link user-back" href="{% url 'admin_usuarios' %}">Volver a usuarios</a>
+<section class="surface user-panel user-narrow registration-panel" aria-label="Formulario de alta">
+  {% include 'includes/user_registration_form.html' %}
+</section>
+{% endblock %}

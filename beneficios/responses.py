@@ -16,7 +16,7 @@ class UpdatedResponseCreator(ResponseCreator):
 
 
 class PendingResponseCreator(ResponseCreator):
-    def create_response(self, request, message='La consulta está pendiente. El servicio de prueba no está disponible; se puede reintentar.', **extra):
+    def create_response(self, request, message='La consulta está pendiente. El servicio no está disponible en este momento; se puede reintentar.', **extra):
         return JsonResponse({'status': 'pending', 'message': message,
                              'request_id': str(request.request_id), **extra}, status=503)
 

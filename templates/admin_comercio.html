@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}{% if creating %}Crear comercio{% else %}Gestionar comercio{% endif %}{% endblock %}
+{% block content %}
+<a class="text-link user-back" href="{% url 'admin_comercios' %}">Volver a comercios</a>
+<header class="page-heading illustrated-heading">
+  <div><span class="eyebrow">CATÁLOGO</span><h1>{% if creating %}Crear comercio{% else %}{{ merchant.name }}{% endif %}</h1><p>{% if creating %}Completa los datos para incorporar el comercio al catálogo.{% else %}Código {{ merchant.code }}{% endif %}</p></div>
+  {% include 'includes/motion_scene.html' with scene='img/motion-commerce.svg' only %}
+  {% if not creating %}<span class="status-badge {% if merchant.active %}status-success{% else %}status-neutral{% endif %}">{% if merchant.active %}Activo{% else %}Desactivado{% endif %}</span>{% endif %}
+</header>
+<div class="merchant-admin-edit-layout">
+  <section class="surface merchant-admin-panel" aria-labelledby="merchant-form-heading">
+    <h2 id="merchant-form-heading">Datos del comercio</h2>
+    <form method="post" class="user-form">
+      {% csrf_token %}{% if not creating %}<input type="hidden" name="action" value="edit">{% endif %}
+      {% include 'includes/user_fields.html' %}
+      <button class="button" type="submit">{% if creating %}Crear comercio{% else %}Guardar cambios{% endif %}</button>
+    </form>
+  </section>
+  {% if not creating %}
+  <section class="surface merchant-admin-panel merchant-admin-state" aria-labelledby="merchant-state-heading">
+    <h2 id="merchant-state-heading">Disponibilidad</h2>
+    <p class="muted">Un comercio desactivado queda fuera del catálogo público y de los nuevos pagos. Sus operaciones anteriores se conservan.</p>
+    {% if merchant.active %}
+    <details class="merchant-admin-confirm"{% if state_form.errors %} open{% endif %}>
+      <summary class="button button-secondary">Desactivar comercio</summary>
+      <div class="merchant-admin-confirm-body">
+        <h3>Confirmar desactivación</h3>
+        <p>El comercio {{ merchant.name }} dejará de estar disponible para nuevas compras.</p>
+        <form method="post" class="user-form">
+          {% csrf_token %}<input type="hidden" name="action" value="state">
+          {% include 'includes/user_fields.html' with form=state_form %}
+          <button class="button" type="submit" name="confirm_state" value="1">Confirmar desactivación</button>
+        </form>
+      </div>
+    </details>
+    {% else %}
+    <form method="post" class="user-form">
+      {% csrf_token %}<input type="hidden" name="action" value="state">
+      {% include 'includes/user_fields.html' with form=state_form %}
+      <button class="button" type="submit">Activar comercio</button>
+    </form>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

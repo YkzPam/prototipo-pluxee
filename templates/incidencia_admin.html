@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Gestionar incidencia{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="{% static 'css/incidencias.css' %}">{% endblock %}
+{% block content %}
+<a class="text-link user-back" href="{% url 'reportes_admin' %}">Volver a reportes</a>
+<header class="page-heading illustrated-heading">
+  <div><span class="eyebrow">GESTIÓN DE INCIDENCIAS</span><h1>{{ report.get_category_display }}</h1><p>Folio {{ report.pk }}</p></div>
+  {% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+</header>
+<div class="incident-layout">
+  <section class="surface incident-panel" aria-labelledby="incident-details-heading">
+    <h2 id="incident-details-heading">Información del reporte</h2>
+    <dl class="incident-facts">
+      <div><dt>Cuenta</dt><dd>{{ report.reporter.username }}</dd></div>
+      <div><dt>Registrado</dt><dd>{{ report.created_at|date:'d/m/Y H:i' }}</dd></div>
+      <div><dt>Estado</dt><dd>{{ report.get_status_display }}</dd></div>
+      <div><dt>Prioridad</dt><dd><span class="incident-priority priority-{{ report.priority }}">{{ report.get_priority_display }}</span></dd></div>
+      <div><dt>Responsable</dt><dd>{{ report.assigned_to.username|default:'Sin asignar' }}</dd></div>
+    </dl>
+    <p class="report-text">{{ report.description }}</p>
+    <form method="post" class="standard-form incident-form">
+      {% csrf_token %}
+      {% include 'includes/user_fields.html' %}
+      <button class="button" type="submit">Guardar cambios</button>
+    </form>
+  </section>
+  <section class="surface incident-panel" aria-labelledby="incident-history-heading">
+    <h2 id="incident-history-heading">Historial de cambios</h2>
+    <ol class="incident-timeline" role="list">
+      {% for update in history %}
+      <li>
+        <div class="incident-history-top"><strong>{{ update.actor.username|default:'Cuenta no disponible' }}</strong><time datetime="{{ update.created_at|date:'c' }}">{{ update.created_at|date:'d/m/Y H:i' }}</time></div>
+        {% if update.old_status != update.new_status %}<p>Estado de <strong>{{ update.get_old_status_display }}</strong> a <strong>{{ update.get_new_status_display }}</strong>.</p>{% endif %}
+        {% if update.old_priority != update.new_priority %}<p>Prioridad de <strong>{{ update.get_old_priority_display }}</strong> a <strong>{{ update.get_new_priority_display }}</strong>.</p>{% endif %}
+        {% if update.old_assigned_to_id != update.new_assigned_to_id %}<p>Responsable de <strong>{{ update.old_assigned_to.username|default:'Sin asignar' }}</strong> a <strong>{{ update.new_assigned_to.username|default:'Sin asignar' }}</strong>.</p>{% endif %}
+        {% if update.response_changed %}<details><summary>Respuesta registrada</summary><p class="report-text">{{ update.response|default:'La respuesta quedó vacía.' }}</p></details>{% endif %}
+      </li>
+      {% empty %}
+      <li><p>Las actualizaciones realizadas desde esta gestión aparecerán aquí.</p></li>
+      {% endfor %}
+    </ol>
+    {% if history.has_other_pages %}
+    <nav class="pagination" aria-label="Páginas del historial de la incidencia">
+      {% if history.has_previous %}<a class="button button-secondary button-small" href="?page={{ history.previous_page_number }}">Anterior</a>{% endif %}
+      <span>Página {{ history.number }} de {{ history.paginator.num_pages }}</span>
+      {% if history.has_next %}<a class="button button-secondary button-small" href="?page={{ history.next_page_number }}">Siguiente</a>{% endif %}
+    </nav>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

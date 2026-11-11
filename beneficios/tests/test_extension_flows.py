@@ -304,14 +304,15 @@ class ExtendedPrototypeFlowsTests(TestCase):
 
     def test_profile_changes_only_authenticated_users_validated_names(self):
         self.sign_in()
-        response = self.client.post(reverse('perfil'), {'first_name': 'María José', 'last_name': "O'Ryan-Pérez", 'user': self.bob.pk})
+        response = self.client.post(reverse('perfil'), {'first_name': 'María José', 'last_name': 'Ryan-Pérez', 'user': self.bob.pk})
         self.assertEqual(response.status_code, 302)
         self.alice.refresh_from_db()
         self.bob.refresh_from_db()
         self.assertEqual(self.alice.first_name, 'María José')
-        self.assertEqual(self.alice.last_name, "O'Ryan-Pérez")
+        self.assertEqual(self.alice.last_name, 'Ryan-Pérez')
         self.assertEqual(self.bob.first_name, 'Bruno')
-        for first_name in ('<script>alert(1)</script>', 'A' * 41, 'Nombre123', ''):
+        # La pauta OWASP del curso también rechaza el apóstrofo.
+        for first_name in ('<script>alert(1)</script>', 'A' * 41, 'Nombre123', '', "O'Ryan"):
             with self.subTest(first_name=first_name):
                 invalid = self.client.post(reverse('perfil'), {'first_name': first_name, 'last_name': 'Prueba'})
                 self.assertNotEqual(invalid.status_code, 302)

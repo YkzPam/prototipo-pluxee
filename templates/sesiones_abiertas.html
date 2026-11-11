@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sesiones abiertas{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="{% static 'css/portal-cuenta.css' %}">{% endblock %}
+{% block content %}
+<a class="text-link user-back" href="{% if request.user.is_staff %}{% url 'seguimiento' %}{% else %}{% url 'perfil' %}{% endif %}">Volver a {% if request.user.is_staff %}seguimiento{% else %}mi perfil{% endif %}</a>
+<header class="page-heading"><div><span class="eyebrow">SEGURIDAD DE LA CUENTA</span><h1>Sesiones abiertas</h1><p>Accesos que siguen vigentes para esta cuenta.</p></div></header>
+<section class="surface portal-session-panel" aria-labelledby="portal-session-heading">
+  <div class="section-heading"><div><h2 id="portal-session-heading">Accesos vigentes</h2><p class="muted">El inicio y la última actividad corresponden a los registros de cada sesión.</p></div><span class="tag">{{ sessions|length }} {% if sessions|length == 1 %}sesión{% else %}sesiones{% endif %}</span></div>
+  <ul class="portal-session-list" role="list">
+    {% for session in sessions %}
+    <li>
+      <div class="portal-session-title"><strong>{% if session.current %}Esta sesión{% else %}Otra sesión{% endif %}</strong>{% if session.current %}<span class="status-badge status-success">Actual</span>{% endif %}</div>
+      <dl class="portal-session-dates">
+        <div><dt>Inicio</dt><dd>{% if session.started_at %}<time datetime="{{ session.started_at|date:'c' }}">{{ session.started_at|date:'d/m/Y H:i:s' }}</time>{% else %}Fecha no registrada{% endif %}</dd></div>
+        <div><dt>Última actividad</dt><dd>{% if session.last_activity_at %}<time datetime="{{ session.last_activity_at|date:'c' }}">{{ session.last_activity_at|date:'d/m/Y H:i:s' }}</time>{% else %}Fecha no registrada{% endif %}</dd></div>
+      </dl>
+    </li>
+    {% empty %}<li>No se encontraron otras sesiones vigentes.</li>{% endfor %}
+  </ul>
+  <form method="post" action="{% url 'cerrar_otras_sesiones' %}" class="portal-session-action">
+    {% csrf_token %}<p class="muted">Las otras sesiones deberán volver a ingresar con sus credenciales.</p>
+    <button class="button button-secondary" type="submit"{% if not other_sessions %} disabled{% endif %}>Cerrar otras sesiones</button>
+  </form>
+</section>
+{% endblock %}

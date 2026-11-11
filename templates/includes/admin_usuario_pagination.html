@@ -1,0 +1,7 @@
+{% if page.has_other_pages %}
+<nav class="admin-user-pagination" aria-label="{{ label }}">
+  {% if page.has_previous %}<a class="button button-secondary button-small" href="?seccion={{ section }}&amp;page={{ page.previous_page_number }}">Anterior</a>{% endif %}
+  <span class="muted">Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a class="button button-secondary button-small" href="?seccion={{ section }}&amp;page={{ page.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}

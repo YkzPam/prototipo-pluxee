@@ -31,6 +31,7 @@ TEMPLATES = [{
         'django.contrib.auth.context_processors.auth',
         'django.contrib.messages.context_processors.messages',
         'beneficios.context_processors.project_context',
+        'beneficios.context_processors.notification_context',
     ]},
 }]
 WSGI_APPLICATION = 'config.wsgi.application'
@@ -73,6 +74,7 @@ LOGIN_MAX_ATTEMPTS = int(os.environ.get('LOGIN_MAX_ATTEMPTS', '5'))
 LOGIN_WINDOW_SECONDS = 300
 LOGIN_LOCK_SECONDS = 900
 QUERY_RETRY_SECONDS = 2
+REGISTRATION_INITIAL_CREDIT = 48000
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_FAILURE_VIEW = 'beneficios.views.csrf_failure'
@@ -82,4 +84,5 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 65536
 FILE_UPLOAD_MAX_MEMORY_SIZE = 65536
 LOGGING = {'version': 1, 'disable_existing_loggers': False,
            'handlers': {'console': {'class': 'logging.StreamHandler'}},
+           'loggers': {'beneficios.movimientos': {'handlers': ['console'], 'level': 'INFO', 'propagate': False}},
            'root': {'handlers': ['console'], 'level': 'WARNING'}}

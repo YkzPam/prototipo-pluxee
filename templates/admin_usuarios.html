@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load moneda %}
+{% block title %}Administrar usuarios{% endblock %}
+{% block content %}
+<header class="page-heading user-page-heading illustrated-heading">
+  <div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Administrar usuarios</h1><p>Consulta las cuentas de beneficiarios y gestiona sus accesos y abonos.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+  <a class="button" href="{% url 'admin_crear_usuario' %}">Crear usuario</a>
+</header>
+{% include 'includes/admin_density.html' %}
+<section class="surface user-panel" aria-labelledby="user-list-title">
+  <h2 id="user-list-title">Beneficiarios registrados</h2>
+  <form method="get" class="user-filters">
+    {% include 'includes/user_fields.html' with form=filters %}
+    <button class="button button-small" type="submit">Filtrar</button>
+    {% if filter_query %}<a class="button button-quiet button-small" href="{% url 'admin_usuarios' %}">Limpiar filtros</a>{% endif %}
+  </form>
+  <div class="user-table-toolbar">
+    <span class="muted">{{ users.paginator.count }} cuenta{{ users.paginator.count|pluralize }}</span>
+    <nav class="user-sort" aria-label="Ordenar cuentas">
+      <span class="muted">Ordenar por</span>
+      {% for key, label in orderings %}<a href="?{% if sort_query %}{{ sort_query }}&amp;{% endif %}orden={{ key }}"{% if order == key %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+    </nav>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table user-table" role="table">
+      <caption class="sr-only">Cuentas de beneficiarios</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col">Usuario</th><th scope="col">Estado</th><th scope="col">Tarjeta</th><th scope="col" class="amount-cell">Saldo</th><th scope="col">Último ingreso</th><th scope="col">Alta</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
+      <tbody role="rowgroup">
+        {% for user in users %}
+        <tr role="row">
+          <th scope="row" class="user-table-identity"><span class="avatar" aria-hidden="true">{{ user.get_short_name|default:user.username|first|upper }}</span><span><strong>{{ user.get_full_name|default:user.username }}</strong><small class="muted">{{ user.username }}</small></span></th>
+          <td>{% if user.is_active %}<span class="status-badge status-success">Activa</span>{% else %}<span class="status-badge status-neutral">Desactivada</span>{% endif %}</td>
+          <td>{% if user.card_blocked is None %}<span class="muted">Sin tarjeta</span>{% elif user.card_blocked %}<span class="status-badge status-denied">Bloqueada</span>{% else %}<span class="status-badge status-success">Activa</span>{% endif %}</td>
+          <td class="amount-cell">{% if user.balance is None %}<span class="muted">—</span>{% else %}${{ user.balance|clp }}{% endif %}</td>
+          <td class="nowrap">{% if user.last_login %}<time datetime="{{ user.last_login|date:'c' }}">{{ user.last_login|date:'d/m/Y H:i' }}</time>{% else %}<span class="muted">Nunca</span>{% endif %}</td>
+          <td class="nowrap"><time datetime="{{ user.date_joined|date:'c' }}">{{ user.date_joined|date:'d/m/Y' }}</time></td>
+          <td><a class="button button-secondary button-small" href="{% url 'admin_usuario' user.pk %}">Gestionar<span class="sr-only"> {{ user.username }}</span></a></td>
+        </tr>
+        {% empty %}
+        <tr role="row"><td colspan="7"><p class="user-list-empty">No hay cuentas para estos filtros.</p></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if users.has_other_pages %}
+  <nav class="pagination" aria-label="Páginas de usuarios">
+    {% if users.has_previous %}<a class="button button-secondary button-small" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ users.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ users.number }} de {{ users.paginator.num_pages }}</span>
+    {% if users.has_next %}<a class="button button-secondary button-small" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ users.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

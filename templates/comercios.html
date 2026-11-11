@@ -1,23 +1,23 @@
 {% extends 'base.html' %}
+{% load static merchant_visuals %}
 {% block title %}Comercios{% endblock %}
 {% block content %}
-<header class="pluxee-section-hero">
+<header class="page-heading illustrated-heading">
   <div>
-    <span class="pluxee-section-badge">Beneficio Junaeb · Demo</span>
+    <span class="eyebrow">MI BENEFICIO</span>
     <h1>Comercios</h1>
-    <p>Busca dónde usar el saldo de demostración.</p>
-  </div>
-  <span class="pluxee-section-symbol" aria-hidden="true"><svg class="ui-icon"><use href="#icon-shop"/></svg></span>
+    <p>Explora el catálogo y guarda tus comercios favoritos.</p>
+  </div>{% include 'includes/motion_scene.html' with scene='img/motion-commerce.svg' only %}
 </header>
 <section class="surface merchant-search pluxee-merchant-search" aria-labelledby="merchant-search-heading">
   <div class="pluxee-merchant-search-intro">
     <h2 id="merchant-search-heading">Buscador de comercios</h2>
-    <p class="muted">El catálogo y sus ubicaciones son ficticios.</p>
+    <p class="muted">Catálogo para simular compras.</p>
   </div>
   <form class="filters merchant-filters" method="get">
     <div class="field merchant-query"><label for="id_q">Nombre o código del comercio</label>{{ form.q }}</div>
     <div class="field"><label for="id_categoria">Categoría</label>{{ form.categoria }}</div>
-    <div class="field"><label for="id_comuna">Comuna de prueba</label>{{ form.comuna }}</div>
+    <div class="field"><label for="id_comuna">Comuna</label>{{ form.comuna }}</div>
     <div class="pluxee-merchant-actions">
       <label class="pluxee-merchant-favorites"><input type="checkbox" name="favoritos" value="1"{% if favorites_only %} checked{% endif %}> Solo favoritos</label>
       <button class="button button-small" type="submit">Buscar</button>
@@ -26,10 +26,11 @@
   </form>
   {% if form.errors %}<div class="notice notice-error" role="alert">{{ form.errors }}</div>{% endif %}
 </section>
-<div class="section-heading merchant-result-heading pluxee-merchant-results"><div><h2>{% if favorites_only %}Mis favoritos{% else %}Locales de prueba{% endif %}</h2><p class="muted">Guarda un local con el corazón para encontrarlo más rápido.</p></div><span class="result-count">{{ merchants|length }} resultado{{ merchants|length|pluralize:'s' }}</span></div>
+<div class="section-heading merchant-result-heading pluxee-merchant-results"><div><h2>{% if favorites_only %}Mis favoritos{% else %}Locales{% endif %}</h2><p class="muted">Guarda un local con el corazón para encontrarlo más rápido.</p></div><span class="result-count">{{ merchants|length }} resultado{{ merchants|length|pluralize:'s' }}</span></div>
 <div class="merchant-grid">
   {% for merchant in merchants %}
   <article class="surface merchant-card">
+    <div class="merchant-cover" aria-hidden="true"><img src="{% static merchant.category|merchant_cover %}" width="360" height="180" alt="" loading="lazy" decoding="async"></div>
     <div class="merchant-card-head">
       <span class="merchant-avatar" aria-hidden="true"><svg class="ui-icon"><use href="#icon-shop"/></svg></span>
       <div class="merchant-identity">
@@ -47,12 +48,12 @@
     <p class="merchant-description">{{ merchant.description }}</p>
     <p class="merchant-address">{{ merchant.address }}</p>
     <div class="merchant-card-foot">
-      <span class="merchant-code">Código {{ merchant.code }}<small>Local ficticio</small></span>
-      <a class="button button-secondary button-small" href="{% url 'pagar' %}?comercio={{ merchant.pk }}">Pagar aquí <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+      <span class="merchant-code">Código {{ merchant.code }}</span>
+      <a class="button button-secondary button-small" href="{% url 'pagar' %}?comercio={{ merchant.pk }}">Ir al pago <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
     </div>
   </article>
   {% empty %}
-  <section class="surface merchant-empty"><div class="empty-state"><svg class="ui-icon" aria-hidden="true"><use href="#icon-shop"/></svg><strong>No se encontraron comercios</strong><p>Se puede cambiar el nombre, el código o los filtros para volver a buscar.</p><a class="button button-secondary button-small" href="{% url 'comercios' %}">Ver todos los locales</a></div></section>
+  <section class="surface merchant-empty"><div class="empty-state">{% include 'includes/empty_illustration.html' with theme='merchants' only %}<strong>No se encontraron comercios</strong><p>Se puede cambiar el nombre, el código o los filtros para volver a buscar.</p><a class="button button-secondary button-small" href="{% url 'comercios' %}">Ver todos los locales</a></div></section>
   {% endfor %}
 </div>
 {% endblock %}

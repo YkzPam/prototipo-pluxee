@@ -1,0 +1,10 @@
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+  <div class="notice feedback-notice {% if message.level_tag == 'error' %}notice-error{% elif message.level_tag == 'warning' %}notice-warning{% elif message.level_tag == 'success' %}notice-success{% else %}notice-info{% endif %}" role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}">
+    <span class="feedback-icon" aria-hidden="true"><svg class="ui-icon"><use href="{% if message.level_tag == 'success' %}#icon-check{% else %}#icon-help{% endif %}"/></svg></span>
+    <p>{{ message }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

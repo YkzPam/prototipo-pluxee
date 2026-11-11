@@ -1,0 +1,63 @@
+.admin-user-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .35rem;
+  margin: 0 0 1.1rem;
+  padding: .35rem;
+  border: 1px solid var(--line);
+  border-radius: .95rem;
+  background: var(--paper);
+}
+
+.admin-user-tabs a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-height: 2.9rem;
+  padding: .5rem .15rem;
+  border-radius: .65rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-user-tabs a:hover { background: var(--purple-soft); }
+.admin-user-tabs a[aria-current='page'] { background: var(--purple); color: white; }
+.admin-user-tabs .ui-icon { width: 1.15rem; height: 1.15rem; flex: none; }
+.admin-user-access { grid-column: 1 / -1; }
+.admin-user-movement-layout { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; }
+.admin-user-credit-amount { color: var(--green); }
+.user-list.admin-user-event-list > li { grid-template-columns: minmax(0, 1fr) auto; }
+.admin-user-event-list time { font-variant-numeric: tabular-nums; }
+
+.admin-user-deactivation > summary { width: fit-content; cursor: pointer; }
+.admin-user-deactivation > summary::-webkit-details-marker { display: none; }
+.admin-user-deactivation > summary:focus-visible { outline: 3px solid #9972c9; outline-offset: 3px; }
+
+.admin-user-confirmation {
+  margin-top: .85rem;
+  padding: 1rem;
+  border: 1px solid #ebc6c9;
+  border-radius: .65rem;
+  background: var(--red-bg);
+  overflow-wrap: anywhere;
+}
+
+.admin-user-actions, .admin-user-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+}
+
+.admin-user-pagination { margin-top: 1rem; }
+.admin-user-danger, .admin-user-danger:hover { background: var(--red); color: white; border-color: var(--red); }
+
+@media (max-width: 740px) {
+  .admin-user-movement-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 440px) {
+  .admin-user-tabs a { flex-direction: column; gap: .25rem; font-size: .8rem; }
+  .user-list.admin-user-event-list > li { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
+}

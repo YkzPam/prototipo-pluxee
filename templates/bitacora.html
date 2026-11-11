@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Bitácora de eventos{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="{% static 'css/portal-cuenta.css' %}">{% endblock %}
+{% block content %}
+<div class="page-heading illustrated-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Bitácora de eventos</h1><p>Accesos, consultas y cambios de estado registrados por el servidor. Los registros excluyen contraseñas e identificadores de sesión.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}</div>
+{% include 'includes/admin_density.html' %}
+{% if selected_interruption %}
+<section class="surface followup-interruption" aria-labelledby="interruption-detail-heading">
+  <div class="section-heading">
+    <div>
+      <h2 id="interruption-detail-heading">Interrupción simulada de {{ selected_interruption.get_service_code_display|lower }}</h2>
+      <p class="muted">La bitácora muestra las consultas que quedaron pendientes durante este periodo.</p>
+    </div>
+    <span class="status-badge {% if selected_interruption.restored_at %}status-success{% else %}status-pending{% endif %}">{% if selected_interruption.restored_at %}Restablecido{% else %}En curso{% endif %}</span>
+  </div>
+  <ol class="followup-milestones" role="list" aria-label="Hitos de la interrupción">
+    <li class="followup-milestone followup-milestone-done"{% if not selected_interruption.restored_at %} aria-current="step"{% endif %}>
+      <span class="followup-milestone-marker" aria-hidden="true">1</span>
+      <div><strong>Interrupción iniciada</strong><time datetime="{{ selected_interruption.started_at|date:'c' }}">{{ selected_interruption.started_at|date:'d/m/Y H:i:s' }}</time></div>
+    </li>
+    <li class="followup-milestone{% if selected_interruption.restored_at %} followup-milestone-done{% endif %}"{% if selected_interruption.restored_at and not selected_interruption.verified_at %} aria-current="step"{% endif %}>
+      <span class="followup-milestone-marker" aria-hidden="true">2</span>
+      <div><strong>Servicio restablecido</strong>{% if selected_interruption.restored_at %}<time datetime="{{ selected_interruption.restored_at|date:'c' }}">{{ selected_interruption.restored_at|date:'d/m/Y H:i:s' }}</time>{% else %}<span class="muted">Pendiente</span>{% endif %}</div>
+    </li>
+    <li class="followup-milestone{% if selected_interruption.verified_at %} followup-milestone-done{% endif %}"{% if selected_interruption.verified_at %} aria-current="step"{% endif %}>
+      <span class="followup-milestone-marker" aria-hidden="true">3</span>
+      <div><strong>Recuperación comprobada</strong>{% if selected_interruption.verified_at %}<time datetime="{{ selected_interruption.verified_at|date:'c' }}">{{ selected_interruption.verified_at|date:'d/m/Y H:i:s' }}</time>{% else %}<span class="muted">Pendiente</span>{% endif %}</div>
+    </li>
+  </ol>
+  <dl class="followup-interruption-facts">
+    <div><dt>Duración</dt><dd>{{ selected_interruption.elapsed }}{% if not selected_interruption.restored_at %} transcurridos{% endif %}</dd></div>
+    <div><dt>Consultas pendientes registradas</dt><dd>{{ selected_interruption.pending_count }}</dd></div>
+  </dl>
+  <section class="restoration-note" aria-labelledby="comprobacion-restablecimiento">
+    <h3 id="comprobacion-restablecimiento" tabindex="-1">Comprobación del restablecimiento</h3>
+    {% if selected_interruption.verified_at %}
+    <p class="restoration-note-text">{{ selected_interruption.verification_note|linebreaksbr }}</p>
+    {% if selected_interruption.verified_by %}<p class="muted">Comprobación registrada por {{ selected_interruption.verified_by.get_username }}.</p>{% endif %}
+    {% elif selected_interruption.restored_at %}
+    <form class="restoration-note-form" method="post" action="{% url 'interrupcion_verificar' selected_interruption.pk %}">
+      {% csrf_token %}
+      <label for="verification_note">Nota de verificación</label>
+      <textarea id="verification_note" name="verification_note" rows="3" maxlength="400" required aria-describedby="verification-note-help"></textarea>
+      <p class="muted" id="verification-note-help">Indicar qué se comprobó al volver a consultar. El registro admite hasta 400 caracteres.</p>
+      <button class="button button-small" type="submit">Registrar comprobación</button>
+    </form>
+    {% else %}
+    <p class="muted">La comprobación se puede registrar una vez restablecido el servicio.</p>
+    {% endif %}
+  </section>
+  <a class="text-link" href="{% url 'bitacora' %}">Ver toda la bitácora</a>
+</section>
+{% endif %}
+<section class="surface events-section" aria-labelledby="bitacora">
+<div class="section-heading followup-event-heading">
+  <div><h2 id="bitacora" tabindex="-1">{% if selected_interruption %}Eventos de la interrupción{% else %}Eventos registrados{% endif %}</h2><p class="muted">{{ events.paginator.count }} registro{{ events.paginator.count|pluralize }} con los filtros actuales.</p></div>
+  {% if export_available %}<a class="button button-secondary button-small" href="{% url 'seguimiento_exportar' %}{% if event_query %}?{{ event_query }}{% endif %}">Descargar registros filtrados (CSV)</a>{% endif %}
+</div>
+{% if filters.period == '24h' %}<p class="followup-filter-context">Se muestran los eventos de las últimas 24 horas.</p>{% endif %}
+<form class="filters event-filters" method="get" action="{% url 'bitacora' %}">
+  {% if filters.interruption %}<input type="hidden" name="interruption" value="{{ filters.interruption }}">{% endif %}
+  {% if filters.period %}<input type="hidden" name="period" value="{{ filters.period }}">{% endif %}
+  <div class="field">
+    <label for="event_type">Evento</label>
+    <select name="event_type" id="event_type">
+      <option value="">Todos</option>
+      {% for value,label in event_types %}<option value="{{ value }}"{% if filters.event_type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="outcome">Resultado</label>
+    <select name="outcome" id="outcome">
+      <option value="">Todos</option>
+      {% for value,label in outcomes %}<option value="{{ value }}"{% if filters.outcome == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field"><label for="from_date">Desde</label><input id="from_date" name="from_date" type="date" value="{{ filters.from_date|default:'' }}"></div>
+  <div class="field"><label for="to_date">Hasta</label><input id="to_date" name="to_date" type="date" value="{{ filters.to_date|default:'' }}"></div>
+  <button class="button button-small" type="submit">Filtrar</button>
+  <a class="button button-quiet button-small" href="{% url 'bitacora' %}{% if selected_interruption %}?interruption={{ selected_interruption.pk }}{% endif %}">Limpiar filtros</a>
+</form>
+{% include 'includes/event_rows.html' with events=events caption='Eventos registrados por el servidor' %}
+{% if events.has_other_pages %}
+<nav class="pagination" aria-label="Páginas de la bitácora">
+  {% if events.has_previous %}<a class="button button-secondary button-small" href="?{% if event_query %}{{ event_query }}&amp;{% endif %}page={{ events.previous_page_number }}">Anterior</a>{% endif %}
+  <span>Página {{ events.number }} de {{ events.paginator.num_pages }}</span>
+  {% if events.has_next %}<a class="button button-secondary button-small" href="?{% if event_query %}{{ event_query }}&amp;{% endif %}page={{ events.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+</section>
+{% endblock %}

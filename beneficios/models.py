@@ -22,6 +22,7 @@ class Movement(models.Model):
     amount = EncryptedIntegerField(min_value=1)
     description = EncryptedCharField(max_length=120)
     occurred_at = models.DateTimeField()
+    credit_reference = models.UUIDField(null=True, blank=True, unique=True, editable=False)
 
     class Meta:
         ordering = ['-occurred_at', '-pk']
@@ -42,6 +43,12 @@ class ServiceInterruption(models.Model):
 
 
 class SupportReport(models.Model):
+    class Priority(models.TextChoices):
+        LOW = 'low', 'Baja'
+        NORMAL = 'normal', 'Normal'
+        HIGH = 'high', 'Alta'
+        URGENT = 'urgent', 'Urgente'
+
     class Category(models.TextChoices):
         BALANCE = 'balance', 'Consulta de saldo'
         MOVEMENTS = 'movements', 'Consulta de movimientos'
@@ -58,9 +65,32 @@ class SupportReport(models.Model):
     category = models.CharField(max_length=12, choices=Category.choices)
     description = EncryptedCharField(max_length=360)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.RECEIVED)
+    priority = models.CharField(max_length=8, choices=Priority.choices, default=Priority.NORMAL)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name='assigned_support_reports')
     response = EncryptedCharField(max_length=400, default='', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+
+
+class SupportReportUpdate(models.Model):
+    report = models.ForeignKey(SupportReport, on_delete=models.CASCADE, related_name='updates')
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                              related_name='support_report_updates')
+    old_status = models.CharField(max_length=12, choices=SupportReport.Status.choices)
+    new_status = models.CharField(max_length=12, choices=SupportReport.Status.choices)
+    old_priority = models.CharField(max_length=8, choices=SupportReport.Priority.choices)
+    new_priority = models.CharField(max_length=8, choices=SupportReport.Priority.choices)
+    old_assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+')
+    new_assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+')
+    response_changed = models.BooleanField(default=False)
+    response = EncryptedCharField(max_length=400, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at', '-pk']
@@ -85,8 +115,9 @@ class AuditEvent(models.Model):
         SERVICE = 'service', 'Escenario de consulta'
         PASSWORD = 'password', 'Cambio de contraseña'
         PAYMENT = 'payment', 'Pago académico'
-        CARD = 'card', 'Estado de tarjeta de prueba'
-        PROFILE = 'profile', 'Perfil de prueba'
+        CARD = 'card', 'Estado de tarjeta'
+        PROFILE = 'profile', 'Perfil de usuario'
+        SETTINGS = 'settings', 'Parámetros del sistema'
 
     class Outcome(models.TextChoices):
         SUCCESS = 'success', 'Correcto'
@@ -95,6 +126,10 @@ class AuditEvent(models.Model):
         EXPIRED = 'expired', 'Vencida'
 
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    target = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='targeted_audit_events',
+    )
     event_type = models.CharField(max_length=20, choices=Type.choices)
     outcome = models.CharField(max_length=12, choices=Outcome.choices)
     detail = models.CharField(max_length=180)
@@ -204,3 +239,85 @@ class PaymentThrottle(models.Model):
     failures = models.PositiveIntegerField(default=0)
     window_started = models.DateTimeField()
     blocked_until = models.DateTimeField(null=True, blank=True)
+
+
+class Notification(models.Model):
+    class Kind(models.TextChoices):
+        CREDIT = 'credit', 'Abono'
+        DEBIT = 'debit', 'Compra'
+        SUPPORT = 'support', 'Respuesta a reporte'
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+    source_key = models.CharField(max_length=110, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+        indexes = [models.Index(fields=['user', 'read_at'], name='notification_user_read_idx')]
+
+    @property
+    def title(self):
+        return {
+            self.Kind.CREDIT: 'Abono registrado',
+            self.Kind.DEBIT: 'Compra registrada',
+            self.Kind.SUPPORT: 'Actualización de tu reporte',
+        }.get(self.kind, 'Notificación de tu cuenta')
+
+    @property
+    def body(self):
+        return {
+            self.Kind.CREDIT: 'Hay un nuevo abono en el historial de tu cuenta.',
+            self.Kind.DEBIT: 'El cargo de una compra quedó registrado en tu historial.',
+            self.Kind.SUPPORT: 'Administración actualizó tu reporte y hay una respuesta disponible.',
+        }.get(self.kind, 'Hay una actualización disponible para consultar.')
+
+    @property
+    def destination(self):
+        from django.urls import reverse
+        if self.kind == self.Kind.SUPPORT:
+            return reverse('reportar_problema') + '#mis-reportes'
+        return reverse('movimientos')
+
+
+class SystemParameters(models.Model):
+    """Fila única con los parámetros que administración puede ajustar sin reiniciar el servidor."""
+    SINGLETON_ID = 1
+
+    # Clave explícita sin autoincremento: MySQL no admite restricciones CHECK sobre columnas autoincrementales.
+    id = models.PositiveSmallIntegerField(primary_key=True, default=SINGLETON_ID, editable=False)
+    registration_initial_credit = models.PositiveIntegerField()
+    login_max_attempts = models.PositiveSmallIntegerField()
+    session_idle_minutes = models.PositiveSmallIntegerField()
+    payment_max_amount = models.PositiveIntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name='+')
+
+    class Meta:
+        constraints = [models.CheckConstraint(condition=models.Q(id=1), name='system_parameters_single_row')]
+
+
+class MerchantCategory(models.Model):
+    """Categorías que administración puede asignar a un comercio."""
+    name = models.CharField(max_length=40, unique=True)
+    position = models.PositiveSmallIntegerField(default=0)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['position', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class HelpTopic(models.Model):
+    """Pregunta frecuente que se muestra en Ayuda."""
+    question = models.CharField(max_length=160)
+    answer = models.TextField(max_length=800)
+    position = models.PositiveSmallIntegerField(default=0)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['position', 'pk']

@@ -18,11 +18,12 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .balance_snapshot import last_confirmed_balance, remember_balance, snapshot_key
+from .charts import bar_chart
 from .database_access import read_alias
 from .events import record
 from .forms import LoginForm, MovementFilterForm, ServiceStateForm
 from .models import AuditEvent, BenefitAccount, Movement, ServiceInterruption, ServiceState, SERVICE_CODES
-from .policies import session_return_path
+from .policies import session_policy, session_return_path
 from .responses import UpdatedResponseCreator, PendingResponseCreator, RejectedResponseCreator
 from .security import protected, login_blocked, login_failed, clear_login_failures
 from .services import MockDataServiceAdapter, SourceUnavailable
@@ -52,7 +53,7 @@ def ingresar(request):
             request.session['last_activity_at'] = now.timestamp()
             request.session.set_expiry(now + timedelta(seconds=settings.SESSION_MAX_SECONDS))
             clear_login_failures(request, username)
-            record(request, 'login', 'success', 'Ingreso correcto mediante cuenta de prueba.')
+            record(request, 'login', 'success', 'Ingreso correcto.')
             if user.must_change_password:
                 return redirect('cambiar_clave')
             return redirect(next_url or 'inicio')
@@ -177,7 +178,7 @@ def _query(request, account_id, code, operation):
         response['Retry-After'] = str(settings.QUERY_RETRY_SECONDS)
         return response
     request.session.pop(f'pending_retry_{code}', None)
-    logged = record(request, code, 'success', 'Consulta autorizada de datos ficticios completada.',
+    logged = record(request, code, 'success', 'Consulta autorizada completada.',
                     int((perf_counter() - start) * 1000))
     updated_at = timezone.now().isoformat()
     if balance_key:
@@ -195,18 +196,27 @@ def api_saldo(request, account_id):
 @require_GET
 @protected(api=True)
 def api_movimientos(request, account_id):
+    month = request.GET.get('mes') if request.GET.get('resumen') == 'mensual' else None
+    periods = MockDataServiceAdapter.summary_periods() if request.GET.get('resumen') == 'mensual' else None
+    if month and month not in {period['value'] for period in periods}:
+        return RejectedResponseCreator().create_response(
+            request, 'El periodo no está disponible. Selecciona uno de los últimos seis meses.', http_status=400)
     form = MovementFilterForm(request.GET)
     if not form.is_valid():
         return RejectedResponseCreator().create_response(
             request, 'Los filtros no son válidos. Se deben revisar las fechas, el tipo y la página.', http_status=400)
 
     def operation(account):
-        query = MockDataServiceAdapter().movements(account, form.cleaned_data)
+        adapter = MockDataServiceAdapter()
+        query = adapter.movements(account, form.cleaned_data)
         paginator = Paginator(query, 20)
         page = paginator.get_page(form.cleaned_data.get('page') or 1)
-        return {'items': [{'id': item.pk, 'date': timezone.localtime(item.occurred_at).isoformat(),
+        result = {'items': [{'id': item.pk, 'date': timezone.localtime(item.occurred_at).isoformat(),
                            'description': item.description, 'kind': item.kind, 'amount': item.amount}
                           for item in page], 'page': page.number, 'pages': paginator.num_pages, 'total': paginator.count}
+        if request.GET.get('resumen') == 'mensual':
+            result['monthly'] = adapter.monthly_summary(account, month=month, periods=periods)
+        return result
 
     return _query(request, account_id, 'movements', operation)
 
@@ -215,7 +225,7 @@ def api_movimientos(request, account_id):
 @protected(api=True)
 def actividad(request):
     return UpdatedResponseCreator().create_response(request, 'La sesión permanece vigente.',
-        expires_at=request.session.get_expiry_date().isoformat(), idle_seconds=settings.SESSION_IDLE_SECONDS)
+        expires_at=request.session.get_expiry_date().isoformat(), idle_seconds=session_policy().idle_seconds)
 
 
 @require_http_methods(['GET', 'POST'])
@@ -242,6 +252,11 @@ def cambiar_clave(request):
 
 
 QUERY_EVENT_TYPES = (AuditEvent.Type.BALANCE, AuditEvent.Type.MOVEMENTS)
+LEGACY_EVENT_DETAILS = {
+    'Consulta autorizada de datos ficticios completada.': 'Consulta autorizada completada.',
+    'Nombres ficticios del perfil actualizados.': 'Nombre y apellido del perfil actualizados.',
+    'Ingreso correcto mediante cuenta de prueba.': 'Ingreso correcto.',
+}
 SUMMARY_FILTERS = {
     'interrupted': {'event_type': 'queries', 'outcome': AuditEvent.Outcome.PENDING},
     'login_denied': {'event_type': AuditEvent.Type.LOGIN, 'outcome': AuditEvent.Outcome.DENIED},
@@ -301,14 +316,35 @@ def _followup_events(params, now):
     return events, filters, dates_valid, selected_interruption
 
 
+def _hourly_chart(now):
+    """Eventos de las últimas 24 horas por hora local, separando los correctos del resto."""
+    first_hour = timezone.localtime(now).replace(minute=0, second=0, microsecond=0) - timedelta(hours=23)
+    correct, incidents = [0] * 24, [0] * 24
+    for created_at, outcome in AuditEvent.objects.filter(created_at__gte=first_hour).order_by().values_list(
+            'created_at', 'outcome').iterator():
+        index = min(23, int((created_at - first_hour).total_seconds() // 3600))
+        (correct if outcome == AuditEvent.Outcome.SUCCESS else incidents)[index] += 1
+    labels = [f'{(first_hour + timedelta(hours=hour)).hour:02d}:00' for hour in range(24)]
+    return bar_chart(labels, [('Correctos', 'bar-success', correct), ('Rechazados o pendientes', 'bar-alert', incidents)],
+                     stacked=True, max_labels=8)
+
+
+FOLLOWUP_EVENT_PARAMS = ('event_type', 'outcome', 'from_date', 'to_date', 'period', 'interruption', 'page')
+
+
+def _with_readable_details(events):
+    for event in events:
+        event.detail = LEGACY_EVENT_DETAILS.get(event.detail, event.detail)
+    return events
+
+
 @require_GET
 @protected(administrator=True)
 def seguimiento(request):
+    # Los enlaces anteriores filtraban la bitácora dentro del panel; se conservan redirigiéndolos.
+    if any(name in request.GET for name in FOLLOWUP_EVENT_PARAMS):
+        return redirect(f"{reverse('bitacora')}?{request.GET.urlencode()}")
     now = timezone.now()
-    events, filters, dates_valid, selected_interruption = _followup_events(request.GET, now)
-    if not dates_valid:
-        messages.error(request, 'El rango de fechas no es válido. Se muestran los registros sin ese filtro.')
-
     day_events = AuditEvent.objects.filter(created_at__gte=now - timedelta(hours=24))
     stats = day_events.aggregate(
         total=Count('id'),
@@ -318,9 +354,24 @@ def seguimiento(request):
     )
     interruptions = ServiceInterruption.objects.annotate(pending_count=Count('pending_queries')).order_by(
         Case(When(restored_at__isnull=True, then=0), default=1), '-started_at', '-pk',
-    )[:25]
+    )[:10]
     for period in interruptions:
         period.elapsed = _interruption_elapsed(period, now)
+    recent_events = _with_readable_details(list(AuditEvent.objects.select_related('actor')[:8]))
+    return render(request, 'seguimiento.html', {
+        'stats': stats, 'services': ServiceState.objects.order_by('code'), 'active_page': 'seguimiento',
+        'interruptions': interruptions, 'recent_events': recent_events, 'hourly_chart': _hourly_chart(now),
+        'summary_filters': {key: urlencode({'period': '24h', **value}) for key, value in SUMMARY_FILTERS.items()},
+    })
+
+
+@require_GET
+@protected(administrator=True)
+def bitacora(request):
+    now = timezone.now()
+    events, filters, dates_valid, selected_interruption = _followup_events(request.GET, now)
+    if not dates_valid:
+        messages.error(request, 'El rango de fechas no es válido. Se muestran los registros sin ese filtro.')
     if selected_interruption:
         selected_interruption.elapsed = _interruption_elapsed(selected_interruption, now)
 
@@ -331,12 +382,11 @@ def seguimiento(request):
     observed_types.add(filters['event_type'])
     observed_outcomes = set(audit.values_list('outcome', flat=True).distinct()) | {filters['outcome']}
     event_choices = [('queries', 'Consultas de saldo y movimientos'), *AuditEvent.Type.choices]
-    return render(request, 'seguimiento.html', {
-        'events': Paginator(events.select_related('actor'), 25).get_page(request.GET.get('page')),
-        'stats': stats, 'services': ServiceState.objects.order_by('code'), 'active_page': 'seguimiento',
-        'interruptions': interruptions, 'selected_interruption': selected_interruption,
+    events_page = Paginator(events.select_related('actor'), 25).get_page(request.GET.get('page'))
+    _with_readable_details(events_page)
+    return render(request, 'bitacora.html', {
+        'events': events_page, 'active_page': 'bitacora', 'selected_interruption': selected_interruption,
         'filters': filters, 'event_query': urlencode({key: value for key, value in filters.items() if value}),
-        'summary_filters': {key: urlencode({'period': '24h', **value}) for key, value in SUMMARY_FILTERS.items()},
         'event_types': [(value, label) for value, label in event_choices if value in observed_types],
         'outcomes': [(value, label) for value, label in AuditEvent.Outcome.choices if value in observed_outcomes],
         'export_available': dates_valid,
@@ -391,7 +441,7 @@ def servicios(request):
             service.available = available
             service.save(update_fields=['available', 'changed_at', 'active_interruption'])
             detail = 'restablecido' if available else 'interrumpido'
-            record(request, 'service', 'success', f'Servicio de prueba {service.label} {detail} desde administración.')
+            record(request, 'service', 'success', f'Servicio {service.label} {detail} desde administración (simulación).')
             messages.success(request, 'El estado del servicio de prueba se actualizó.')
         else:
             messages.error(request, 'El servicio de prueba no existe.')
@@ -417,4 +467,4 @@ def not_found(request, exception=None):
 
 def server_error(request):
     return render(request, 'error.html', {'title': 'No fue posible completar la solicitud', 'status': 500,
-        'message': 'Se produjo una dificultad en el prototipo. Se puede volver al inicio e intentar nuevamente.'}, status=500)
+        'message': 'Vuelve al inicio para intentar la operación nuevamente.'}, status=500)

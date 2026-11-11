@@ -1,25 +1,29 @@
 {% extends 'base.html' %}{% load moneda %}
-{% block title %}Comprobante de prueba{% endblock %}
+{% block title %}Comprobante de pago simulado{% endblock %}
 {% block content %}
-<section class="surface receipt-card">
+<div class="receipt-journey">
+{% include 'includes/payment_journey.html' with stage='complete' method=payment.method %}
+<section class="surface receipt-card receipt-journey-card">
   <div class="receipt-success" aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"/></svg></div>
-  <span class="eyebrow">OPERACIÓN DEMO</span>
-  <h1>Pago de prueba realizado</h1>
-  <p class="muted">La operación quedó registrada en la cuenta ficticia.</p>
-  <div class="receipt-amount">${{ payment.amount|clp }}<small>Pesos chilenos</small></div>
+  <span class="eyebrow">COMPROBANTE</span>
+  <h1>Pago simulado registrado</h1>
+  <p class="muted">El cargo ya aparece en los movimientos de la cuenta.</p>
+  <div class="receipt-amount"><span data-private-amount>${{ payment.amount|clp }}</span><small>Pesos chilenos</small></div>
   <dl class="receipt-details">
     <div><dt>Medio de pago</dt><dd>{{ payment.get_method_display }}</dd></div>
     <div><dt>Comercio</dt><dd>{{ payment.merchant.name }}</dd></div>
     <div><dt>Código de comercio</dt><dd>{{ payment.merchant.code }}</dd></div>
     <div><dt>Fecha y hora</dt><dd>{{ payment.created_at|date:'d/m/Y · H:i:s' }}</dd></div>
     <div><dt>Cuenta</dt><dd>Terminada en {{ account.number_suffix }}</dd></div>
-    <div><dt>Saldo después del pago</dt><dd>${{ payment.balance_after|clp }}</dd></div>
-    <div class="receipt-reference"><dt>Referencia de prueba</dt><dd>{{ payment.id }}</dd></div>
+    <div><dt>Saldo después del pago</dt><dd data-private-amount>${{ payment.balance_after|clp }}</dd></div>
+    <div class="receipt-reference"><dt>Referencia</dt><dd>{{ payment.id }}</dd></div>
   </dl>
-  <div class="receipt-notice"><strong>Comprobante académico, sin valor comercial.</strong><p>Registro local de una operación de demostración.</p></div>
+  <div class="receipt-notice"><strong>Comprobante sin valor comercial.</strong></div>
   <div class="receipt-actions">
-    <a class="button button-full" href="{% url 'movimientos' %}">Ver el movimiento</a>
+    <a class="button button-full" href="{% url 'comprobante_pdf' payment.pk %}">Descargar PDF</a>
+    <a class="button button-secondary button-full" href="{% url 'movimientos' %}">Ver el movimiento</a>
     <a class="button button-secondary button-full" href="{% url 'inicio' %}">Volver al inicio</a>
   </div>
 </section>
+</div>
 {% endblock %}

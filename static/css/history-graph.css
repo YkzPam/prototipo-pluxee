@@ -1,0 +1,34 @@
+.monthly-period-controls { display: grid; gap: .25rem; min-inline-size: 10rem; }
+.monthly-period-controls label { color: var(--muted); font-size: .72rem; font-weight: 750; }
+.monthly-period-controls select { max-inline-size: 100%; min-block-size: 2.6rem; padding: .45rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--paper, #fff); color: var(--purple); font: inherit; font-size: .84rem; text-transform: capitalize; }
+.monthly-period-controls select:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.monthly-period-controls select:disabled { opacity: .65; }
+
+.movement-history .movement-day-row td { padding: .9rem .9rem .4rem; background: var(--purple-soft, #f2edf8); border-bottom: 1px solid var(--line); }
+.movement-day-row h3 { margin: 0; font-size: .78rem; font-weight: 800; color: var(--muted); }
+.movement-detail-trigger { display: inline-flex; align-items: center; justify-content: space-between; gap: .6rem; inline-size: 100%; min-block-size: 2.6rem; padding: .25rem 0; border: 0; border-radius: .3rem; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.movement-detail-trigger > span:first-child { overflow-wrap: anywhere; }
+.movement-detail-trigger:hover { color: var(--purple); }
+.movement-detail-trigger:focus-visible, .movement-recent-trigger:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.movement-detail-arrow { flex: none; color: var(--purple); }
+.movement-kind-label { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .77rem; font-weight: 700; white-space: nowrap; }
+.movement-kind-icon { display: inline-grid; place-items: center; inline-size: 1.65rem; block-size: 1.65rem; border-radius: .5rem; color: var(--purple); background: var(--purple-soft, #f2edf8); font-size: 1rem; }
+.movement-kind-label.is-credit .movement-kind-icon { background: #e8f2d0; color: #426411; }
+.movement-table .movement-entry-amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.movement-recent-trigger { inline-size: 100%; border-inline: 0; border-top: 0; color: inherit; background: transparent; font: inherit; text-align: start; cursor: pointer; }
+.movement-recent-trigger:hover { background: var(--purple-soft, #f2edf8); }
+
+@media (max-width: 700px) {
+  .movement-history .movement-day-row { display: block; padding: 0; border: 0; background: transparent; }
+  .movement-history .movement-day-row td { display: block; padding: .7rem .55rem; border-radius: .5rem; }
+  .movement-day-row td::before { display: none; }
+  .movement-table .movement-entry-kind { align-items: center; }
+  .movement-detail-trigger { font-weight: 700; }
+  .monthly-period-controls { inline-size: 100%; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .movement-detail-arrow { transition: translate 160ms ease; }
+  .movement-detail-trigger:hover .movement-detail-arrow { translate: 2px -2px; }
+  .weekly-chart-bars { animation: content-enter 220ms ease-out; }
+}

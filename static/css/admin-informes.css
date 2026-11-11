@@ -1,0 +1,26 @@
+.admin-report-panel { min-width: 0; padding: clamp(1rem, 3vw, 1.6rem); margin-block-end: 1rem; }
+.admin-report-panel h2 { margin-block: 0 .9rem; }
+.admin-report-panel .section-heading { flex-wrap: wrap; gap: .7rem; }
+.admin-report-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .7rem; }
+.admin-report-filters .field { flex: 1 1 10rem; }
+.admin-report-filters > .notice { flex: 1 1 100%; }
+.admin-report-hint { margin: .8rem 0 0; line-height: 1.5; font-size: .78rem; }
+.admin-report-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: 0 0 1rem; }
+.admin-report-totals > div { min-width: 0; padding: 1rem; }
+.admin-report-totals dt { color: var(--muted); font-size: .8rem; }
+.admin-report-totals dd { margin: .35rem 0 0; color: var(--purple); font-size: clamp(1.15rem, 2.5vw, 1.75rem); font-weight: 800; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.admin-report-table td { overflow-wrap: anywhere; }
+.admin-report-table td > small { display: block; margin-block-start: .2rem; }
+.admin-report-amount { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
+@media (max-width: 700px) {
+  .admin-report-totals { grid-template-columns: minmax(0, 1fr); }
+  .admin-report-totals > div { display: flex; justify-content: space-between; align-items: baseline; gap: .7rem; }
+  .admin-report-totals dd { margin: 0; }
+  .admin-report-table, .admin-report-table tbody { display: block; width: 100%; }
+  .admin-report-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .admin-report-table tbody tr { display: block; margin-block: .7rem; padding: .6rem; border: 1px solid var(--line); border-radius: .7rem; }
+  .admin-report-table tbody td { display: grid; grid-template-columns: minmax(6rem, .7fr) minmax(0, 1fr); gap: .7rem; border: 0; padding: .4rem .1rem; text-align: start; }
+  .admin-report-table tbody td[data-label]::before { content: attr(data-label); color: var(--muted); font-size: .75rem; font-weight: 700; }
+  .admin-report-table tbody td[colspan] { display: block; }
+  .admin-report-amount { white-space: normal; }
+}

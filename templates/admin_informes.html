@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load moneda static %}
+{% block title %}Informe de movimientos{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="{% static 'css/admin-informes.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading illustrated-heading">
+  <div><span class="eyebrow">INFORMES</span><h1>Movimientos por periodo</h1><p>Consulta los abonos y las compras de las cuentas y descarga los registros del periodo seleccionado.</p></div>
+  {% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+</header>
+{% include 'includes/admin_density.html' %}
+<section class="surface admin-report-panel" aria-labelledby="report-filters-heading">
+  <h2 id="report-filters-heading">Periodo y filtros</h2>
+  <form class="admin-report-filters" method="get" action="{% url 'admin_informes' %}">
+    {% include 'includes/user_fields.html' with form=filters %}
+    <button class="button" type="submit">Consultar</button>
+    <a class="button button-quiet" href="{% url 'admin_informes' %}">Mes actual</a>
+  </form>
+  <p class="muted admin-report-hint">Las fechas incluyen ambos días. El periodo admite hasta 366 días. El filtro de usuario busca el nombre de acceso completo.</p>
+</section>
+{% if report_error %}<div class="notice notice-error" role="alert">{{ report_error }}</div>{% endif %}
+{% if valid_filters %}
+<dl class="admin-report-totals">
+  <div class="surface"><dt>Movimientos del periodo</dt><dd>{{ record_count|clp }}</dd></div>
+  <div class="surface"><dt>Abonos registrados</dt><dd>${{ credited|clp }}</dd></div>
+  <div class="surface"><dt>Compras registradas</dt><dd>${{ spent|clp }}</dd></div>
+</dl>
+<section class="surface admin-report-panel" aria-labelledby="report-chart-heading">
+  <div class="section-heading"><div><h2 id="report-chart-heading">Abonos y compras por {{ chart_bucket }}</h2><p class="muted">Importes del periodo filtrado. Pasa el cursor sobre una barra para ver su valor.</p></div></div>
+  {% include 'includes/bar_chart.html' with chart=movement_chart chart_id='report-chart' title='Abonos y compras del periodo' empty_text='No hay movimientos en el periodo seleccionado.' %}
+</section>
+<section class="surface admin-report-panel" aria-labelledby="report-rows-heading">
+  <div class="section-heading"><div><h2 id="report-rows-heading">Registros encontrados</h2><p class="muted">Los totales consideran todos los movimientos que cumplen los filtros.</p></div><a class="button button-secondary button-small" href="{{ export_url }}">Descargar CSV</a></div>
+  <p class="muted admin-report-hint">La descarga admite hasta 10.000 movimientos por archivo y aplica estos mismos filtros.</p>
+  <div class="table-wrap">
+    <table class="data-table admin-report-table" role="table">
+      <caption class="sr-only">Movimientos del periodo filtrado</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Fecha y hora</th><th scope="col" role="columnheader">Usuario</th><th scope="col" role="columnheader">Descripción</th><th scope="col" role="columnheader">Tipo</th><th scope="col" role="columnheader">Importe</th></tr></thead>
+      <tbody role="rowgroup">
+      {% for movement in movements %}
+      <tr role="row">
+        <td role="cell" data-label="Fecha y hora"><time datetime="{{ movement.occurred_at|date:'c' }}">{{ movement.occurred_at|date:'d/m/Y H:i:s' }}</time></td>
+        <td role="cell" data-label="Usuario">{% if movement.account.user.is_staff or movement.account.user.is_superuser %}{{ movement.account.user.username }}{% else %}<a href="{% url 'admin_usuario' movement.account.user_id %}?seccion=movimientos">{{ movement.account.user.username }}</a>{% endif %}</td>
+        <td role="cell" data-label="Descripción">{{ movement.description }}<small>N.º {{ movement.pk }}</small></td>
+        <td role="cell" data-label="Tipo"><span class="status-badge {% if movement.kind == 'abono' %}status-success{% else %}status-neutral{% endif %}">{{ movement.get_kind_display }}</span></td>
+        <td role="cell" data-label="Importe" class="admin-report-amount">${{ movement.amount|clp }}</td>
+      </tr>
+      {% empty %}<tr role="row"><td colspan="5" role="cell"><p class="empty-state">No hay movimientos que cumplan estos filtros.</p></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if movements.has_other_pages %}
+  <nav class="pagination" aria-label="Páginas del informe">
+    {% if movements.has_previous %}<a class="button button-secondary button-small" href="?{{ filter_query }}&amp;page={{ movements.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ movements.number }} de {{ movements.paginator.num_pages }}</span>
+    {% if movements.has_next %}<a class="button button-secondary button-small" href="?{{ filter_query }}&amp;page={{ movements.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

@@ -6,6 +6,7 @@ from django.db import OperationalError, connection, transaction
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
+from . import parameters
 from .events import record
 from .models import LoginThrottle
 from .responses import RejectedResponseCreator
@@ -13,8 +14,9 @@ from .responses import RejectedResponseCreator
 
 def throttle_keys(request, username):
     # No confiar en X-Forwarded-For enviado por el cliente.
-    return [(salted_hmac('login-account', username.casefold()).hexdigest(), settings.LOGIN_MAX_ATTEMPTS),
-            (salted_hmac('login-ip', request.META.get('REMOTE_ADDR', '')).hexdigest(), settings.LOGIN_MAX_ATTEMPTS * 6)]
+    attempts = parameters.current().login_max_attempts
+    return [(salted_hmac('login-account', username.casefold()).hexdigest(), attempts),
+            (salted_hmac('login-ip', request.META.get('REMOTE_ADDR', '')).hexdigest(), attempts * 6)]
 
 
 def login_blocked(request, username):
@@ -24,10 +26,18 @@ def login_blocked(request, username):
 
 
 def login_failed(request, username):
+    _count_attempts(throttle_keys(request, username))
+
+
+def allow_registration_attempt(request):
+    key = salted_hmac('beneficiary-registration', request.META.get('REMOTE_ADDR', '')).hexdigest()
+    return _count_attempts([(key, parameters.current().login_max_attempts * 4)])
+
+
+def _count_attempts(keys):
     for attempt in range(3):
         try:
-            _store_login_failure(request, username)
-            return
+            return _store_attempts(keys)
         except OperationalError as error:
             # InnoDB puede revertir la transacción si varios intentos crean el mismo contador.
             if attempt == 2 or connection.vendor != 'mysql' or error.args[:1] != (1213,):
@@ -35,9 +45,10 @@ def login_failed(request, username):
 
 
 @transaction.atomic
-def _store_login_failure(request, username):
+def _store_attempts(keys):
     now = timezone.now()
-    for key, threshold in throttle_keys(request, username):
+    allowed = True
+    for key, threshold in keys:
         entry, _ = LoginThrottle.objects.select_for_update().get_or_create(
             key=key, defaults={'window_started': now}
         )
@@ -49,6 +60,9 @@ def _store_login_failure(request, username):
             if entry.failures >= threshold:
                 entry.blocked_until = now + timedelta(seconds=settings.LOGIN_LOCK_SECONDS)
             entry.save()
+        else:
+            allowed = False
+    return allowed
 
 
 def clear_login_failures(request, username):

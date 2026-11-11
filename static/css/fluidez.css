@@ -1,0 +1,151 @@
+/* Transiciones entre páginas, carga del saldo y catálogo compacto de comercios. */
+
+/* 1. Transición entre páginas: el menú y la barra superior permanecen; solo el contenido se funde. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+.sidebar { view-transition-name: portal-sidebar; }
+.topbar { view-transition-name: portal-topbar; }
+.page-content { view-transition-name: portal-content; }
+::view-transition-group(portal-sidebar),
+::view-transition-group(portal-topbar) { animation-duration: 0s; }
+::view-transition-old(portal-content) { animation: page-fade-out .12s ease-in both; }
+::view-transition-new(portal-content) { animation: page-fade-in .22s ease-out both; }
+html:is([data-motion-level="none"], [data-motion="off"])::view-transition-group(*),
+html:is([data-motion-level="none"], [data-motion="off"])::view-transition-old(*),
+html:is([data-motion-level="none"], [data-motion="off"])::view-transition-new(*) { animation: none !important; }
+@keyframes page-fade-out { to { opacity: 0; } }
+@keyframes page-fade-in { from { opacity: 0; } }
+
+/* 2. Saldo: bloque de carga mientras no hay un valor confirmado y cifras de ancho fijo para el conteo. */
+.balance-amount { font-variant-numeric: tabular-nums; transition: opacity .2s ease; }
+[data-balance-state="loading"][data-balance-empty="true"] .balance-amount {
+  inline-size: min(100%, 7ch);
+  border-radius: .6rem;
+  color: transparent;
+  background: linear-gradient(90deg, #8a6fae1f 25%, #8a6fae3d 50%, #8a6fae1f 75%) 0 0 / 200% 100%;
+}
+[data-balance-state="loading"][data-balance-empty="false"] .balance-amount { opacity: .5; }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion-level="none"], [data-motion="off"]) [data-balance-state="loading"][data-balance-empty="true"] .balance-amount {
+    animation: skeleton-shimmer 1.2s linear infinite;
+  }
+}
+@keyframes skeleton-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* 3. Comercios: la grilla se adapta al ancho disponible y la portada ocupa menos espacio. */
+.merchant-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)); gap: 1rem; }
+.merchant-cover img { height: clamp(5.5rem, 11vw, 7rem); object-fit: contain; }
+.merchant-card { padding: 1.15rem 1.1rem; }
+.merchant-card .merchant-description { margin-bottom: .9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.merchant-card-foot { margin-top: .9rem; padding-top: .8rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .merchant-card { transition: translate .2s ease, box-shadow .2s ease; }
+  .favorite-button.just-toggled .ui-icon { animation: heart-pop .38s cubic-bezier(.3, 1.6, .5, 1); }
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .merchant-card:hover { translate: 0 -3px; }
+}
+@keyframes heart-pop { 0% { scale: 1; } 40% { scale: 1.35; } 100% { scale: 1; } }
+
+/* 4. Bitácora: los resultados rechazados o vencidos se distinguen de los correctos y pendientes. */
+.status-badge.status-denied { background: #fbe8ec; color: #812e41; }
+html[data-theme="dark"] .status-badge.status-denied { background: #4a1f2b; color: #f6c9d3; }
+.followup-interruption { padding: clamp(1rem, 2.5vw, 1.6rem); margin-bottom: 1.5rem; }
+
+/* 5. Notificaciones: agrupadas por día, en filas compactas con concepto y monto. */
+.notification-day { margin: 1.1rem 0 .35rem; font-size: .72rem; font-weight: 750; letter-spacing: .06rem; text-transform: uppercase; color: var(--muted); }
+.notification-day:first-of-type { margin-top: .2rem; }
+.notification-list { display: grid; gap: .45rem; }
+.notification-item { margin-block: 0; padding: .7rem .9rem; align-items: center; }
+.notification-kind-icon { width: 2.2rem; height: 2.2rem; border-radius: .7rem; }
+.notification-title-line { align-items: center; flex-wrap: nowrap; }
+.notification-title-line h4 { margin: 0; font-size: .92rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notification-amount { flex: 0 0 auto; font-size: .95rem; font-variant-numeric: tabular-nums; color: var(--ink, #2b1640); }
+.notification-amount.is-credit { color: #2f7a45; }
+.notification-copy > p { margin: .15rem 0 0; font-size: .8rem; }
+.notification-actions { margin-top: .3rem; gap: .25rem .9rem; font-size: .75rem; color: var(--muted); }
+.notification-actions .button-small { padding-block: .2rem; min-height: 0; }
+.notification-unread .notification-read-status::before { content: ''; display: inline-block; width: .45rem; height: .45rem; margin-inline-end: .35rem; border-radius: 50%; background: #7950a4; vertical-align: .05rem; }
+html[data-theme="dark"] .notification-amount { color: #f1e9fa; }
+html[data-theme="dark"] .notification-amount.is-credit { color: #9fe0b1; }
+
+/* 6. Parámetros del sistema. */
+.parameters-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 1fr); gap: 1.25rem; align-items: start; }
+.parameters-side { display: grid; gap: 1.25rem; }
+.parameters-form .field input { max-width: 14rem; }
+.parameters-current { display: grid; gap: .55rem; margin: .8rem 0; }
+.parameters-current > div { display: flex; justify-content: space-between; gap: 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--line); }
+.parameters-current dt { color: var(--muted); font-size: .85rem; }
+.parameters-current dd { margin: 0; font-weight: 750; font-variant-numeric: tabular-nums; }
+.parameters-origin { font-size: .78rem; margin: 0; }
+.parameters-history { display: grid; gap: .7rem; margin: .8rem 0; padding: 0; list-style: none; font-size: .82rem; }
+.parameters-history li { display: grid; gap: .15rem; }
+.parameters-history time { color: var(--muted); font-size: .74rem; }
+@media (max-width: 900px) { .parameters-layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* 7. Usuarios: tabla con orden y ficha con resumen de la cuenta. */
+.user-table-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; margin: 1rem 0 .5rem; font-size: .82rem; }
+.user-sort { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+.user-sort a { padding: .25rem .6rem; border-radius: 1rem; color: inherit; text-decoration: none; border: 1px solid var(--line); }
+.user-sort a[aria-current] { background: var(--purple); border-color: var(--purple); color: #fff; }
+.user-table th[scope="row"] { font-weight: inherit; font-size: inherit; letter-spacing: normal; color: inherit; padding: 19px 13px 19px 0; border-bottom: 1px solid #edeaf1; vertical-align: middle; }
+.user-table-identity strong { font-size: .86rem; color: var(--ink, #2b1640); }
+.user-table-identity small { font-size: .74rem; }
+.user-table td { vertical-align: middle; }
+/* El indicador destacado del panel ahora es un enlace: conserva el color claro sobre el fondo morado. */
+.followup-summary .stat:first-child dt a { color: #fff; }
+.user-table-identity { display: flex; align-items: center; gap: .65rem; min-width: 12rem; }
+.user-table-identity > span:last-child { display: grid; gap: .1rem; }
+.user-table-identity .avatar { flex: 0 0 auto; }
+.user-table .amount-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.user-summary-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin: 0 0 1.2rem; }
+.user-summary-strip > div { padding: .85rem 1rem; }
+.user-summary-strip dt { color: var(--muted); font-size: .75rem; }
+.user-summary-strip dd { margin: .3rem 0 0; font-weight: 750; font-variant-numeric: tabular-nums; }
+@media (max-width: 700px) { .user-summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* 8. Gráficos de barras SVG. */
+.bar-chart { margin: .6rem 0 0; }
+.bar-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.bar-chart-grid { stroke: #e6dfee; stroke-width: 1; }
+.bar-chart-axis { fill: #8a7b98; font-size: 11px; font-family: inherit; }
+.bar-chart-bar { transition: opacity .15s ease; }
+.bar-chart-bar:hover { opacity: .75; }
+.bar-success { fill: #8ec06c; background: #8ec06c; }
+.bar-alert { fill: #e0867f; background: #e0867f; }
+.bar-purple { fill: #7950a4; background: #7950a4; }
+.bar-chart-legend { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin-top: .5rem; font-size: .8rem; color: var(--muted); }
+.bar-chart-swatch { display: inline-block; width: .7rem; height: .7rem; margin-inline-end: .4rem; border-radius: .2rem; vertical-align: -.05rem; }
+.bar-chart-empty { padding: 1.5rem 0; text-align: center; }
+html[data-theme="dark"] .bar-chart-grid { stroke: #4a3a58; }
+html[data-theme="dark"] .bar-chart-axis { fill: #b9a9c8; }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion-level="none"], [data-motion="off"]) .bar-chart-bar { animation: bar-rise .5s cubic-bezier(.2, .7, .3, 1) both; transform-box: fill-box; transform-origin: bottom; }
+}
+@keyframes bar-rise { from { transform: scaleY(0); } }
+
+/* 9. Avisos flotantes para mensajes de éxito e información. */
+.toast-stack { position: fixed; z-index: 80; inset-block-end: 1.25rem; inset-inline-end: 1.25rem; display: grid; gap: .6rem; width: min(24rem, calc(100vw - 2rem)); pointer-events: none; }
+.toast-stack .toast { pointer-events: auto; margin: 0; padding-inline-end: 2.4rem; position: relative; box-shadow: 0 12px 28px #2a10441f; }
+.toast-close { position: absolute; inset-block-start: .35rem; inset-inline-end: .4rem; width: 1.8rem; height: 1.8rem; border: 0; border-radius: 50%; background: transparent; color: inherit; font-size: 1.15rem; line-height: 1; cursor: pointer; }
+.toast-close:hover, .toast-close:focus-visible { background: #0000000f; }
+@media (max-width: 700px) { .toast-stack { inset-block-end: 6rem; inset-inline: 1rem; width: auto; } }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion-level="none"], [data-motion="off"]) .toast-stack .toast { animation: toast-in .28s cubic-bezier(.2, .7, .3, 1) both; }
+  html:not([data-motion-level="none"], [data-motion="off"]) .toast-stack .toast[data-leaving] { animation: toast-out .22s ease-in both; }
+}
+@keyframes toast-in { from { opacity: 0; translate: 0 12px; } }
+@keyframes toast-out { to { opacity: 0; translate: 16px 0; } }
+
+/* 10. Tema oscuro: contraste de elementos que solo tenían colores para el tema claro. */
+html[data-theme="dark"] .user-sort a[aria-current] { background: #d7ec80; border-color: #d7ec80; color: #29143c; }
+html[data-theme="dark"] .service-item { background: #2c1f39; border-color: #5e4571; }
+html[data-theme="dark"] .service-item h3 { color: #f2e5ff; }
+html[data-theme="dark"] .service-item > p { color: var(--muted); }
+html[data-theme="dark"] .followup-services .service-item-interrupted { background: #3d2c1d; border-color: #8a6436; }
+html[data-theme="dark"] :is(.field > label, .standard-form label) { color: #e6d8f2; }
+html[data-theme="dark"] .filters { background: #291c36; border-color: #4d395c; }
+html[data-theme="dark"] .avatar:not([data-personal-avatar]) { background: #3a264b; color: #f2e5ff; }
+html[data-theme="dark"] .notification-unread .notification-read-status { color: #e2c9fb; }
+html[data-theme="dark"] .notification-unread .notification-read-status::before { background: #c9a6ee; }

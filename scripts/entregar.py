@@ -38,7 +38,7 @@ def run(command):
 for command in steps:
     run(command)
 
-allowed_folders = {'beneficios', 'config', 'identidad', 'static', 'templates', 'scripts', '.github'}
+allowed_folders = {'beneficios', 'config', 'identidad', 'static', 'templates', 'scripts', '.github', 'docs'}
 allowed_files = {'README.md', 'requirements.txt', 'manage.py', 'servidor.py',
                  'servidor_seguro.py', 'iniciar.cmd', 'preparar.cmd', 'verificar.cmd', '.coveragerc', '.gitignore'}
 ignored = {'__pycache__', '.venv', '.runtime', '.git', '.static', 'dist', 'evidencias', '.evidencias'}

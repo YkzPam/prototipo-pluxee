@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load moneda %}
+{% block title %}Notificaciones{% endblock %}
+{% block content %}
+<header class="page-heading notification-heading">
+  <div>
+    <span class="eyebrow">ACTIVIDAD DE TU CUENTA</span>
+    <h1>Notificaciones</h1>
+    <p>Abonos, compras y respuestas a tus reportes.</p>
+  </div>
+  {% if notification_unread_count %}
+  <form method="post" action="{% url 'notificaciones_leer_todas' %}" data-notification-form data-read-all>
+    {% csrf_token %}
+    <button class="button button-secondary button-small" type="submit">Marcar todas como leídas</button>
+  </form>
+  {% endif %}
+</header>
+<p class="sr-only" role="status" data-notification-feedback></p>
+<section class="surface notification-center" aria-labelledby="notification-list-title">
+  <div class="notification-section-heading">
+    <h2 id="notification-list-title">Actualizaciones recientes</h2>
+    <span class="notification-summary" data-notification-summary>{{ notification_unread_count|default:0 }} sin leer</span>
+  </div>
+  {% regroup notifications by day_label as days %}
+  {% for day in days %}
+  <h3 class="notification-day">{{ day.grouper }}</h3>
+  <ul class="notification-list" role="list">
+    {% for notification in day.list %}
+    <li class="notification-item{% if not notification.read_at %} notification-unread{% endif %}" data-notification-item>
+      <span class="notification-kind-icon" aria-hidden="true">
+        <svg class="ui-icon"><use href="{% if notification.kind == 'support' %}#icon-help{% elif notification.kind == 'credit' %}#icon-wallet{% else %}#icon-pay{% endif %}"/></svg>
+      </span>
+      <div class="notification-copy">
+        <div class="notification-title-line">
+          <h4>{{ notification.concept|default:notification.title }}</h4>
+          {% if notification.amount != None %}<strong class="notification-amount{% if notification.kind == 'credit' %} is-credit{% endif %}" data-private-amount>{% if notification.kind == 'credit' %}+{% else %}−{% endif %}${{ notification.amount|clp }}</strong>{% endif %}
+        </div>
+        <p>{% if notification.concept %}{{ notification.title }}{% else %}{{ notification.body }}{% endif %}</p>
+        <div class="notification-actions">
+          <time datetime="{{ notification.created_at|date:'c' }}">{{ notification.created_at|date:'H:i' }}</time>
+          <span class="notification-read-status" data-notification-read-status>{% if notification.read_at %}Leída{% else %}Sin leer{% endif %}</span>
+          <a class="text-link" href="{{ notification.destination }}">{% if notification.kind == 'support' %}Ver mis reportes{% else %}Ver movimientos{% endif %}</a>
+          {% if not notification.read_at %}
+          <form method="post" action="{% url 'notificacion_leer' notification.pk %}" data-notification-form>
+            {% csrf_token %}
+            <button class="button button-quiet button-small" type="submit">Marcar como leída<span class="sr-only">, {{ notification.concept|default:notification.title }}</span></button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% empty %}
+  <ul class="notification-list" role="list">
+    <li class="notification-empty">
+      {% include 'includes/empty_illustration.html' with theme='notifications' only %}
+      <h3>Las actualizaciones aparecerán aquí</h3>
+      <p>La cuenta recibirá un aviso cuando se registre un movimiento o administración responda a un reporte.</p>
+      <a class="button button-secondary button-small" href="{% if request.user.is_staff %}{% url 'seguimiento' %}{% else %}{% url 'inicio' %}{% endif %}">Volver al inicio</a>
+    </li>
+  </ul>
+  {% endfor %}
+  {% if notifications.has_other_pages %}
+  <nav class="pagination" aria-label="Páginas de notificaciones">
+    {% if notifications.has_previous %}<a class="button button-secondary button-small" href="?page={{ notifications.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ notifications.number }} de {{ notifications.paginator.num_pages }}</span>
+    {% if notifications.has_next %}<a class="button button-secondary button-small" href="?page={{ notifications.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

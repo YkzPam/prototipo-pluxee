@@ -1,0 +1,26 @@
+<nav class="payment-journey" aria-label="Etapas del pago">
+  <ol>
+    <li class="payment-journey-step{% if stage == 'data' %} is-current{% else %} is-complete{% endif %}"{% if stage == 'data' %} aria-current="step"{% endif %}>
+      {% if stage != 'data' %}
+      <a href="{% url 'pagar' %}{% if method %}?metodo={{ method|urlencode }}{% endif %}" class="payment-journey-label">
+        <span class="payment-journey-number" aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"/></svg></span>
+        <span><small>PASO 01</small><strong>Datos</strong></span>
+      </a>
+      {% else %}
+      <span class="payment-journey-label"><span class="payment-journey-number" aria-hidden="true">1</span><span><small>PASO 01</small><strong>Datos</strong></span></span>
+      {% endif %}
+    </li>
+    <li class="payment-journey-step{% if stage == 'review' %} is-current{% elif stage == 'complete' %} is-complete{% endif %}"{% if stage == 'review' %} aria-current="step"{% endif %}>
+      <span class="payment-journey-label">
+        <span class="payment-journey-number" aria-hidden="true">{% if stage == 'complete' %}<svg class="ui-icon"><use href="#icon-check"/></svg>{% else %}2{% endif %}</span>
+        <span><small>PASO 02</small><strong>Revisión</strong></span>
+      </span>
+    </li>
+    <li class="payment-journey-step{% if stage == 'complete' %} is-current is-complete{% endif %}"{% if stage == 'complete' %} aria-current="step"{% endif %}>
+      <span class="payment-journey-label">
+        <span class="payment-journey-number" aria-hidden="true">{% if stage == 'complete' %}<svg class="ui-icon"><use href="#icon-check"/></svg>{% else %}3{% endif %}</span>
+        <span><small>PASO 03</small><strong>Confirmación</strong></span>
+      </span>
+    </li>
+  </ol>
+</nav>

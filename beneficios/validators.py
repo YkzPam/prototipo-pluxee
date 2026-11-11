@@ -10,3 +10,13 @@ class PasswordCompositionValidator:
 
     def get_help_text(self):
         return 'Debe combinar letras, números y al menos un símbolo.'
+
+
+# Caracteres que la pauta OWASP del curso pide rechazar en los datos de entrada, más el carácter nulo.
+DANGEROUS_CHARACTERS = frozenset('<>"\'%()&+' + chr(92) + chr(0))
+DANGEROUS_MESSAGE = 'No se admiten los caracteres < > " \' % ( ) & + ' + chr(92) + ' en este campo.'
+
+
+def reject_dangerous_characters(value):
+    if any(character in DANGEROUS_CHARACTERS for character in value):
+        raise ValidationError(DANGEROUS_MESSAGE, code='dangerous_characters')

@@ -64,21 +64,36 @@ APP_GRANTS = {
     'auth_permission': 'SELECT',
     'django_content_type': 'SELECT',
     'django_session': 'SELECT, INSERT, UPDATE, DELETE',
-    'identidad_user': 'SELECT, UPDATE (`password`, `must_change_password`, `last_login`, `first_name`, `last_name`)',
+    'identidad_user': (
+        'SELECT, INSERT (`username`, `password`, `first_name`, `last_name`, `email`, `date_joined`, '
+        '`must_change_password`, `is_active`), UPDATE (`password`, `must_change_password`, `last_login`, '
+        '`first_name`, `last_name`, `is_active`, `access_revision`)'
+    ),
     'identidad_user_groups': 'SELECT',
     'identidad_user_user_permissions': 'SELECT',
     'beneficios_auditevent': 'SELECT, INSERT',
-    'beneficios_benefitaccount': 'SELECT',
-    'beneficios_democard': 'SELECT, UPDATE (`status`, `changed_at`, `dynamic_code_digest`, `dynamic_expires_at`)',
+    'beneficios_notification': 'SELECT, INSERT, UPDATE (`read_at`)',
+    'beneficios_benefitaccount': 'SELECT, INSERT',
+    'beneficios_democard': 'SELECT, INSERT, UPDATE (`status`, `changed_at`, `dynamic_code_digest`, `dynamic_expires_at`)',
     'beneficios_loginthrottle': 'SELECT, INSERT, UPDATE, DELETE',
-    'beneficios_merchant': 'SELECT',
+    'beneficios_merchant': (
+        'SELECT, INSERT (`code`, `name`, `category`, `commune`, `address`, `description`, `active`), '
+        'UPDATE (`name`, `category`, `commune`, `address`, `description`, `active`)'
+    ),
     'beneficios_merchantfavorite': 'SELECT, INSERT, DELETE',
     'beneficios_movement': 'SELECT, INSERT',
     'beneficios_payment': 'SELECT, INSERT',
     'beneficios_paymentthrottle': 'SELECT, INSERT, UPDATE',
     'beneficios_serviceinterruption': 'SELECT, INSERT, UPDATE (`restored_at`, `verification_note`, `verified_at`, `verified_by_id`)',
     'beneficios_servicestate': 'SELECT, UPDATE (`available`, `changed_at`, `active_interruption_id`)',
-    'beneficios_supportreport': 'SELECT, INSERT, UPDATE (`status`, `response`, `updated_at`)',
+    'beneficios_supportreport': 'SELECT, INSERT, UPDATE (`status`, `response`, `updated_at`, `priority`, `assigned_to_id`)',
+    'beneficios_supportreportupdate': 'SELECT, INSERT',
+    'beneficios_merchantcategory': 'SELECT',
+    'beneficios_helptopic': 'SELECT',
+    'beneficios_systemparameters': (
+        'SELECT, INSERT, UPDATE (`registration_initial_credit`, `login_max_attempts`, `session_idle_minutes`, '
+        '`payment_max_amount`, `updated_at`, `updated_by_id`)'
+    ),
 }
 
 

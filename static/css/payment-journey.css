@@ -1,0 +1,56 @@
+/* El recorrido del pago conserva los formularios y la confirmación del servidor. */
+.payment-journey {
+  margin-block: 0 1.2rem;
+  padding: .9rem clamp(.7rem, 2vw, 1.1rem);
+  border: 1px solid #e3d8ee;
+  border-radius: 1rem;
+  background: var(--paper, #fff);
+}
+.payment-journey ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.payment-journey-step { position: relative; min-width: 0; color: #7a6d85; }
+.payment-journey-step:not(:last-child)::after { position: absolute; z-index: 0; inset-inline-start: 2.1rem; inset-inline-end: .2rem; inset-block-start: 1.08rem; height: 2px; background: #e7deee; content: ''; }
+.payment-journey-label { position: relative; z-index: 1; display: flex; align-items: center; gap: .6rem; width: fit-content; max-width: 100%; padding-inline-end: .45rem; color: inherit; background: var(--paper, #fff); text-decoration: none; }
+.payment-journey-label > span:last-child { min-width: 0; }
+.payment-journey-label small, .payment-journey-label strong { display: block; }
+.payment-journey-label small { font-size: .55rem; line-height: 1.35; letter-spacing: .08em; }
+.payment-journey-label strong { font-size: .86rem; line-height: 1.4; overflow-wrap: anywhere; }
+.payment-journey-number { display: grid; place-items: center; flex: 0 0 auto; inline-size: 2.2rem; block-size: 2.2rem; border: 1px solid #dfd3e9; border-radius: .75rem; color: #756382; background: #f6f1fa; font-size: .82rem; font-weight: 800; }
+.payment-journey-number .ui-icon { width: 1.15rem; height: 1.15rem; }
+.payment-journey-step.is-complete { color: var(--purple); }
+.payment-journey-step.is-complete .payment-journey-number { border-color: #d6e4aa; background: #edf5d2; color: #4c5c20; }
+.payment-journey-step.is-complete:not(:last-child)::after { background: #cadd96; }
+.payment-journey-step.is-current { color: var(--purple); }
+.payment-journey-step.is-current .payment-journey-number { border-color: var(--purple); background: var(--purple); color: #fff; box-shadow: 0 0 0 3px #ece2f6; }
+.payment-journey a:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; border-radius: .4rem; }
+.payment-review-stage { border-top: 4px solid #d4e989; }
+.receipt-journey { width: min(100%, 43rem); margin-inline: auto; }
+.receipt-journey .receipt-card { max-width: 100%; margin-inline: 0; }
+.receipt-journey-card { position: relative; transform-origin: top center; }
+.receipt-journey-card::after { position: absolute; inset-inline: 1.2rem; inset-block-end: .6rem; border-top: 1px dashed #d5c7e0; content: ''; pointer-events: none; }
+.receipt-journey-card .receipt-success { box-shadow: 0 0 0 .6rem #eff6d9; }
+
+@media (max-width: 560px) {
+  .payment-journey { padding-inline: .55rem; }
+  .payment-journey ol { gap: .25rem; }
+  .payment-journey-label { gap: .35rem; padding-inline-end: .2rem; }
+  .payment-journey-label small { font-size: .5rem; }
+  .payment-journey-label strong { font-size: .7rem; }
+  .payment-journey-number { inline-size: 1.65rem; block-size: 1.65rem; border-radius: .55rem; font-size: .7rem; }
+  .payment-journey-number .ui-icon { width: .9rem; height: .9rem; }
+  .payment-journey-step:not(:last-child)::after { inset-block-start: .82rem; inset-inline-start: 1.55rem; }
+}
+@media (max-width: 360px) {
+  .payment-journey-label { align-items: flex-start; flex-direction: column; gap: .25rem; }
+  .payment-journey-label strong { font-size: .68rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .receipt-journey-card { animation: receipt-unfold .48s cubic-bezier(.2,.65,.3,1) both; }
+  .receipt-journey-card .receipt-details { animation: receipt-details-enter .38s .13s ease-out both; }
+  .payment-journey-step.is-current .payment-journey-number { animation: journey-current .28s ease-out both; }
+}
+html[data-motion="off"] .receipt-journey-card,
+html[data-motion="off"] .receipt-journey-card .receipt-details,
+html[data-motion="off"] .payment-journey-number { animation: none; }
+@keyframes receipt-unfold { from { opacity: .45; transform: perspective(1100px) rotateX(-8deg) translateY(-9px); } to { opacity: 1; transform: perspective(1100px) rotateX(0) translateY(0); } }
+@keyframes receipt-details-enter { from { opacity: .6; translate: 0 -5px; } to { opacity: 1; translate: 0 0; } }
+@keyframes journey-current { from { scale: .88; } to { scale: 1; } }

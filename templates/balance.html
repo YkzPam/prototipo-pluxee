@@ -3,7 +3,7 @@
 {% block scripts %}<script src="{% static 'js/account.js' %}" defer></script>{% endblock %}
 {% block content %}
 <div data-account="{{ account.pk }}" data-view="balance">
-  <div class="page-heading"><div><span class="eyebrow">MI BENEFICIO</span><h1>Consulta de saldo</h1><p>Información de la cuenta {{ account.public_label }}.</p></div><span class="tag">Cuenta de prueba</span></div>
+  <div class="page-heading illustrated-heading"><div><span class="eyebrow">MI BENEFICIO</span><h1>Consulta de saldo</h1><p>Información de la cuenta {{ account.public_label }}.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-wallet.svg' only %}</div>
   {% include "includes/balance_card.html" %}
   <section class="surface summary-card"><div class="section-heading"><div><h2>Resumen de registros</h2><p class="muted">Abonos y cargos de la consulta actual.</p></div></div><div class="summary-values"><div><span>Abonos registrados</span><strong data-credited>—</strong></div><span class="summary-operator" aria-hidden="true">−</span><div><span>Cargos registrados</span><strong data-spent>—</strong></div><span class="summary-operator" aria-hidden="true">=</span><div><span>Saldo de esta consulta</span><strong data-current-balance>—</strong></div></div></section>
   <div class="account-note"><span aria-hidden="true">i</span><p>Si una consulta se interrumpe, la tarjeta muestra el último saldo confirmado en esta sesión con su fecha. El resumen solo se completa cuando la consulta actual termina correctamente.</p></div>

@@ -38,7 +38,7 @@ class AdminFollowupTests(TestCase):
 
     def test_detail_and_export_require_administrative_access(self):
         incident = ServiceInterruption.objects.create(service_code='balance', started_at=timezone.now())
-        urls = [reverse('seguimiento'), reverse('seguimiento_exportar')]
+        urls = [reverse('bitacora'), reverse('seguimiento_exportar')]
         for url in urls:
             self.assertEqual(self.client.get(url, {'interruption': incident.pk}).status_code, 302)
 
@@ -63,7 +63,7 @@ class AdminFollowupTests(TestCase):
         self.create_event('balance', 'success', duration_ms=50)
         filters = {'interruption': first.pk, 'event_type': 'balance', 'outcome': 'pending', 'period': '24h'}
 
-        detail = self.client.get(reverse('seguimiento'), filters)
+        detail = self.client.get(reverse('bitacora'), filters)
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(detail.context['selected_interruption'].pk, first.pk)
         self.assertEqual(list(detail.context['events']), [latest, older])
@@ -81,7 +81,7 @@ class AdminFollowupTests(TestCase):
         self.client.force_login(self.admin)
         empty = ServiceInterruption.objects.create(service_code='movements', started_at=timezone.now())
         for invalid in ('x', '-1', str(empty.pk + 1)):
-            for name in ('seguimiento', 'seguimiento_exportar'):
+            for name in ('bitacora', 'seguimiento_exportar'):
                 with self.subTest(route=name, interruption=invalid):
                     self.assertEqual(self.client.get(reverse(name), {'interruption': invalid}).status_code, 404)
 
@@ -112,7 +112,7 @@ class AdminFollowupTests(TestCase):
                           'access_denied': [access], 'expired': [expired]}
         for name, expected in expected_links.items():
             with self.subTest(link=name):
-                selected = self.client.get(f'{url}?{response.context["summary_filters"][name]}')
+                selected = self.client.get(f'{reverse("bitacora")}?{response.context["summary_filters"][name]}')
                 self.assertEqual(list(selected.context['events']), expected)
 
     def test_export_includes_matching_records_beyond_the_visible_page(self):
@@ -125,11 +125,30 @@ class AdminFollowupTests(TestCase):
         today = noon.date().isoformat()
         filters = {'event_type': 'movements', 'from_date': today, 'to_date': today}
 
-        result = self.client.get(reverse('seguimiento'), filters)
+        result = self.client.get(reverse('bitacora'), filters)
         self.assertEqual(len(result.context['events']), 25)
         self.assertEqual(result.context['events'].paginator.count, 26)
         rows = self.read_csv(self.client.get(reverse('seguimiento_exportar'), filters))
         self.assertEqual([row[3] for row in rows[1:]], [str(value) for value in reversed(range(26))])
+
+    def test_panel_shows_recent_activity_and_old_filtered_links_open_the_log(self):
+        events = [self.create_event('balance', 'success', created_at=timezone.now() - timedelta(minutes=minute))
+                  for minute in range(10)]
+        self.client.force_login(self.admin)
+        panel = self.client.get(reverse('seguimiento'))
+        self.assertEqual(panel.status_code, 200)
+        self.assertEqual(panel.context['recent_events'], events[:8])
+        self.assertContains(panel, reverse('bitacora'))
+        self.assertNotIn('filters', panel.context)
+
+        legacy = self.client.get(reverse('seguimiento'), {'event_type': 'balance', 'page': '2'})
+        self.assertRedirects(legacy, f"{reverse('bitacora')}?event_type=balance&page=2",
+                             fetch_redirect_response=False)
+        log = self.client.get(reverse('bitacora'), {'event_type': 'balance'})
+        self.assertEqual(log.context['events'].paginator.count, 10)
+
+        self.client.force_login(self.beneficiary)
+        self.assertEqual(self.client.get(reverse('bitacora')).status_code, 403)
 
     def test_export_refuses_invalid_date_filters(self):
         self.client.force_login(self.admin)

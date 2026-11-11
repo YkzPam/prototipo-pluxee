@@ -1,0 +1,12 @@
+{% load static %}
+<span class="section-empty-art" aria-hidden="true">
+{% if theme == 'notifications' %}
+  <img src="{% static 'img/empty-notifications.svg' %}" width="240" height="150" alt="" loading="lazy" decoding="async">
+{% elif theme == 'pending' %}
+  <img src="{% static 'img/empty-pending.svg' %}" width="240" height="150" alt="" loading="lazy" decoding="async">
+{% elif theme == 'merchants' %}
+  <img src="{% static 'img/merchant-grocery.svg' %}" width="360" height="180" alt="" loading="lazy" decoding="async">
+{% else %}
+  <img src="{% static 'img/empty-movements.svg' %}" width="240" height="150" alt="" loading="lazy" decoding="async">
+{% endif %}
+</span>

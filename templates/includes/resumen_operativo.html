@@ -1,0 +1,17 @@
+{% if summary %}
+<section class="portal-summary" aria-labelledby="portal-summary-heading">
+  <div class="section-heading"><div><h2 id="portal-summary-heading">Resumen operativo</h2><p class="muted">Registros actuales · {{ summary.today|date:'d/m/Y' }}</p></div></div>
+  <div class="portal-summary-grid">
+    <a class="surface portal-summary-card" href="{{ summary.active_users_url }}">
+      <span>Usuarios activos</span><strong>{{ summary.active_users }}</strong><small>Ver cuentas habilitadas</small>
+    </a>
+    <a class="surface portal-summary-card" href="{{ summary.movements_url }}">
+      <span>Movimientos de hoy</span><strong>{{ summary.today_movements }}</strong><small>Ver abonos y compras</small>
+    </a>
+    <div class="surface portal-summary-card">
+      <span>Reportes pendientes</span><strong>{{ summary.pending_reports }}</strong>
+      <div class="portal-summary-report-links"><a href="{{ summary.received_url }}">Recibidos {{ summary.received_reports }}</a><a href="{{ summary.review_url }}">En revisión {{ summary.review_reports }}</a></div>
+    </div>
+  </div>
+</section>
+{% endif %}

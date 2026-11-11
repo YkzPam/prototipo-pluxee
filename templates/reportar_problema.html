@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}Reportar un problema{% endblock %}
 {% block content %}
-<div class="page-heading">
-  <div><span class="eyebrow">AYUDA · PROTOTIPO</span><h1>Reportar un problema</h1><p>Registra un problema de la demostración y revisa su estado con el folio.</p></div>
+<div class="page-heading illustrated-heading">
+  <div><span class="eyebrow">AYUDA</span><h1>Reportar un problema</h1><p>Describe lo ocurrido y revisa el estado de tu reporte con su folio.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
 </div>
 <div class="report-workspace">
   <section class="surface report-section" aria-labelledby="report-form-heading">
     <h2 id="report-form-heading">Nuevo reporte</h2>
-    <p class="muted">El reporte queda en el entorno académico y se revisa dentro del prototipo.</p>
+    <p class="muted">El equipo administrador revisará el reporte desde su bandeja.</p>
     <form method="post" action="{% url 'reportar_problema' %}" class="standard-form report-form">
       {% csrf_token %}
       {% for field in form %}
@@ -22,7 +22,7 @@
   </section>
   <section class="surface report-section" id="mis-reportes" aria-labelledby="my-reports-heading">
     <h2 id="my-reports-heading">Mis reportes</h2>
-    <p class="muted">Aquí aparecen los reportes registrados con esta cuenta de prueba.</p>
+    <p class="muted">Consulta los reportes registrados con tu cuenta.</p>
     {% include 'includes/reportes_lista.html' with list_anchor='mis-reportes' %}
   </section>
 </div>

@@ -20,7 +20,11 @@ class SupportFollowupTests(TestCase):
     def test_beneficiary_creates_report_and_can_only_read_own_reports(self):
         self.client.force_login(self.beneficiary)
         page = reverse('reportar_problema')
-        description = 'Saldo pendiente <script>alert(1)</script>'
+        # La pauta OWASP del curso rechaza la entrada con caracteres peligrosos antes de guardarla.
+        rejected = self.client.post(page, {'category': 'balance', 'description': 'Saldo pendiente <script>alert(1)</script>'})
+        self.assertEqual(rejected.status_code, 400)
+        self.assertFalse(SupportReport.objects.filter(reporter=self.beneficiary).exists())
+        description = 'Saldo pendiente después de pagar en el comercio'
         result = self.client.post(page, {'category': 'balance', 'description': description})
         self.assertEqual(result.status_code, 302)
         report = SupportReport.objects.get(reporter=self.beneficiary)
@@ -128,4 +132,4 @@ class SupportFollowupTests(TestCase):
         self.assertEqual(records.count(), 1)
         self.assertNotIn(note, records.get().detail)
         self.assertEqual(incident.pending_queries.count(), 0)
-        self.assertContains(self.client.get(reverse('seguimiento'), {'interruption': incident.pk}), note)
+        self.assertContains(self.client.get(reverse('bitacora'), {'interruption': incident.pk}), note)

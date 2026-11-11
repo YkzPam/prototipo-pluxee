@@ -1,11 +1,13 @@
 {% load static %}
 <!doctype html>
-<html lang="es-CL">
+<html lang="es-CL" data-interface-user="{{ request.user.pk|default:'public' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>{% block title %}Mi cuenta{% endblock %} · Prototipo Pluxee</title>
+  <meta name="color-scheme" content="light dark">
+  <script src="{% static 'js/preferences-init.js' %}"></script>
+  <title>{% block title %}Mi cuenta{% endblock %} · Portal de beneficios</title>
+  <link rel="icon" href="{% static 'img/portal-icon.svg' %}" type="image/svg+xml">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="stylesheet" href="{% static 'css/visual.css' %}">
   <link rel="stylesheet" href="{% static 'css/movimientos.css' %}">
@@ -16,7 +18,25 @@
   <link rel="stylesheet" href="{% static 'css/pluxee_app.css' %}">
   <link rel="stylesheet" href="{% static 'css/pagos.css' %}">
   <link rel="stylesheet" href="{% static 'css/secciones_pluxee.css' %}">
+  <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+  <link rel="stylesheet" href="{% static 'css/presentacion.css' %}">
+  <link rel="stylesheet" href="{% static 'css/portal-shell.css' %}">
+  <link rel="stylesheet" href="{% static 'css/portal-content.css' %}">
+  <link rel="stylesheet" href="{% static 'css/portal-motion.css' %}">
+  <link rel="stylesheet" href="{% static 'css/notificaciones.css' %}">
+  <link rel="stylesheet" href="{% static 'css/section-art.css' %}">
+  <link rel="stylesheet" href="{% static 'css/payment-journey.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-density.css' %}">
+  <link rel="stylesheet" href="{% static 'css/history-graph.css' %}">
+  <link rel="stylesheet" href="{% static 'css/interface.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-comercios.css' %}">
+  <link rel="stylesheet" href="{% static 'css/fluidez.css' %}">
   <script src="{% static 'js/common.js' %}" defer></script>
+  <script src="{% static 'js/avisos.js' %}" defer></script>
+  <script src="{% static 'js/portal-motion.js' %}" defer></script>
+  <script src="{% static 'js/notificaciones.js' %}" defer></script>
+  <script src="{% static 'js/admin-density.js' %}" defer></script>
+  <script src="{% static 'js/interface.js' %}" defer></script>
   {% block scripts %}{% endblock %}
 </head>
 <body class="{% if request.user.is_authenticated %}{% if request.user.is_staff %}app-admin{% else %}app-beneficiary{% endif %}{% else %}app-public{% endif %}" data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
@@ -35,14 +55,21 @@
     <symbol id="icon-wallet" viewBox="0 0 24 24"><path d="M20 8H5a2 2 0 0 1 0-4h13v4M3 6v13a2 2 0 0 0 2 2h15V8m0 5h-5a2 2 0 0 0 0 4h5m-5-2h.01"/></symbol>
     <symbol id="icon-tracking" viewBox="0 0 24 24"><path d="M4 4v16h16M7 14l4-5 4 3 5-6"/></symbol>
     <symbol id="icon-exit" viewBox="0 0 24 24"><path d="M10 4H5v16h5m-1-8h12m-4-4 4 4-4 4"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5Zm5 3h4"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+    <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M4 20C1 9 8 3 21 3c0 13-6 20-17 17Zm0 0L16 8"/></symbol>
+    <symbol id="icon-star" viewBox="0 0 24 24"><path d="m12 2 3 6.5 7 .9-5.1 5 1.2 7.1L12 18l-6.1 3.5 1.2-7.1L2 9.4l7-.9Z"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12c5-9 15-9 20 0-5 9-15 9-20 0Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-sliders" viewBox="0 0 24 24"><path d="M4 6h10m4 0h2M4 12h4m4 0h8M4 18h12m4 0h0M14 4v4M8 10v4M16 16v4"/></symbol>
+    <symbol id="icon-log" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6Zm9 0v4h4M9 11h7M9 15h7M9 19h4"/></symbol>
   </defs></svg>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
   {% if request.user.is_authenticated %}
   <div class="app-shell">
     <aside class="sidebar" aria-label="Menú principal">
-      <a class="brand" href="{% if request.user.is_staff %}{% url 'seguimiento' %}{% else %}{% url 'inicio' %}{% endif %}" aria-label="Prototipo Pluxee, inicio">
+      <a class="brand" href="{% if request.user.is_staff %}{% url 'seguimiento' %}{% else %}{% url 'inicio' %}{% endif %}" aria-label="Portal de beneficios, inicio">
         <span class="brand-mark" aria-hidden="true">p<span></span></span>
-        <span>pluxee<small>PROTOTIPO ACADÉMICO</small></span>
+        <span>pluxee<small>PORTAL DE BENEFICIOS</small></span>
       </a>
       <div class="sidebar-label">{% if request.user.is_staff %}ADMINISTRACIÓN{% else %}MI BENEFICIO{% endif %}</div>
       <nav class="nav-links desktop-nav" aria-label="Secciones">
@@ -50,9 +77,16 @@
         <a href="{% url 'seguimiento' %}" class="{% if active_page == 'seguimiento' %}active{% endif %}" {% if active_page == 'seguimiento' %}aria-current="page"{% endif %}>
           <svg class="ui-icon" aria-hidden="true"><use href="#icon-tracking"/></svg> Seguimiento
         </a>
+        <a href="{% url 'bitacora' %}" class="{% if active_page == 'bitacora' %}active{% endif %}"{% if active_page == 'bitacora' %} aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-log"/></svg> Bitácora</a>
         <a href="{% url 'reportes_admin' %}" class="{% if active_page == 'reportes_admin' %}active{% endif %}" {% if active_page == 'reportes_admin' %}aria-current="page"{% endif %}>
           <svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg> Reportes
         </a>
+        <a href="{% url 'admin_usuarios' %}" class="{% if active_page == 'admin_usuarios' %}active{% endif %}" {% if active_page == 'admin_usuarios' %}aria-current="page"{% endif %}>
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-user"/></svg> Usuarios
+        </a>
+        <a href="{% url 'admin_comercios' %}" class="{% if active_page == 'admin_comercios' %}active{% endif %}"{% if active_page == 'admin_comercios' %} aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-shop"/></svg> Comercios</a>
+        <a href="{% url 'admin_informes' %}" class="{% if active_page == 'admin_informes' %}active{% endif %}"{% if active_page == 'admin_informes' %} aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-tracking"/></svg> Informes</a>
+        <a href="{% url 'admin_parametros' %}" class="{% if active_page == 'admin_parametros' %}active{% endif %}"{% if active_page == 'admin_parametros' %} aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-sliders"/></svg> Parámetros</a>
         {% else %}
         <a href="{% url 'inicio' %}" class="{% if active_page == 'inicio' %}active{% endif %}" {% if active_page == 'inicio' %}aria-current="page"{% endif %}>
           <svg class="ui-icon" aria-hidden="true"><use href="#icon-home"/></svg> Inicio
@@ -82,14 +116,25 @@
         {% if request.user.is_staff %}<div class="profile">{% else %}
         <a class="profile profile-link" href="{% url 'perfil' %}" aria-label="Mi perfil, {{ request.user.get_short_name|default:request.user.username }}">
         {% endif %}
-          <span class="avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
-          <div><strong>{{ request.user.get_short_name|default:request.user.username }}</strong><small>{% if request.user.is_staff %}Administrador de prueba{% else %}Beneficiario de prueba{% endif %}</small></div>
+          <span class="avatar" data-personal-avatar data-avatar-initial="{{ request.user.get_short_name|default:request.user.username|first|upper }}" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span>
+          <div><strong>{{ request.user.get_short_name|default:request.user.username }}</strong><small>{% if request.user.is_staff %}Administrador{% else %}Beneficiario{% endif %}</small></div>
         {% if request.user.is_staff %}</div>{% else %}</a>{% endif %}
         <form action="{% url 'salir' %}" method="post">{% csrf_token %}<button class="logout-button" type="submit"><svg class="ui-icon" aria-hidden="true"><use href="#icon-exit"/></svg> Cerrar sesión</button></form>
       </div>
     </aside>
     <div class="app-main">
-      <header class="topbar"><span class="context-label">{% if request.user.is_staff %}Panel de seguimiento{% else %}Beneficio de alimentación{% endif %}</span><span class="academic-pill"><span aria-hidden="true"></span> Prototipo académico · Datos ficticios</span></header>
+      <header class="topbar">
+        <span class="context-label">{% if request.user.is_staff %}Panel de seguimiento{% else %}Beneficio de alimentación{% endif %}</span>
+        <div class="topbar-tools">
+        <button class="interface-tool" type="button" data-open-actions hidden aria-label="Buscar una opción"><svg class="ui-icon" aria-hidden="true"><use href="#icon-list"/></svg><span>Buscar</span><kbd>Ctrl K</kbd></button>
+        <a class="interface-tool" href="{% url 'apariencia' %}" aria-label="Apariencia y privacidad"><svg class="ui-icon" aria-hidden="true"><use href="#icon-sun"/></svg><span>Apariencia</span></a>
+        <a href="{% url 'notificaciones' %}" class="notification-access" data-notification-access aria-label="Notificaciones{% if notification_unread_count %}, {{ notification_unread_count }} sin leer{% endif %}"{% if active_page == 'notificaciones' %} aria-current="page"{% endif %}>
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-bell"/></svg>
+          <span class="notification-access-label">Notificaciones</span>
+          <span class="notification-count" data-notification-count{% if not notification_unread_count %} hidden{% endif %}>{{ notification_unread_count|default:0 }}</span>
+        </a>
+        </div>
+      </header>
       <main id="contenido" class="page-content" tabindex="-1"{% if request.method == 'GET' and not request.user.is_staff and not request.GET.metodo %} data-section-transition="{{ active_page }}"{% endif %}>
         <div class="session-alert notice notice-error" data-session-alert role="alert" hidden><div><strong>La sesión ha finalizado</strong><p data-session-message>Es necesario ingresar nuevamente para continuar.</p></div><a class="button button-small" href="{% url 'ingresar' %}">Volver a ingresar</a></div>
         {% if request.session_clock and not request.user.must_change_password %}
@@ -99,16 +144,18 @@
           <button class="button button-small" type="button" data-session-continue>Continuar sesión</button>
         </div>
         {% endif %}
-        {% if messages %}<div class="messages">
-          {% for message in messages %}
-          <div class="notice {% if message.tags == 'error' %}notice-error{% elif message.tags == 'warning' %}notice-warning{% elif message.tags == 'success' %}notice-success{% else %}notice-info{% endif %}" role="status">{{ message }}</div>
-          {% endfor %}
-        </div>{% endif %}
+        {% include 'includes/flash_messages.html' %}
+        {% if not request.user.must_change_password %}
+        <div class="tour-invite" data-tour-invite hidden><span>Conoce las opciones de tu portal.</span><button type="button" class="button button-small button-secondary" data-start-tour>Abrir recorrido</button><button type="button" class="button button-small button-quiet" data-tour-dismiss>Ahora no</button></div>
+        {% endif %}
         {% block content %}{% endblock %}
       </main>
-      <footer class="app-footer">Proyecto de Ingeniería de Software · Entorno académico independiente de Pluxee Chile.</footer>
+      {% include 'includes/site_footer.html' %}
     </div>
   </div>
+  {% include 'includes/interface_dialogs.html' %}
+  <template id="empty-movements-art">{% include 'includes/empty_illustration.html' with theme='movements' only %}</template>
+  <template id="empty-pending-art">{% include 'includes/empty_illustration.html' with theme='pending' only %}</template>
   {% if not request.user.is_staff %}
   <nav class="bottom-nav" aria-label="Navegación principal móvil">
     <a href="{% url 'inicio' %}" class="{% if active_page == 'inicio' or active_page == 'saldo' or active_page == 'movimientos' %}active{% endif %}" {% if active_page == 'inicio' %}aria-current="page"{% endif %}><svg class="ui-icon" aria-hidden="true"><use href="#icon-home"/></svg><span>Inicio</span></a>
@@ -119,6 +166,7 @@
   {% endif %}
   {% else %}
     {% block public_content %}{% endblock %}
+    {% include 'includes/site_footer.html' %}
   {% endif %}
 </body>
 </html>

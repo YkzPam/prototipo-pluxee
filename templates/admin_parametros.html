@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load moneda %}
+{% block title %}Parámetros del sistema{% endblock %}
+{% block content %}
+<header class="page-heading illustrated-heading">
+  <div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Parámetros del sistema</h1><p>Ajusta las reglas del portal sin reiniciar el servidor. Cada cambio queda registrado en la bitácora.</p></div>
+  {% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+</header>
+<div class="parameters-layout">
+  <section class="surface user-panel" aria-labelledby="parameters-form-heading">
+    <h2 id="parameters-form-heading">Valores configurables</h2>
+    <form class="user-form parameters-form" method="post" novalidate>
+      {% csrf_token %}
+      {% include 'includes/user_fields.html' with form=form %}
+      <button class="button" type="submit">Guardar parámetros</button>
+    </form>
+  </section>
+  <aside class="parameters-side">
+    <section class="surface user-panel" aria-labelledby="parameters-current-heading">
+      <h2 id="parameters-current-heading">Vigentes ahora</h2>
+      <dl class="parameters-current">
+        <div><dt>Abono inicial</dt><dd>${{ active.registration_initial_credit|clp }}</dd></div>
+        <div><dt>Intentos de ingreso</dt><dd>{{ active.login_max_attempts }}</dd></div>
+        <div><dt>Inactividad de sesión</dt><dd>{{ active.session_idle_minutes }} min</dd></div>
+        <div><dt>Máximo por compra</dt><dd>${{ active.payment_max_amount|clp }}</dd></div>
+      </dl>
+      <p class="muted parameters-origin">{% if active.updated_at %}Última modificación el {{ active.updated_at|date:'d/m/Y H:i' }}{% if active.updated_by %} por {{ active.updated_by.get_username }}{% endif %}.{% else %}Se usan los valores de la configuración inicial.{% endif %}</p>
+    </section>
+    <section class="surface user-panel" aria-labelledby="parameters-history-heading">
+      <h2 id="parameters-history-heading">Cambios recientes</h2>
+      <ol class="parameters-history" role="list">
+        {% for change in history %}
+        <li><time datetime="{{ change.created_at|date:'c' }}">{{ change.created_at|date:'d/m/Y H:i' }}</time><span>{{ change.detail }}</span><small class="muted">{{ change.actor.username|default:'Sistema' }}</small></li>
+        {% empty %}
+        <li class="muted">Aún no hay cambios registrados.</li>
+        {% endfor %}
+      </ol>
+      <a class="text-link" href="{% url 'bitacora' %}?event_type=settings">Ver en la bitácora</a>
+    </section>
+  </aside>
+</div>
+{% endblock %}

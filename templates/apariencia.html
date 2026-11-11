@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Apariencia{% endblock %}
+{% block content %}
+<header class="page-heading illustrated-heading"><div><span class="eyebrow">PERSONALIZA TU ESPACIO</span><h1>Apariencia y privacidad</h1><p>Las preferencias se guardan en este navegador.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}</header>
+<form class="appearance-grid" data-preferences-form>
+  <section class="surface appearance-panel">
+    <h2>Colores</h2>
+    <fieldset><legend>Tema del portal</legend>
+      <label><input type="radio" name="theme" value="light"> Claro</label>
+      <label><input type="radio" name="theme" value="dark"> Oscuro</label>
+      <label><input type="radio" name="theme" value="system"> Seguir al sistema</label>
+    </fieldset>
+    <label class="preference-check"><input type="checkbox" name="contrast"> Mayor contraste</label>
+  </section>
+  <section class="surface appearance-panel">
+    <h2>Movimiento</h2>
+    <label for="motion-level">Intensidad de las animaciones</label>
+    <select id="motion-level" name="motion"><option value="full">Completa</option><option value="soft">Suave</option><option value="none">Sin animaciones</option></select>
+    <p class="muted">La preferencia de movimiento reducido del sistema tiene prioridad.</p>
+    <label class="preference-check"><input type="checkbox" name="private"> Ocultar importes al consultar</label>
+  </section>
+  <section class="surface appearance-panel">
+    <h2>Tu avatar</h2>
+    <p class="muted">Elige un símbolo y un color para identificar la cuenta en este navegador.</p>
+    <fieldset><legend>Símbolo</legend>
+      <label><input type="radio" name="avatar" value="initial"> Inicial</label>
+      <label><input type="radio" name="avatar" value="leaf"> Hoja</label>
+      <label><input type="radio" name="avatar" value="sun"> Sol</label>
+      <label><input type="radio" name="avatar" value="star"> Estrella</label>
+    </fieldset>
+    <fieldset><legend>Color</legend>
+      <label><input type="radio" name="avatarColor" value="purple"> Morado</label>
+      <label><input type="radio" name="avatarColor" value="lime"> Lima</label>
+      <label><input type="radio" name="avatarColor" value="lavender"> Lavanda</label>
+    </fieldset>
+    <div class="appearance-avatar" data-avatar-initial="{{ avatar_initial }}" data-personal-avatar aria-hidden="true">{{ avatar_initial }}</div>
+  </section>
+  <section class="surface appearance-panel">
+    <h2>Conoce el portal</h2>
+    <p>El recorrido muestra dónde encontrar las funciones principales de tu cuenta.</p>
+    <button class="button button-secondary" type="button" data-start-tour>Abrir recorrido</button>
+    <p class="muted">El buscador de acciones también se abre con Ctrl + K.</p>
+  </section>
+  <p class="sr-only" role="status" data-preferences-status></p>
+</form>
+{% endblock %}

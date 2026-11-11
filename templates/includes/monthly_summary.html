@@ -1,0 +1,38 @@
+<section class="surface monthly-summary" aria-labelledby="monthly-title" data-monthly-summary data-ui-state="loading">
+  <div class="section-heading">
+    <div>
+      <h2 id="monthly-title">Resumen del mes</h2>
+      <p class="muted">Abonos y compras registrados en el periodo seleccionado.</p>
+    </div>
+    <div class="monthly-period-controls">
+      <label for="monthly-period-select">Periodo</label>
+      <select id="monthly-period-select" data-monthly-select disabled>
+        <option value="">Mes actual</option>
+      </select>
+    </div>
+    <span class="monthly-period sr-only" data-monthly-period hidden></span>
+  </div>
+  <div class="notice notice-info ui-state-notice" role="status" data-monthly-notice>
+    <p data-monthly-status>Consultando el resumen…</p>
+    <button type="button" class="button button-secondary button-small" data-retry-movements data-monthly-retry hidden>Reintentar</button>
+  </div>
+  <dl class="monthly-grid" data-monthly-values aria-live="polite" hidden>
+    <div class="monthly-metric monthly-credit">
+      <dt>Total abonado</dt><dd data-monthly-credit data-private-amount></dd>
+    </div>
+    <div class="monthly-metric monthly-spent">
+      <dt>Total gastado</dt><dd data-monthly-spent data-private-amount></dd>
+    </div>
+    <div class="monthly-metric monthly-latest">
+      <dt>Última compra</dt><dd data-monthly-purchase></dd><dd class="muted" data-monthly-purchase-detail hidden></dd>
+    </div>
+  </dl>
+  <div class="weekly-chart" data-weekly-chart hidden>
+    <div class="weekly-chart-heading">
+      <h3>Gastos por semana</h3>
+      <p class="muted">Selecciona una semana para ver sus compras.</p>
+    </div>
+    <ol class="weekly-chart-bars" data-weekly-bars></ol>
+    <p class="muted weekly-chart-caption">Importes en pesos chilenos. La escala toma la semana con más gastos del mes.</p>
+  </div>
+</section>

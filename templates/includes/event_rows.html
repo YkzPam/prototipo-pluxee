@@ -1,0 +1,22 @@
+<div class="table-wrap">
+  <table class="data-table events-table followup-table followup-events" role="table">
+    <caption class="sr-only">{{ caption }}</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Fecha y hora</th><th scope="col" role="columnheader">Evento</th><th scope="col" role="columnheader">Cuenta</th><th scope="col" role="columnheader">Resultado</th><th scope="col" role="columnheader">Detalle</th></tr></thead>
+    <tbody role="rowgroup">
+      {% for ev in events %}
+      <tr role="row">
+        <td class="nowrap" role="cell"><span class="followup-cell-label" aria-hidden="true">Fecha y hora</span><time datetime="{{ ev.created_at|date:'c' }}">{{ ev.created_at|date:'d/m/Y' }}<small>{{ ev.created_at|date:'H:i:s' }}</small></time></td>
+        <td role="cell"><span class="followup-cell-label" aria-hidden="true">Evento</span><strong>{{ ev.get_event_type_display }}</strong></td>
+        <td role="cell"><span class="followup-cell-label" aria-hidden="true">Cuenta</span>{{ ev.actor.username|default:'No autenticado' }}</td>
+        <td role="cell"><span class="followup-cell-label" aria-hidden="true">Resultado</span><span class="status-badge {% if ev.outcome == 'success' %}status-success{% elif ev.outcome == 'pending' %}status-pending{% else %}status-denied{% endif %}">{{ ev.get_outcome_display }}</span></td>
+        <td class="followup-event-detail" role="cell">
+          <span class="followup-cell-label" aria-hidden="true">Detalle</span>{{ ev.detail }}{% if ev.duration_ms != None %}<small>{{ ev.duration_ms }} ms</small>{% endif %}
+          <details class="followup-event-reference"><summary>Identificador del evento</summary><code>{{ ev.request_id }}</code></details>
+        </td>
+      </tr>
+      {% empty %}
+      <tr class="followup-empty-row" role="row"><td colspan="5" role="cell"><div class="empty-state"><strong>No hay eventos para este filtro</strong><p>Cambia los filtros para revisar otros eventos.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

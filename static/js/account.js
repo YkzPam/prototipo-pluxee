@@ -24,6 +24,7 @@
   const movementActions = all('[data-page-prev], [data-page-next], [data-movement-filters] button');
   const prev = app.querySelector('[data-page-prev]');
   const next = app.querySelector('[data-page-next]');
+  const monthSelect = app.querySelector('[data-monthly-select]');
 
   function retryCountdown(buttons) {
     const labels = new Map();
@@ -83,11 +84,56 @@
     return snapshot;
   }
 
+  let shownBalance = null;
+  let countFrame = 0;
+
+  function motionAllowed() {
+    const root = document.documentElement;
+    return root.dataset.motion !== 'off' && root.dataset.motionLevel !== 'none'
+      && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  // El importe sube desde el valor mostrado antes; con importes ocultos o movimiento reducido se muestra directo.
+  function countBalance(to) {
+    cancelAnimationFrame(countFrame);
+    const from = shownBalance ?? 0;
+    shownBalance = to;
+    const reading = balanceCard.querySelector('.balance-reading');
+    const hidden = () => document.documentElement.dataset.privateAmounts === 'hidden';
+    if (from === to || !motionAllowed() || hidden()) {
+      setText('[data-balance]', api.money(to));
+      return;
+    }
+    reading.setAttribute('aria-busy', 'true');
+    const start = performance.now();
+    const duration = 650;
+    const step = now => {
+      const progress = Math.min(1, (now - start) / duration);
+      if (progress < 1 && !hidden()) {
+        const eased = 1 - (1 - progress) ** 3;
+        setText('[data-balance]', api.money(Math.round(from + (to - from) * eased)));
+        countFrame = requestAnimationFrame(step);
+        return;
+      }
+      setText('[data-balance]', api.money(to));
+      reading.removeAttribute('aria-busy');
+      amountsUpdated();
+    };
+    countFrame = requestAnimationFrame(step);
+  }
+
   function showBalance(state, label, snapshot = null, message = '') {
     if (!balanceCard) return;
     balanceCard.dataset.balanceState = state;
+    balanceCard.dataset.balanceEmpty = String(!snapshot);
     setText('[data-balance-heading]', label);
-    setText('[data-balance]', snapshot ? api.money(snapshot.balance) : '—');
+    if (state === 'current' && snapshot) countBalance(snapshot.balance);
+    else {
+      cancelAnimationFrame(countFrame);
+      balanceCard.querySelector('.balance-reading').removeAttribute('aria-busy');
+      setText('[data-balance]', snapshot ? api.money(snapshot.balance) : '—');
+      if (snapshot) shownBalance = snapshot.balance;
+    }
 
     const reference = balanceCard.querySelector('[data-balance-reference]');
     const date = balanceCard.querySelector('[data-balance-time]');
@@ -104,12 +150,14 @@
     const detail = balanceCard.querySelector('[data-state-detail]');
     detail.textContent = message;
     detail.hidden = !message;
+    amountsUpdated();
   }
 
   function showBalanceSummary(data = null) {
     setText('[data-current-balance]', data ? api.money(data.balance) : '—');
     setText('[data-credited]', data ? api.money(data.credited) : '—');
     setText('[data-spent]', data ? api.money(data.spent) : '—');
+    amountsUpdated();
   }
 
   function errorBox(selector, message, show) {
@@ -214,24 +262,42 @@
     return node;
   }
 
+  function privateMoney(tag, className, text) {
+    const node = element(tag, className, text);
+    node.setAttribute('data-private-amount', '');
+    return node;
+  }
+
+  function detailTrigger(item, className) {
+    const button = element('button', className);
+    button.type = 'button';
+    button.dataset.movementDetail = `/api/movimientos/${encodeURIComponent(item.id)}/detalle/`;
+    return button;
+  }
+
+  function amountsUpdated() {
+    document.dispatchEvent(new CustomEvent('portal:amounts-updated'));
+  }
+
   function recentRows(items) {
     const holder = app.querySelector('[data-recent-movements]');
     if (!holder) return;
     holder.replaceChildren();
     if (!items.length) {
-      holder.append(element('p', 'empty-state', 'Sin movimientos. La cuenta aún no tiene operaciones registradas.'));
+      holder.append(emptyState('Sin movimientos. La cuenta aún no tiene operaciones registradas.', 'movements'));
       return;
     }
     items.slice(0, 3).forEach(item => {
-      const row = element('div', 'movement-row');
+      const row = detailTrigger(item, 'movement-row movement-recent-trigger');
       const credit = item.kind === 'abono';
       const icon = element('span', 'movement-symbol' + (credit ? ' credit' : ''), credit ? '↓' : '↑');
       icon.setAttribute('aria-hidden', 'true');
       const description = element('div', 'movement-description');
       description.append(element('strong', '', item.description), element('small', '', api.date(item.date)));
-      row.append(icon, description, element('span', 'movement-money' + (credit ? ' credit' : ''), (credit ? '+ ' : '− ') + api.money(item.amount)));
+      row.append(icon, description, privateMoney('span', 'movement-money' + (credit ? ' credit' : ''), (credit ? '+ ' : '− ') + api.money(item.amount)));
       holder.append(row);
     });
+    amountsUpdated();
   }
 
   function tableRows(items) {
@@ -239,31 +305,66 @@
     if (!holder) return;
     holder.replaceChildren();
     if (!items.length) {
-      placeholder('Sin movimientos para los filtros seleccionados.');
+      placeholder('Sin movimientos para los filtros seleccionados.', 'movements');
       return;
     }
+    let previousDay = null;
     items.forEach(item => {
+      const day = item.date.slice(0, 10);
+      if (day !== previousDay) {
+        const headingRow = element('tr', 'movement-day-row');
+        headingRow.setAttribute('role', 'row');
+        const headingCell = element('td');
+        headingCell.colSpan = 4;
+        headingCell.setAttribute('role', 'cell');
+        const heading = element('h3', '', api.date(day));
+        headingCell.append(heading);
+        headingRow.append(headingCell);
+        holder.append(headingRow);
+        previousDay = day;
+      }
       const row = element('tr', 'movement-table-entry');
       row.setAttribute('role', 'row');
       const credit = item.kind === 'abono';
       const type = element('td', 'movement-entry-kind');
-      type.append(element('span', 'status-badge ' + (credit ? 'status-success' : 'status-neutral'), credit ? 'Abono' : 'Cargo'));
+      const kindLabel = element('span', 'movement-kind-label' + (credit ? ' is-credit' : ''));
+      const icon = element('span', 'movement-kind-icon', credit ? '↓' : '↑');
+      icon.setAttribute('aria-hidden', 'true');
+      kindLabel.append(icon, element('span', '', credit ? 'Abono' : 'Compra'));
+      type.append(kindLabel);
+      const description = element('td', 'movement-entry-description');
+      const trigger = detailTrigger(item, 'movement-detail-trigger');
+      trigger.append(element('span', '', item.description), element('span', 'movement-detail-arrow', '↗'));
+      description.append(trigger);
+      const occurred = element('time', '', api.dateTime(item.date));
+      occurred.dateTime = item.date;
+      const date = element('td', 'movement-entry-date');
+      date.append(occurred);
       const cells = [
-        element('td', 'movement-entry-description', item.description),
-        element('td', 'movement-entry-date', api.date(item.date)),
+        description,
+        date,
         type,
-        element('td', 'amount-cell movement-entry-amount movement-money' + (credit ? ' credit' : ''),
+        privateMoney('td', 'amount-cell movement-entry-amount movement-money' + (credit ? ' credit' : ''),
           (credit ? '+ ' : '− ') + api.money(item.amount)),
       ];
       cells.forEach(cell => cell.setAttribute('role', 'cell'));
       row.append(...cells);
       holder.append(row);
     });
+    amountsUpdated();
   }
 
-  function placeholder(message) {
+  function emptyState(message, theme) {
+    const box = element('div', 'empty-state');
+    const illustration = theme ? document.getElementById('empty-' + theme + '-art') : null;
+    if (illustration) box.append(illustration.content.cloneNode(true));
+    box.append(element('p', '', message));
+    return box;
+  }
+
+  function placeholder(message, theme = null) {
     const recent = app.querySelector('[data-recent-movements]');
-    if (recent) recent.replaceChildren(element('p', 'empty-state', message));
+    if (recent) recent.replaceChildren(emptyState(message, theme));
     const holder = app.querySelector('[data-movement-rows]');
     if (holder) {
       const row = element('tr', 'movement-table-placeholder');
@@ -271,26 +372,96 @@
       const cell = element('td');
       cell.setAttribute('role', 'cell');
       cell.colSpan = 4;
-      cell.append(element('div', 'empty-state', message));
+      cell.append(emptyState(message, theme));
       row.append(cell);
       holder.replaceChildren(row);
     }
   }
 
+  function showMonthly(state, data = null) {
+    const summary = app.querySelector('[data-monthly-summary]');
+    if (!summary) return;
+    const ready = state === 'ready' && data !== null;
+    const notice = summary.querySelector('[data-monthly-notice]');
+    const period = summary.querySelector('[data-monthly-period]');
+    const detail = summary.querySelector('[data-monthly-purchase-detail]');
+    const purchase = ready ? data.latest_purchase : null;
+    summary.dataset.uiState = state;
+    summary.setAttribute('aria-busy', String(state === 'loading'));
+    summary.querySelector('[data-monthly-values]').hidden = !ready;
+    notice.hidden = ready;
+    notice.classList.toggle('notice-error', state === 'error');
+    notice.classList.toggle('notice-info', state !== 'error');
+    period.hidden = !ready;
+    period.textContent = ready ? data.period : '';
+    if (ready && monthSelect && Array.isArray(data.periods)) {
+      monthSelect.replaceChildren(...data.periods.map(period => {
+        const option = element('option', '', period.label);
+        option.value = period.value;
+        return option;
+      }));
+      monthSelect.value = data.month;
+    }
+    summary.querySelector('[data-monthly-retry]').hidden = state !== 'error';
+    setText('[data-monthly-status]', state === 'loading' ? 'Consultando el resumen…'
+      : state === 'expired' ? 'Vuelve a ingresar para consultar el resumen.' : 'El resumen no está disponible. Puedes reintentar.');
+    setText('[data-monthly-credit]', ready ? api.money(data.credited) : '');
+    setText('[data-monthly-spent]', ready ? api.money(data.spent) : '');
+    setText('[data-monthly-purchase]', ready ? (purchase ? purchase.description : 'Sin compras este mes') : '');
+    detail.hidden = !purchase;
+    detail.replaceChildren();
+    if (purchase) detail.append(privateMoney('span', '', api.money(purchase.amount)),
+      document.createTextNode(' · ' + api.date(purchase.date)));
+    showWeekly(ready && Array.isArray(data.weekly) ? data.weekly : null);
+    amountsUpdated();
+  }
+
+  function showWeekly(weeks) {
+    const chart = app.querySelector('[data-weekly-chart]');
+    if (!chart) return;
+    chart.hidden = !weeks;
+    const bars = chart.querySelector('[data-weekly-bars]');
+    bars.replaceChildren();
+    if (!weeks) return;
+    const max = Math.max(1, ...weeks.map(week => week.amount));
+    weeks.forEach(week => {
+      const item = element('li');
+      const link = element('a', 'weekly-bar-link');
+      const query = new URLSearchParams({desde: week.from_date, hasta: week.to_date, tipo: 'cargo'});
+      link.href = '/movimientos/?' + query.toString();
+      link.setAttribute('aria-label', `Días ${week.label}. Ver compras.`);
+      const meter = element('meter');
+      meter.min = 0;
+      meter.max = max;
+      meter.value = week.amount;
+      meter.setAttribute('aria-hidden', 'true');
+      link.append(element('span', 'weekly-bar-label', 'Días ' + week.label),
+        meter, privateMoney('strong', 'weekly-bar-amount', api.money(week.amount)));
+      item.append(link);
+      bars.append(item);
+    });
+  }
+
   async function movements(page = 1) {
     if (movementsBusy || movementRetry.waiting() || api.isExpired()) return;
     movementsBusy = true;
+    if (monthSelect) monthSelect.disabled = true;
     app.dataset.movementsBusy = 'true';
     queryMovementsButton?.setAttribute('aria-disabled', 'true');
     const buttons = [...movementRetryButtons, ...movementActions];
     buttons.forEach(button => { button.disabled = true; });
     errorBox('[data-movements-error]', '', false);
+    showMonthly('loading');
     placeholder('Consultando los registros…');
     setText('[data-movement-count]', 'Consultando movimientos…');
     setText('[data-movements-updated]', '');
     const pagination = app.querySelector('[data-pagination]');
     if (pagination) pagination.hidden = true;
     const params = new URLSearchParams();
+    if (view === 'dashboard') {
+      params.set('resumen', 'mensual');
+      if (monthSelect?.value) params.set('mes', monthSelect.value);
+    }
     const form = app.querySelector('[data-movement-filters]');
     if (form) new FormData(form).forEach((value, key) => {
       if (value && (key !== 'tipo' || value !== 'todos')) params.set(key, value);
@@ -305,7 +476,11 @@
     const result = await api.request(base + 'movimientos/?' + params.toString());
     if (result.ok && result.status === 'updated' && result.data && !api.isExpired()) {
       const items = Array.isArray(result.data.items) ? result.data.items : [];
-      if (view === 'dashboard') recentRows(items); else tableRows(items);
+      if (view === 'dashboard') {
+        recentRows(items);
+        if (result.data.monthly) showMonthly('ready', result.data.monthly);
+        else showMonthly('error');
+      } else tableRows(items);
       currentPage = result.data.page || 1;
       totalPages = result.data.pages || 1;
       if (form && currentPage !== page) {
@@ -320,11 +495,13 @@
       setText('[data-page-label]', `Página ${currentPage} de ${totalPages}`);
       if (pagination) pagination.hidden = totalPages <= 1;
     } else {
-      placeholder(result.code === 401 ? 'La sesión finalizó. Es necesario ingresar nuevamente.' : 'La consulta no se completó. No se muestra un historial vacío como resultado.');
+      showMonthly(api.isExpired() || result.code === 401 ? 'expired' : 'error');
+      placeholder(result.code === 401 ? 'La sesión finalizó. Es necesario ingresar nuevamente.' : 'La consulta no se completó. No se muestra un historial vacío como resultado.', 'pending');
       setText('[data-movement-count]', result.code === 400 ? 'Revisar los filtros' : 'Consulta pendiente');
       if (result.code !== 401) errorBox('[data-movements-error]', result.message || 'No fue posible recuperar el historial. Se puede reintentar.', true);
     }
     movementsBusy = false;
+    if (monthSelect) monthSelect.disabled = api.isExpired();
     delete app.dataset.movementsBusy;
     queryMovementsButton?.removeAttribute('aria-disabled');
     buttons.forEach(button => { button.disabled = api.isExpired(); });
@@ -389,6 +566,7 @@
     lastConfirmed = null;
     showBalance('expired', 'Sesión finalizada', null, 'Vuelve a ingresar para consultar el saldo.');
     showBalanceSummary();
+    showMonthly('expired');
     if (balanceButton) balanceButton.textContent = 'Actualizar saldo';
     placeholder('La sesión finalizó. Es necesario ingresar nuevamente.');
     setText('[data-movement-count]', 'Acceso finalizado');
@@ -396,4 +574,5 @@
   });
   if (view === 'dashboard' || view === 'balance') balance();
   if (view === 'dashboard' || view === 'movements') movements(initialPage);
+  monthSelect?.addEventListener('change', () => movements(1));
 })();

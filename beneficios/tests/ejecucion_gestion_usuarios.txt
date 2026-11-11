@@ -1,0 +1,311 @@
+Verificación local UTC: 2026-11-11T00:17:40.999004+00:00
+
+$ python manage.py check --settings=config.settings.testing
+System check identified no issues (0 silenced).
+
+$ python -m coverage run manage.py test -v 2 --settings=config.settings.testing
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Found 120 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: messages, staticfiles
+  Apply all migrations: auth, beneficios, contenttypes, identidad, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying identidad.0001_initial... OK
+  Applying beneficios.0001_initial... OK
+  Applying beneficios.0002_funciones_academicas... OK
+  Applying beneficios.0003_remove_movement_movement_amount_positive_and_more... OK
+  Applying beneficios.0004_registrar_interrupciones... OK
+  Applying beneficios.0005_reportes_y_comprobacion... OK
+  Applying beneficios.0006_medios_pago... OK
+  Applying beneficios.0007_movement_credit_reference... OK
+  Applying beneficios.0008_auditevent_target... OK
+  Applying beneficios.0009_notification... OK
+  Applying beneficios.0010_incident_assignment_history... OK
+  Applying identidad.0002_demo_login_directo... OK
+  Applying identidad.0003_clave_admin_demo... OK
+  Applying identidad.0004_user_access_revision_alter_user_is_staff_and_more... OK
+  Applying sessions.0001_initial...test_anonymous_and_staff_cannot_read_the_beneficiary_history (beneficios.tests.test_account_activity.AccountActivityTests.test_anonymous_and_staff_cannot_read_the_beneficiary_history) ... ok
+test_history_displays_only_the_owners_access_events_and_safe_reasons (beneficios.tests.test_account_activity.AccountActivityTests.test_history_displays_only_the_owners_access_events_and_safe_reasons) ... ok
+test_history_is_paginated_and_linked_from_the_profile (beneficios.tests.test_account_activity.AccountActivityTests.test_history_is_paginated_and_linked_from_the_profile) ... ok
+test_detail_and_export_require_administrative_access (beneficios.tests.test_admin_followup.AdminFollowupTests.test_detail_and_export_require_administrative_access) ... Forbidden: /seguimiento/
+Forbidden: /seguimiento/exportar/
+Method Not Allowed (POST): /seguimiento/exportar/
+ok
+test_export_includes_matching_records_beyond_the_visible_page (beneficios.tests.test_admin_followup.AdminFollowupTests.test_export_includes_matching_records_beyond_the_visible_page) ... ok
+test_export_refuses_invalid_date_filters (beneficios.tests.test_admin_followup.AdminFollowupTests.test_export_refuses_invalid_date_filters) ... Bad Request: /seguimiento/exportar/
+Bad Request: /seguimiento/exportar/
+ok
+test_invalid_incident_is_not_an_unfiltered_request_and_empty_incident_has_headers (beneficios.tests.test_admin_followup.AdminFollowupTests.test_invalid_incident_is_not_an_unfiltered_request_and_empty_incident_has_headers) ... Not Found: /seguimiento/
+Not Found: /seguimiento/exportar/
+Not Found: /seguimiento/
+Not Found: /seguimiento/exportar/
+Not Found: /seguimiento/
+Not Found: /seguimiento/exportar/
+ok
+test_selected_interruption_and_csv_apply_the_same_filters (beneficios.tests.test_admin_followup.AdminFollowupTests.test_selected_interruption_and_csv_apply_the_same_filters) ... ok
+test_summary_metrics_and_links_exclude_unrelated_events_and_old_events (beneficios.tests.test_admin_followup.AdminFollowupTests.test_summary_metrics_and_links_exclude_unrelated_events_and_old_events) ... ok
+test_first_interruption_has_no_previous_balance (beneficios.tests.test_balance_snapshot.BalanceSnapshotTests.test_first_interruption_has_no_previous_balance) ... Service Unavailable: /api/cuentas/1/saldo/
+ok
+test_previous_balance_isolated_to_authorized_account_and_original_session (beneficios.tests.test_balance_snapshot.BalanceSnapshotTests.test_previous_balance_isolated_to_authorized_account_and_original_session) ... Service Unavailable: /api/cuentas/1/saldo/
+Forbidden: /api/cuentas/2/saldo/
+Unauthorized: /api/cuentas/1/saldo/
+ok
+test_previous_balance_survives_navigation_and_retry_but_never_counts_as_current (beneficios.tests.test_balance_snapshot.BalanceSnapshotTests.test_previous_balance_survives_navigation_and_retry_but_never_counts_as_current) ... Service Unavailable: /api/cuentas/1/saldo/
+Too Many Requests: /api/cuentas/1/saldo/
+ok
+test_blocked_card_cannot_pay_and_owner_can_unblock_only_own_card (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_blocked_card_cannot_pay_and_owner_can_unblock_only_own_card) ... Conflict: /pagar/
+ok
+test_database_audit_failure_rolls_back_payment_and_receipt_together (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_database_audit_failure_rolls_back_payment_and_receipt_together) ... Service Unavailable: /pagar/
+ok
+test_favorite_toggle_is_scoped_to_authenticated_user (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_favorite_toggle_is_scoped_to_authenticated_user) ... ok
+test_inactive_or_nonexistent_merchant_is_rejected (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_inactive_or_nonexistent_merchant_is_rejected) ... Bad Request: /pagar/
+Bad Request: /pagar/
+ok
+test_incorrect_pin_does_not_debit_and_is_never_written_to_audit (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_incorrect_pin_does_not_debit_and_is_never_written_to_audit) ... Bad Request: /pagar/
+ok
+test_insufficient_balance_rejects_payment_without_negative_ledger (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_insufficient_balance_rejects_payment_without_negative_ledger) ... Bad Request: /pagar/
+ok
+test_invalid_amounts_and_non_uuid_keys_cannot_create_payments (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_invalid_amounts_and_non_uuid_keys_cannot_create_payments) ... Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+ok
+test_merchant_search_filters_and_favorites_return_only_matching_active_records (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_merchant_search_filters_and_favorites_return_only_matching_active_records) ... ok
+test_merchant_search_rejects_invalid_parameters_and_inactive_favorites (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_merchant_search_rejects_invalid_parameters_and_inactive_favorites) ... Bad Request: /comercios/
+Bad Request: /comercios/
+Bad Request: /comercios/
+Bad Request: /comercios/
+Not Found: /comercios/3/favorito/
+Method Not Allowed (GET): /comercios/1/favorito/
+ok
+test_new_functions_require_authentication_and_admin_cannot_use_beneficiary_payments (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_new_functions_require_authentication_and_admin_cannot_use_beneficiary_payments) ... ok
+test_new_mutating_flows_require_csrf_protection (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_new_mutating_flows_require_csrf_protection) ... Forbidden (CSRF cookie not set.): /pagar/
+Forbidden (CSRF token missing.): /tarjeta/
+Forbidden (CSRF token missing.): /perfil/
+Forbidden (CSRF token missing.): /comercios/1/favorito/
+ok
+test_payment_cannot_select_another_account_or_user_through_post_fields (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_payment_cannot_select_another_account_or_user_through_post_fields) ... ok
+test_payment_from_another_account_and_missing_receipt_are_not_disclosed (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_payment_from_another_account_and_missing_receipt_are_not_disclosed) ... Not Found: /pagar/comprobante/58779c62-f900-4d54-9b7e-435b882b3fc5/
+Not Found: /pagar/comprobante/d06c00f0-943c-443c-86ce-ab5a0f756101/
+ok
+test_pin_lockout_rejects_correct_pin_until_cooldown (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_pin_lockout_rejects_correct_pin_until_cooldown) ... Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Bad Request: /pagar/
+Too Many Requests: /pagar/
+ok
+test_profile_changes_only_authenticated_users_validated_names (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_profile_changes_only_authenticated_users_validated_names) ... Bad Request: /perfil/
+Bad Request: /perfil/
+Bad Request: /perfil/
+Bad Request: /perfil/
+ok
+test_removing_favorite_keeps_the_catalog_filters (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_removing_favorite_keeps_the_catalog_filters) ... ok
+test_reusing_idempotency_key_with_other_amount_or_merchant_is_rejected (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_reusing_idempotency_key_with_other_amount_or_merchant_is_rejected) ... Conflict: /pagar/
+Conflict: /pagar/
+ok
+test_same_key_for_distinct_users_never_retrieves_foreign_receipt (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_same_key_for_distinct_users_never_retrieves_foreign_receipt) ... ok
+test_same_payment_request_is_idempotent_and_does_not_debit_twice (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_same_payment_request_is_idempotent_and_does_not_debit_twice) ... ok
+test_service_interruptions_do_not_debit_or_create_receipts (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_service_interruptions_do_not_debit_or_create_receipts) ... Service Unavailable: /pagar/
+Service Unavailable: /pagar/
+ok
+test_valid_payment_creates_one_own_debit_receipt_and_persisted_balance (beneficios.tests.test_extension_flows.ExtendedPrototypeFlowsTests.test_valid_payment_creates_one_own_debit_receipt_and_persisted_balance) ... ok
+test_history_and_simulation_require_an_administrator (beneficios.tests.test_interruption_history.InterruptionHistoryTests.test_history_and_simulation_require_an_administrator) ... Forbidden: /seguimiento/
+Forbidden: /seguimiento/servicios/
+ok
+test_history_records_distinct_periods_and_counts_only_the_affected_queries (beneficios.tests.test_interruption_history.InterruptionHistoryTests.test_history_records_distinct_periods_and_counts_only_the_affected_queries) ... Service Unavailable: /api/cuentas/1/saldo/
+Too Many Requests: /api/cuentas/1/saldo/
+Service Unavailable: /api/cuentas/1/movimientos/
+ok
+test_detail_is_private_and_links_only_the_owners_receipt (beneficios.tests.test_notifications_interface.NotificationsAndDetailTests.test_detail_is_private_and_links_only_the_owners_receipt) ... Unauthorized: /api/movimientos/1/detalle/
+Not Found: /api/movimientos/1/detalle/
+Service Unavailable: /api/movimientos/1/detalle/
+ok
+test_new_movement_notifies_once_and_rollback_keeps_no_notice (beneficios.tests.test_notifications_interface.NotificationsAndDetailTests.test_new_movement_notifies_once_and_rollback_keeps_no_notice) ... ok
+test_read_actions_are_scoped_to_the_current_user (beneficios.tests.test_notifications_interface.NotificationsAndDetailTests.test_read_actions_are_scoped_to_the_current_user) ... Not Found: /notificaciones/2/leer/
+Forbidden (CSRF cookie not set.): /notificaciones/leer-todas/
+ok
+test_summary_filters_month_boundaries_and_returns_selected_week_links (beneficios.tests.test_notifications_interface.NotificationsAndDetailTests.test_summary_filters_month_boundaries_and_returns_selected_week_links) ... Bad Request: /api/cuentas/1/movimientos/
+ok
+test_support_response_notice_uses_only_the_fields_saved (beneficios.tests.test_notifications_interface.NotificationsAndDetailTests.test_support_response_notice_uses_only_the_fields_saved) ... ok
+test_invalid_or_missing_csrf_change_leaves_temporary_password_in_place (beneficios.tests.test_password_rotation.TemporaryPasswordTests.test_invalid_or_missing_csrf_change_leaves_temporary_password_in_place) ... Forbidden (CSRF cookie not set.): /cuenta/clave/
+ok
+test_login_requires_change_and_ignores_requested_destination (beneficios.tests.test_password_rotation.TemporaryPasswordTests.test_login_requires_change_and_ignores_requested_destination) ... ok
+test_pending_change_blocks_api_and_heartbeat_without_renewing_session (beneficios.tests.test_password_rotation.TemporaryPasswordTests.test_pending_change_blocks_api_and_heartbeat_without_renewing_session) ... Forbidden: /api/cuentas/1/saldo/
+Forbidden: /api/sesion/actividad/
+ok
+test_successful_change_rotates_session_and_restores_only_allowed_access (beneficios.tests.test_password_rotation.TemporaryPasswordTests.test_successful_change_rotates_session_and_restores_only_allowed_access) ... Forbidden: /seguimiento/
+Unauthorized: /api/sesion/actividad/
+Unauthorized: /api/sesion/actividad/
+ok
+test_audit_failure_rolls_back_the_charge_and_preserves_the_unspent_code (beneficios.tests.test_payment_methods.PaymentMethodTests.test_audit_failure_rolls_back_the_charge_and_preserves_the_unspent_code) ... Service Unavailable: /pagar/
+ok
+test_dynamic_code_is_bound_to_the_issuing_session_and_has_a_90_minute_limit (beneficios.tests.test_payment_methods.PaymentMethodTests.test_dynamic_code_is_bound_to_the_issuing_session_and_has_a_90_minute_limit) ... Bad Request: /pagar/
+Bad Request: /pagar/
+ok
+test_dynamic_code_is_consumed_once_and_an_identical_retry_returns_the_receipt (beneficios.tests.test_payment_methods.PaymentMethodTests.test_dynamic_code_is_consumed_once_and_an_identical_retry_returns_the_receipt) ... Conflict: /pagar/
+Bad Request: /pagar/
+ok
+test_invalid_pin_blocked_attempts_and_blocked_card_cannot_issue_a_code (beneficios.tests.test_payment_methods.PaymentMethodTests.test_invalid_pin_blocked_attempts_and_blocked_card_cannot_issue_a_code) ... Bad Request: /pagar/clave-dinamica/
+Too Many Requests: /pagar/clave-dinamica/
+Conflict: /pagar/clave-dinamica/
+ok
+test_legacy_request_still_uses_online_and_card_has_its_own_receipt (beneficios.tests.test_payment_methods.PaymentMethodTests.test_legacy_request_still_uses_online_and_card_has_its_own_receipt) ... Bad Request: /pagar/
+ok
+test_qr_catalog_offers_active_codes_and_prefills_the_chosen_commerce (beneficios.tests.test_payment_methods.PaymentMethodTests.test_qr_catalog_offers_active_codes_and_prefills_the_chosen_commerce) ... ok
+test_qr_code_alone_identifies_the_commerce (beneficios.tests.test_payment_methods.PaymentMethodTests.test_qr_code_alone_identifies_the_commerce) ... ok
+test_qr_rejects_unknown_or_inactive_codes (beneficios.tests.test_payment_methods.PaymentMethodTests.test_qr_rejects_unknown_or_inactive_codes) ... Bad Request: /pagar/
+Bad Request: /pagar/
+ok
+test_qr_requires_the_selected_merchants_code_and_labels_the_receipt (beneficios.tests.test_payment_methods.PaymentMethodTests.test_qr_requires_the_selected_merchants_code_and_labels_the_receipt) ... Bad Request: /pagar/
+ok
+test_editing_and_expiration_require_a_new_review (beneficios.tests.test_payment_review.PaymentReviewTests.test_editing_and_expiration_require_a_new_review) ... Conflict: /pagar/
+Conflict: /pagar/
+ok
+test_final_confirmation_rechecks_balance_service_and_required_audit (beneficios.tests.test_payment_review.PaymentReviewTests.test_final_confirmation_rechecks_balance_service_and_required_audit) ... Service Unavailable: /pagar/
+Service Unavailable: /pagar/
+Conflict: /pagar/
+ok
+test_other_session_and_changed_card_cannot_use_the_authorization (beneficios.tests.test_payment_review.PaymentReviewTests.test_other_session_and_changed_card_cannot_use_the_authorization) ... Conflict: /pagar/
+Bad Request: /pagar/
+ok
+test_qr_and_dynamic_review_keep_their_credential_rules (beneficios.tests.test_payment_review.PaymentReviewTests.test_qr_and_dynamic_review_keep_their_credential_rules) ... ok
+test_ui_reviews_server_values_before_charge_and_ignores_changed_posted_fields (beneficios.tests.test_payment_review.PaymentReviewTests.test_ui_reviews_server_values_before_charge_and_ignores_changed_posted_fields) ... ok
+test_wrong_preview_pin_uses_existing_throttle_and_confirmation_needs_csrf (beneficios.tests.test_payment_review.PaymentReviewTests.test_wrong_preview_pin_uses_existing_throttle_and_confirmation_needs_csrf) ... Bad Request: /pagar/
+Forbidden (CSRF token missing.): /pagar/
+ok
+test_home_and_endpoint_reflect_administrator_interruptions_and_recovery (beneficios.tests.test_query_status.QueryStatusTests.test_home_and_endpoint_reflect_administrator_interruptions_and_recovery) ... ok
+test_passive_status_requests_do_not_delay_session_expiry (beneficios.tests.test_query_status.QueryStatusTests.test_passive_status_requests_do_not_delay_session_expiry) ... Unauthorized: /api/consultas/estado/
+ok
+test_status_endpoint_requires_authentication_and_permits_only_get (beneficios.tests.test_query_status.QueryStatusTests.test_status_endpoint_requires_authentication_and_permits_only_get) ... Unauthorized: /api/consultas/estado/
+Forbidden: /api/consultas/estado/
+Method Not Allowed (POST): /api/consultas/estado/
+ok
+test_status_read_failure_leaves_home_available_without_asserting_service_availability (beneficios.tests.test_query_status.QueryStatusTests.test_status_read_failure_leaves_home_available_without_asserting_service_availability) ... Service Unavailable: /api/consultas/estado/
+ok
+test_admin_signup_receives_the_same_credit (beneficios.tests.test_registration_credit.RegistrationCreditTests.test_admin_signup_receives_the_same_credit) ... ok
+test_audit_failure_rolls_back_user_credit_and_notification (beneficios.tests.test_registration_credit.RegistrationCreditTests.test_audit_failure_rolls_back_user_credit_and_notification) ... ok
+test_new_user_can_pay_using_the_initial_credit (beneficios.tests.test_registration_credit.RegistrationCreditTests.test_new_user_can_pay_using_the_initial_credit) ... ok
+test_public_signup_receives_one_credit_even_after_duplicate_submission (beneficios.tests.test_registration_credit.RegistrationCreditTests.test_public_signup_receives_one_credit_even_after_duplicate_submission) ... ok
+test_expiry_preserves_only_valid_filters_from_read_view (beneficios.tests.test_session_warning.SessionWarningTests.test_expiry_preserves_only_valid_filters_from_read_view) ... ok
+test_malformed_return_url_does_not_prevent_signing_in (beneficios.tests.test_session_warning.SessionWarningTests.test_malformed_return_url_does_not_prevent_signing_in) ... ok
+test_passive_clock_does_not_renew_and_activity_preserves_absolute_deadline (beneficios.tests.test_session_warning.SessionWarningTests.test_passive_clock_does_not_renew_and_activity_preserves_absolute_deadline) ... ok
+test_reauthentication_cannot_resume_payment_or_invalid_filter (beneficios.tests.test_session_warning.SessionWarningTests.test_reauthentication_cannot_resume_payment_or_invalid_filter) ... ok
+test_admin_filters_and_transitions_reports_without_overwriting_a_newer_state (beneficios.tests.test_support_followup.SupportFollowupTests.test_admin_filters_and_transitions_reports_without_overwriting_a_newer_state) ... ok
+test_beneficiary_creates_report_and_can_only_read_own_reports (beneficios.tests.test_support_followup.SupportFollowupTests.test_beneficiary_creates_report_and_can_only_read_own_reports) ... ok
+test_reports_require_authentication_authorization_and_csrf (beneficios.tests.test_support_followup.SupportFollowupTests.test_reports_require_authentication_authorization_and_csrf) ... Forbidden: /seguimiento/reportes/
+Forbidden: /seguimiento/reportes/95d8f3bf-86ab-49c7-8b78-3cfee4950539/
+Forbidden (CSRF cookie not set.): /reportes/
+Method Not Allowed (GET): /seguimiento/reportes/95d8f3bf-86ab-49c7-8b78-3cfee4950539/
+Forbidden (CSRF token missing.): /seguimiento/reportes/95d8f3bf-86ab-49c7-8b78-3cfee4950539/
+ok
+test_updating_report_preserves_the_admin_inbox_page_and_filters (beneficios.tests.test_support_followup.SupportFollowupTests.test_updating_report_preserves_the_admin_inbox_page_and_filters) ... ok
+test_verification_note_requires_restoration_and_preserves_the_first_record (beneficios.tests.test_support_followup.SupportFollowupTests.test_verification_note_requires_restoration_and_preserves_the_first_record) ... Forbidden: /seguimiento/interrupciones/1/verificar/
+ok
+test_admin_reset_assigns_temporary_password_that_must_be_changed (beneficios.tests.test_user_management.UserManagementTests.test_admin_reset_assigns_temporary_password_that_must_be_changed) ... Unauthorized: /api/cuentas/1/saldo/
+Forbidden: /api/cuentas/1/saldo/
+ok
+test_anonymous_user_is_sent_to_login (beneficios.tests.test_user_management.UserManagementTests.test_anonymous_user_is_sent_to_login) ... ok
+test_beneficiary_cannot_reach_user_administration (beneficios.tests.test_user_management.UserManagementTests.test_beneficiary_cannot_reach_user_administration) ... Forbidden: /seguimiento/usuarios/
+Forbidden: /seguimiento/usuarios/crear/
+Forbidden: /seguimiento/usuarios/4/
+Forbidden: /seguimiento/usuarios/4/
+ok
+test_credit_is_idempotent_and_requires_active_account (beneficios.tests.test_user_management.UserManagementTests.test_credit_is_idempotent_and_requires_active_account) ... ok
+test_deactivation_requires_confirmation_and_closes_sessions (beneficios.tests.test_user_management.UserManagementTests.test_deactivation_requires_confirmation_and_closes_sessions) ... Unauthorized: /api/cuentas/1/saldo/
+ok
+test_list_filters_by_username_and_state (beneficios.tests.test_user_management.UserManagementTests.test_list_filters_by_username_and_state) ... ok
+test_profile_edit_is_validated_and_audited (beneficios.tests.test_user_management.UserManagementTests.test_profile_edit_is_validated_and_audited) ... ok
+test_staff_accounts_are_not_managed_from_user_detail (beneficios.tests.test_user_management.UserManagementTests.test_staff_accounts_are_not_managed_from_user_detail) ... Not Found: /seguimiento/usuarios/2/
+ok
+test_unknown_action_changes_nothing (beneficios.tests.test_user_management.UserManagementTests.test_unknown_action_changes_nothing) ... ok
+test_weak_or_mismatched_reset_password_is_rejected (beneficios.tests.test_user_management.UserManagementTests.test_weak_or_mismatched_reset_password_is_rejected) ... ok
+test_absolute_timeout_applies_even_with_recent_activity (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_absolute_timeout_applies_even_with_recent_activity) ... Unauthorized: /api/cuentas/1/saldo/
+ok
+test_account_id_changes_do_not_change_authorization (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_account_id_changes_do_not_change_authorization) ... Forbidden: /api/cuentas/2/saldo/
+Forbidden: /api/cuentas/2/movimientos/
+Forbidden: /api/cuentas/999999/saldo/
+ok
+test_account_owner_reads_balance_computed_from_persisted_movements (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_account_owner_reads_balance_computed_from_persisted_movements) ... ok
+test_active_heartbeat_updates_activity_without_resetting_absolute_limit (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_active_heartbeat_updates_activity_without_resetting_absolute_limit) ... ok
+test_administrator_can_read_actual_events_but_not_other_accounts_balance (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_administrator_can_read_actual_events_but_not_other_accounts_balance) ... Forbidden: /api/cuentas/1/saldo/
+ok
+test_administrator_can_switch_only_valid_service_states_without_modifying_ledger (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_administrator_can_switch_only_valid_service_states_without_modifying_ledger) ... Method Not Allowed (GET): /seguimiento/servicios/
+ok
+test_audit_failure_is_explicit_without_falsifying_balance_result (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_audit_failure_is_explicit_without_falsifying_balance_result) ... ok
+test_audit_rows_have_trace_and_do_not_include_password_or_reusable_session (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_audit_rows_have_trace_and_do_not_include_password_or_reusable_session) ... ok
+test_beneficiary_cannot_read_or_change_admin_services (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_beneficiary_cannot_read_or_change_admin_services) ... Forbidden: /seguimiento/
+Forbidden: /seguimiento/servicios/
+ok
+test_disabled_account_cannot_login (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_disabled_account_cannot_login) ... ok
+test_expired_html_redirects_with_reason_and_security_headers (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_expired_html_redirects_with_reason_and_security_headers) ... ok
+test_external_next_url_cannot_redirect_credentials_off_site (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_external_next_url_cannot_redirect_credentials_off_site) ... ok
+test_failure_of_one_observer_does_not_block_other_observers (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_failure_of_one_observer_does_not_block_other_observers) ... ok
+test_filters_constrain_date_kind_and_pagination (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_filters_constrain_date_kind_and_pagination) ... ok
+test_guest_cannot_read_json_or_protected_page (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_guest_cannot_read_json_or_protected_page) ... Unauthorized: /api/cuentas/1/saldo/
+Unauthorized: /api/cuentas/1/movimientos/
+ok
+test_html_escapes_stored_account_text_and_pages_have_defensive_headers (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_html_escapes_stored_account_text_and_pages_have_defensive_headers) ... ok
+test_idle_timeout_invalidates_old_session_and_logs_reason (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_idle_timeout_invalidates_old_session_and_logs_reason) ... Unauthorized: /api/cuentas/1/saldo/
+Unauthorized: /api/cuentas/1/saldo/
+ok
+test_input_validation_rejects_missing_oversized_and_injection_inputs (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_input_validation_rejects_missing_oversized_and_injection_inputs) ... ok
+test_internal_next_url_is_preserved (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_internal_next_url_is_preserved) ... ok
+test_interrupted_balance_is_pending_without_zero_and_recovers_after_retry (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_interrupted_balance_is_pending_without_zero_and_recovers_after_retry) ... Service Unavailable: /api/cuentas/1/saldo/
+Too Many Requests: /api/cuentas/1/saldo/
+Too Many Requests: /api/cuentas/1/saldo/
+ok
+test_invalid_filters_are_rejected_without_query_result (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_invalid_filters_are_rejected_without_query_result) ... Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+Bad Request: /api/cuentas/1/movimientos/
+ok
+test_ledger_rejects_zero_amount_before_encryption (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_ledger_rejects_zero_amount_before_encryption) ... ok
+test_lockout_rejects_even_correct_password_until_timeout (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_lockout_rejects_even_correct_password_until_timeout) ... ok
+test_logout_invalidates_cookie_and_cannot_be_triggered_with_get (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_logout_invalidates_cookie_and_cannot_be_triggered_with_get) ... Method Not Allowed (GET): /salir/
+Unauthorized: /api/cuentas/1/saldo/
+ok
+test_movement_filter_offers_own_stored_kinds_and_keeps_a_valid_deep_link (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_movement_filter_offers_own_stored_kinds_and_keeps_a_valid_deep_link) ... ok
+test_movements_interruption_and_empty_history_are_distinct (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_movements_interruption_and_empty_history_are_distinct) ... Service Unavailable: /api/cuentas/1/movimientos/
+ok
+test_navigation_refresh_keeps_session_without_extending_absolute_start (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_navigation_refresh_keeps_session_without_extending_absolute_start) ... ok
+test_password_change_requires_current_secret_and_keeps_authorized_session (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_password_change_requires_current_secret_and_keeps_authorized_session) ... ok
+test_password_is_hashed_and_strength_policy_rejects_weak_values (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_password_is_hashed_and_strength_policy_rejects_weak_values) ... ok
+test_post_requires_csrf_token_even_for_authenticated_administrator (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_post_requires_csrf_token_even_for_authenticated_administrator) ... Forbidden (CSRF cookie not set.): /ingresar/
+Forbidden (CSRF cookie not set.): /seguimiento/servicios/
+Forbidden (CSRF token missing.): /salir/
+ok
+test_reading_movements_returns_only_own_data_in_descending_date_order (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_reading_movements_returns_only_own_data_in_descending_date_order) ... ok
+test_valid_csrf_form_token_allows_authorized_request (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_valid_csrf_form_token_allows_authorized_request) ... ok
+test_valid_login_establishes_server_session_and_audit (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_valid_login_establishes_server_session_and_audit) ... ok
+test_wrong_and_unknown_accounts_receive_same_generic_error (beneficios.tests.test_workflows.PrototypeWorkflowsTests.test_wrong_and_unknown_accounts_receive_same_generic_error) ... ok
+
+----------------------------------------------------------------------
+Ran 120 tests in 45.264s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+ OK
+System check identified no issues (0 silenced).
+Código de salida: 0

@@ -1,0 +1,19 @@
+{% load moneda %}
+<section class="surface payment-form-card payment-review payment-review-stage" aria-labelledby="payment-review-heading">
+  <span class="eyebrow">ANTES DE CONFIRMAR</span>
+  <h2 id="payment-review-heading">Resumen del pago</h2>
+  <dl class="payment-review-details">
+    <div><dt>Comercio</dt><dd>{{ review.merchant.name }}<small>Código {{ review.merchant.code }}</small></dd></div>
+    <div><dt>Medio de pago</dt><dd>{{ review.method_label }}</dd></div>
+    <div><dt>Monto de la compra</dt><dd class="payment-review-amount" data-private-amount>${{ review.amount|clp }}</dd></div>
+    <div><dt>Saldo actual</dt><dd data-private-amount>${{ review.balance|clp }}</dd></div>
+    <div class="payment-review-balance"><dt>Saldo después del pago</dt><dd data-private-amount>${{ review.balance_after|clp }}</dd></div>
+  </dl>
+  <p class="muted">El cargo se registrará al confirmar. Esta revisión vence a las <time datetime="{{ review.expires_at|date:'c' }}">{{ review.expires_at|date:'H:i' }}</time>.</p>
+  <form method="post" action="{% url 'pagar' %}" class="payment-review-actions">
+    {% csrf_token %}
+    <input type="hidden" name="review_token" value="{{ review.token }}">
+    <button class="button button-full" type="submit" name="payment_step" value="confirm">Confirmar pago simulado <svg class="ui-icon" aria-hidden="true"><use href="#icon-check"/></svg></button>
+    <button class="button button-secondary button-full" type="submit" name="payment_step" value="edit">Volver a editar</button>
+  </form>
+</section>

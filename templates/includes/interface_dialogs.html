@@ -1,0 +1,23 @@
+<dialog class="action-search dialog-card" data-action-search aria-labelledby="action-search-title">
+  <div class="dialog-heading"><h2 id="action-search-title">¿Dónde quieres ir?</h2><button class="dialog-close" type="button" data-close-dialog aria-label="Cerrar buscador">×</button></div>
+  <label class="sr-only" for="action-query">Buscar una opción</label>
+  <input id="action-query" type="search" placeholder="Busca pagar, movimientos, tarjeta…" autocomplete="off" data-action-query>
+  <ul class="action-results" data-action-results></ul>
+  <p class="muted">Usa Tab para elegir una opción y Enter para abrirla. Esc cierra el buscador.</p>
+</dialog>
+<dialog class="movement-drawer dialog-card" data-movement-drawer aria-labelledby="drawer-title">
+  <div class="dialog-heading"><h2 id="drawer-title">Detalle del movimiento</h2><button class="dialog-close" type="button" data-close-dialog aria-label="Cerrar detalle">×</button></div>
+  <div data-drawer-loading role="status">Consultando el movimiento…</div>
+  <div class="notice notice-error" data-drawer-error role="alert" hidden><p data-drawer-error-text></p><button class="button button-small" type="button" data-drawer-retry>Reintentar</button></div>
+  <div data-drawer-content hidden>
+    <p class="drawer-amount" data-drawer-amount data-private-amount></p>
+    <p data-drawer-description></p>
+    <dl class="drawer-facts" data-drawer-facts></dl>
+    <div class="drawer-actions"><a class="button" data-drawer-receipt hidden>Ver comprobante</a><a class="button button-secondary" data-drawer-pdf hidden>Descargar PDF</a></div>
+  </div>
+</dialog>
+<dialog class="tour-dialog dialog-card" data-tour-dialog aria-labelledby="tour-title">
+  <div class="dialog-heading"><span class="eyebrow" data-tour-progress></span><button class="dialog-close" type="button" data-close-dialog aria-label="Cerrar recorrido">×</button></div>
+  <h2 id="tour-title"></h2><p data-tour-description></p>
+  <div class="tour-actions"><button class="button button-secondary" type="button" data-tour-prev>Anterior</button><button class="button" type="button" data-tour-next>Siguiente</button></div>
+</dialog>
