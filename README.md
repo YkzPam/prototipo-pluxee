@@ -67,7 +67,7 @@ El informe de la evaluación 2 dejó la estructura física sujeta al gestor acad
 
 ## 5. Verificación y entornos
 
-`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete, pero su presencia no implica que GitHub Actions se haya ejecutado o que exista un despliegue remoto.
+`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio privado `YkzPam/prototipo-pluxee`. La primera ejecución (#1, rama `prototipo-evaluacion-3`, commit `d4c9a02`) terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
 
 En Windows, `.venv\Scripts\python.exe scripts\entregar.py --desplegar` ejecuta el proceso completo. El ZIP verificado se extrae en una carpeta que se identifica por su huella. La versión candidata inicia en otro puerto local y se comprueba con HTTPS y MySQL antes de pasar al puerto 8443. Las versiones comparten los datos locales y las claves del equipo. El resultado queda en `dist/verificacion_local.txt` y `dist/despliegue_local.json`.
 
@@ -87,7 +87,7 @@ El proyecto tiene un pipeline local que se ejecuta con una sola orden y se detie
 | 8. Verificación del candidato | `scripts/verificar_https.py` sobre MySQL | TLS, cookies, CSRF, sesiones, permisos y un pago real sin duplicados |
 | 9. Activación con vuelta atrás | Reemplazo en el puerto 8443 | Si la nueva versión no responde, se reactiva la anterior |
 
-La misma secuencia de las etapas 1 a 6 está en `.github/workflows/verificacion.yml` para ejecutarse en GitHub Actions cuando el repositorio se publique. La revisión de código de la última iteración está en `docs/REVISION_CODIGO.md` y la secuencia de la exposición en `docs/GUIA_PRESENTACION.md`.
+La misma secuencia de las etapas 1 a 6 se ejecuta en GitHub Actions (`.github/workflows/verificacion.yml`) con cada envío al repositorio; el historial está en la pestaña Actions de `YkzPam/prototipo-pluxee`. La revisión de código de la última iteración está en `docs/REVISION_CODIGO.md` y la secuencia de la exposición en `docs/GUIA_PRESENTACION.md`.
 
 | Perfil | Configuración y alcance |
 |---|---|
