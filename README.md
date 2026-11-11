@@ -29,11 +29,11 @@ Si usas Git, también puedes clonarlo: `git clone --branch evaluacion-3 https://
 
 ### Paso 2. Extrae el ZIP
 
-Clic derecho sobre el archivo → **Extraer todo…**. Te recomendamos una carpeta con una ruta corta, como `C:\Pluxee`. Importante: no lo ejecutes desde dentro del ZIP sin extraerlo, porque no va a funcionar.
+Haz clic derecho sobre el archivo y elige **Extraer todo…**. Te recomendamos una carpeta con una ruta corta, como `C:\Pluxee`. Importante: no lo ejecutes desde dentro del ZIP sin extraerlo, porque no va a funcionar.
 
 ### Paso 3. Inícialo
 
-Abre la carpeta y haz doble clic en **`iniciar.cmd`**. Como el archivo viene de internet, puede que Windows te pida confirmación: elige **Ejecutar** (o **Más información → Ejecutar de todas formas**).
+Abre la carpeta y haz doble clic en **`iniciar.cmd`**. Como el archivo viene de internet, puede que Windows te pida confirmación: elige **Ejecutar**. Si en cambio aparece «Windows protegió su PC», haz clic en **Más información** y después en **Ejecutar de todas formas**.
 
 La primera vez vas a ver bastante texto en la ventana. Es normal: el programa está haciendo esto por su cuenta, sin que tengas que tocar nada:
 
@@ -54,11 +54,11 @@ Desde ese momento, la ventana va mostrando cada página que visitas, como un reg
 El prototipo usa HTTPS, igual que un sitio real. Como el certificado lo creó tu propio computador, el navegador no lo conoce y va a mostrar «La conexión no es privada». Para que confíe en él:
 
 1. Abre la carpeta `.runtime\security\web_tls\` y haz doble clic en `Pluxee_Prototipo_Local.crt`.
-2. Elige **Instalar certificado… → Usuario actual → Siguiente**.
-3. Marca **Colocar todos los certificados en el siguiente almacén → Examinar… → Entidades de certificación raíz de confianza → Aceptar → Siguiente → Finalizar**. Windows te mostrará una advertencia: acéptala.
+2. Haz clic en **Instalar certificado…**, elige **Usuario actual** y presiona **Siguiente**.
+3. Marca **Colocar todos los certificados en el siguiente almacén** y presiona **Examinar…**. En la lista, elige **Entidades de certificación raíz de confianza** y acepta. Luego presiona **Siguiente** y **Finalizar**. Windows te mostrará una advertencia: acéptala.
 4. **Cierra el navegador por completo** y vuelve a abrirlo.
 
-Tranquilo: este certificado solo sirve para `127.0.0.1` y `localhost`, es decir, para tu propio computador. Si después quieres quitarlo: abre `certmgr.msc` → Entidades de certificación raíz de confianza → Certificados → «Prototipo Pluxee local» → Eliminar.
+Tranquilo: este certificado solo sirve para `127.0.0.1` y `localhost`, es decir, para tu propio computador. Si después quieres quitarlo, abre `certmgr.msc`, entra a la carpeta **Entidades de certificación raíz de confianza** y luego a **Certificados**, busca «Prototipo Pluxee local» y elimínalo.
 
 ### Paso 5. ¡A usarlo!
 
@@ -87,7 +87,7 @@ Solo abre `iniciar.cmd`: arranca en segundos y tus datos siguen ahí. Para apaga
 |---|---|
 | «Se necesita Python 3.12 o superior» | Instala Python desde python.org marcando «Add python.exe to PATH» y vuelve a abrir `iniciar.cmd`. |
 | «No se pudieron instalar las dependencias» | Revisa tu conexión a internet e inténtalo de nuevo. |
-| «No fue posible descargar mysql-8.4.13-winx64.zip» | Descárgalo desde tu navegador (dev.mysql.com → MySQL Community Server → Archives → versión 8.4.13, Windows ZIP) y cópialo en la carpeta `.runtime\downloads`. Al iniciar, el programa revisa que sea el archivo correcto antes de usarlo. |
+| «No fue posible descargar mysql-8.4.13-winx64.zip» | Descárgalo desde tu navegador: en dev.mysql.com, entra a MySQL Community Server, abre la pestaña Archives y elige la versión 8.4.13 para Windows (archivo ZIP). Después cópialo en la carpeta `.runtime\downloads`. Al iniciar, el programa revisa que sea el archivo correcto antes de usarlo. |
 | «Los puertos locales 3307 y 13306 están ocupados» | Hay otro MySQL corriendo en tu computador. Ciérralo y vuelve a intentar. |
 | Un error al abrir el puerto 8443 | Seguramente ya tienes otra ventana de `iniciar.cmd` abierta. Ciérrala (o reinicia el computador). |
 | «La conexión no es privada», o en la ventana aparece «AVISO El navegador rechazó el certificado local» | Te falta el paso 4. Hazlo y vuelve a abrir el navegador. |
@@ -162,7 +162,7 @@ La guía pide al menos tres servicios que muestren claramente su entrada, su pro
 |---|---|---|---|
 | Consulta de saldo y movimientos | Tu sesión y los filtros de fecha y tipo | Revisa el tipo, el rango y el largo de los filtros; comprueba que la cuenta sea tuya y que el servicio esté disponible, y calcula el saldo (abonos menos cargos) con un usuario de solo lectura | El saldo con su hora de confirmación, los movimientos por día o un aviso claro si el servicio está interrumpido |
 | Pago (QR, clave dinámica, online o tarjeta) | Comercio, monto y PIN o clave dinámica | Comprueba que la tarjeta esté activa, que te alcance el saldo, que no superes el monto máximo y que la clave siga vigente; guarda el cargo y el comprobante en una sola transacción | El comprobante, el nuevo movimiento y su registro en la terminal y en la bitácora |
-| Reportes y seguimiento | Tipo y descripción del problema; luego, la respuesta y el estado que pone el administrador | Rechaza caracteres peligrosos, asigna un folio y un estado (Recibido → En revisión → Resuelto) y registra cada cambio | El folio y el estado de tu reporte, la respuesta del administrador y una bandeja con filtros para él |
+| Reportes y seguimiento | Tipo y descripción del problema; luego, la respuesta y el estado que pone el administrador | Rechaza caracteres peligrosos, asigna un folio, lo hace pasar de Recibido a En revisión y luego a Resuelto, y registra cada cambio | El folio y el estado de tu reporte, la respuesta del administrador y una bandeja con filtros para él |
 
 ### 4.2 Cómo se ordena el código
 
