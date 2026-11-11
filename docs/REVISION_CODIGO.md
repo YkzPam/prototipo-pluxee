@@ -26,8 +26,9 @@ La guía de construcción del prototipo pide revisar el código regularmente (*c
 | Sesiones | Identificadores del framework, cierre completo, inactividad configurable | Cumple |
 | Datos y salidas | Listas y resultados desde tablas, no desde el código | Corregido en CF04 |
 | Portabilidad | Las migraciones funcionan en SQLite (pruebas) y en MySQL (presentación) | Corregido en CF05 |
-| Interfaz | Coherencia visual, contraste WCAG en ambos temas, vista móvil | Corregido (contraste en tema oscuro) |
-| Pruebas | Cobertura sobre 80 % y una prueba por corrección | Cumple: 137 pruebas, 87 % |
+| Interfaz | Coherencia visual, contraste WCAG en ambos temas, vista móvil | Corregido en R-01, R-05 y R-06 |
+| Registro | Actividad visible en la terminal sin datos personales | Corregido en R-07 |
+| Pruebas | Cobertura sobre 80 % y una prueba por corrección | Cumple: 140 pruebas, 87 % |
 
 ## Hallazgos y resolución
 
@@ -42,6 +43,8 @@ La guía de construcción del prototipo pide revisar el código regularmente (*c
 | R-04 | Media | El despliegue (`entregar.py --desplegar`) fallaba siempre: la comprobación de salud buscaba el título anterior «Prototipo Pluxee» y el sitio ya se llamaba «Portal de beneficios» | `scripts/desplegar_demo.py` | La comprobación busca el título vigente; despliegue completado y registrado en `dist/despliegue_local.json` | Despliegue real con verificación HTTPS y MySQL del candidato |
 | R-05 | Media | En tema oscuro, la pantalla de ingreso mostraba texto claro sobre campos blancos y el título oscuro sobre fondo oscuro | `static/css/fluidez.css` | Colores del formulario de ingreso para el tema oscuro; contraste medido entre 9,1:1 y 16,5:1 | Medición automatizada de contraste |
 | R-03 | Baja | Con «sin movimiento» en Apariencia, un aviso flotante no se habría cerrado | `static/js/avisos.js` | El aviso se retira de inmediato cuando no hay animación de salida | Revisión del código |
+| R-06 | Media | En tema oscuro, la variable `--purple` pasa a lavanda claro, pero varios bloques conservaban un fondo claro fijo: respuesta del administrador en reportes, panel de clave dinámica, confirmaciones de desactivación (usuarios y comercios), aviso de ayuda, filtros de movimientos, tarjeta verde, marcadores de pasos y saldo del resumen de pago. Texto claro sobre fondo claro (1:1 a 1,8:1) | `static/css/fluidez.css` (secciones 12 y 13) | Superficies oscuras para esos bloques, texto morado oscuro sobre el verde de marca y grises secundarios ajustados también en tema claro | Auditoría automatizada de contraste en 101 páginas por tema: sin elementos bajo 4,5:1 (3:1 en texto grande) |
+| R-07 | Baja | El servidor HTTPS no mostraba en la terminal las páginas atendidas, y cada conexión rechazada por un navegador sin el certificado instalado imprimía un error | `beneficios/middleware.py`, `servidor_seguro.py` | Una línea por página (hora, método, ruta, estado, tiempo y perfil, sin parámetros ni nombres) y un único aviso por minuto con la instrucción para instalar el certificado | `test_request_log.py` |
 
 ## Decisiones registradas
 

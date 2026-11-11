@@ -5,7 +5,7 @@ La guía de la unidad indica que los pasos 1, 2 y 3 se evalúan durante la prese
 ## 1. Preparación (el día anterior)
 
 1. **Cerrar versiones anteriores.** Reiniciar el equipo o cerrar cualquier ventana de `iniciar.cmd` abierta: el puerto 8443 debe quedar libre. Alternativa sin reiniciar: `.venv\Scripts\python.exe scripts\entregar.py --desplegar` prueba la versión nueva en otro puerto y, si pasa la verificación, reemplaza la que está en el 8443.
-2. **Iniciar el prototipo.** Ejecutar `iniciar.cmd` y esperar el mensaje `Prototipo académico Pluxee Chile: https://127.0.0.1:8443/`. Mantener la ventana abierta.
+2. **Iniciar el prototipo.** Ejecutar `iniciar.cmd` y esperar el mensaje `Prototipo académico Pluxee Chile: https://127.0.0.1:8443/`. Mantener la ventana abierta: muestra una línea por cada página atendida (hora, método, ruta, estado, tiempo y perfil) y los movimientos registrados, útil para mostrar la actividad durante la presentación. Si aparece «AVISO El navegador rechazó el certificado local», completar el paso 3 y volver a abrir el navegador.
 3. **Confiar en el certificado local** (una sola vez por equipo, para que el navegador no muestre la advertencia «La conexión no es privada»):
    1. Abrir la carpeta `.runtime\security\web_tls\` del proyecto.
    2. Doble clic en `Pluxee_Prototipo_Local.crt` → **Instalar certificado…** → **Usuario actual** → Siguiente.
@@ -69,7 +69,7 @@ La guía de la unidad indica que los pasos 1, 2 y 3 se evalúan durante la prese
 
 - Mostrar `beneficios/tests/EVIDENCIA_PRUEBAS.md`: cinco hallazgos reales (CF01 a CF05), cada uno con su causa, corrección y prueba.
 - Mostrar `docs/REVISION_CODIGO.md`: lista de verificación y tabla de hallazgos.
-- Ejecutar `verificar.cmd` o mostrar `dist/verificacion_local.txt`: 137 pruebas correctas y 87 % de cobertura.
+- Ejecutar `verificar.cmd` o mostrar `dist/verificacion_local.txt`: 140 pruebas correctas y 87 % de cobertura.
 - Pipeline CI/CD: README sección 5.1. Ejecutar `entregar.py --desplegar` antes de la exposición deja en `dist/despliegue_local.json` la evidencia del despliegue de esta versión (huella del ZIP, verificación del candidato y activación).
 
 ## 7. Preguntas probables

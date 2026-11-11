@@ -158,3 +158,62 @@ html[data-theme="dark"] .app-public .login-form .field input:not([type="hidden"]
 html[data-theme="dark"] .app-public .login-form .field input::placeholder { color: #a995ba; }
 html[data-theme="dark"] .app-public .login-form .field input:focus { border-color: #cdb3ea; outline-color: #9c7cc0; }
 html[data-theme="dark"] .app-public .login-form-wrap .login-services > span { background: #2c1f39; border-color: #5e4571; color: #e2c9fb; }
+
+/* 12. Tema oscuro: bloques interactivos y de texto con fondo claro fijo.
+   En oscuro, --purple pasa a lavanda claro; los bloques que conservaban un fondo claro
+   quedaban con texto claro sobre claro. Contraste medido en todas las páginas: 4,5:1 o más. */
+/* Superficies que siguen siendo verde lima (marca): texto morado oscuro original. */
+html[data-theme="dark"] :is(.benefit-card-art, .card-brand, .skip-link, .brand-mark) { --purple: #31105c; --muted: #4f3d61; color: #31105c; }
+/* Bloques informativos claros: pasan a superficies oscuras. */
+html[data-theme="dark"] .report-reply { background: #2c2139; border-inline-start: 3px solid #b58ee0; color: var(--ink); }
+html[data-theme="dark"] .report-reply strong { color: #f2e5ff; }
+html[data-theme="dark"] .payment-code-panel { background: #1c1426; border-color: #51405e; }
+html[data-theme="dark"] :is(.admin-user-confirmation, .merchant-admin-confirm-body) { background: #3a1d27; border-color: #8a3a4c; color: #f8dbe1; }
+html[data-theme="dark"] :is(.admin-user-confirmation, .merchant-admin-confirm-body) :is(h3, p, strong) { color: #f8dbe1; }
+html[data-theme="dark"] .help-banner { background: #2a1f37; border-color: #51405e; color: #f2e5ff; }
+html[data-theme="dark"] .help-banner small { color: #c8b9d7; }
+html[data-theme="dark"] .help-banner-icon { background: #392648; color: #f2e5ff; }
+html[data-theme="dark"] .movement-filter-panel, html[data-theme="dark"] .movement-filter-panel summary { background: #1c1426; border-color: #51405e; color: #f2e5ff; }
+html[data-theme="dark"] .section-icon,
+html[data-theme="dark"] .action-icon,
+html[data-theme="dark"] .pluxee-home .home-action .action-icon { background: #392648; color: #e6d4fa; }
+html[data-theme="dark"] .home-action-pay { background: #21182d; border-color: #51405e; }
+/* Tarjeta de saldo del resumen de pago: era blanca con texto lavanda. */
+html[data-theme="dark"] .payment-summary .balance-card { background: #21182d; border-color: #51405e; color: var(--ink); }
+html[data-theme="dark"] .payment-summary .balance-card :is(.balance-amount, h2) { color: #f2e5ff; }
+html[data-theme="dark"] .payment-summary .balance-card :is(.balance-caption, small, .balance-card-bottom, .card-topline > span:not(.card-brand)) { color: #c8b9d7; }
+/* Marcadores de pasos: número oscuro sobre lavanda y pasos pendientes sobre fondo oscuro. */
+html[data-theme="dark"] .step-number { background: #392648; color: #f2e5ff; }
+html[data-theme="dark"] .payment-journey-number { background: #2a1f37; border-color: #5e4a70; color: #d5c6e3; }
+html[data-theme="dark"] .payment-journey-step.is-complete .payment-journey-number { background: #2f3a14; border-color: #6c7f2c; color: #e3f6a0; }
+html[data-theme="dark"] .payment-journey-step.is-current .payment-journey-number { color: #21182d; box-shadow: 0 0 0 3px #4a3360; }
+html[data-theme="dark"] .payment-journey-label :is(small, strong) { color: #c8b9d7; }
+html[data-theme="dark"] .payment-journey-step.is-current .payment-journey-label :is(small, strong) { color: #f2e5ff; }
+html[data-theme="dark"] .report-step[aria-current="step"] .report-step-marker,
+html[data-theme="dark"] .followup-milestone-done .followup-milestone-marker,
+html[data-theme="dark"] .admin-user-tabs a[aria-current="page"] { color: #21182d; }
+html[data-theme="dark"] .followup-milestone-marker { background: #2a1f37; color: #d5c6e3; }
+html[data-theme="dark"] .followup-milestone-done .followup-milestone-marker { background: var(--purple); }
+/* Textos secundarios que usaban grises pensados para fondo blanco. */
+html[data-theme="dark"] .admin-user-credit-amount { color: #9fe0b1; }
+html[data-theme="dark"] .empty-state { color: #c8b9d7; }
+html[data-theme="dark"] .empty-state strong { color: #f2e5ff; }
+html[data-theme="dark"] :is(.eyebrow, .result-count, .merchant-code) { color: #c9b6dc; }
+html[data-theme="dark"] .merchant-code small { color: #b9a9c8; }
+html[data-theme="dark"] .eyebrow-light { color: #f6f0fc; }
+html[data-theme="dark"] .sidebar-label { color: #e6d9f2; }
+html[data-theme="dark"] .profile small { color: #f0e6fa; }
+/* Áreas de texto sin estilo propio usaban el gris del navegador. */
+html[data-theme="dark"] .page-content textarea { background: #17111f; border: 1px solid #715986; color: #f7effe; }
+
+/* 13. Tema claro: grises secundarios bajo 4,5:1 sobre blanco y lavanda (medidos en las 101 páginas). */
+html:not([data-theme="dark"]) :is(.balance-card-bottom small, .payment-summary .balance-caption, .result-count, .help-banner small,
+  .empty-state, .empty-state p, .merchant-code, .help-icon, .summary-operator) { color: #6b5a7b; }
+html:not([data-theme="dark"]) .page-heading:not(.pluxee-home-heading) .eyebrow:not(.eyebrow-light) { color: #6b5a7b; }
+html:not([data-theme="dark"]) .merchant-category { color: #5d4a6e; }
+html:not([data-theme="dark"]) .error-number { color: #8a6fb0; }
+/* Textos pequeños sobre la barra lateral morada (ambos temas). */
+.sidebar .sidebar-label { color: #e6d9f2; }
+:is(.profile, .sidebar .brand) small { color: #f0e6fa; }
+.registration-intro .eyebrow-light { color: #f6f0fc; }
+html:not([data-theme="dark"]) .button-quiet:is(:hover, :focus-visible) { color: #5d4a6e; }
