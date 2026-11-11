@@ -149,3 +149,12 @@ html[data-theme="dark"] .filters { background: #291c36; border-color: #4d395c; }
 html[data-theme="dark"] .avatar:not([data-personal-avatar]) { background: #3a264b; color: #f2e5ff; }
 html[data-theme="dark"] .notification-unread .notification-read-status { color: #e2c9fb; }
 html[data-theme="dark"] .notification-unread .notification-read-status::before { background: #c9a6ee; }
+
+/* 11. Ingreso en tema oscuro: los colores fijos del formulario público no se adaptaban. */
+html[data-theme="dark"] .app-public .login-form-wrap .login-heading h2 { color: #f2e5ff; }
+html[data-theme="dark"] .app-public .login-form-wrap .login-heading .eyebrow { color: #cdb3ea; }
+html[data-theme="dark"] .app-public .login-form-wrap .login-heading p { color: var(--muted); }
+html[data-theme="dark"] .app-public .login-form .field input:not([type="hidden"]) { background: #17111f; border-color: #715986; color: #f7effe; }
+html[data-theme="dark"] .app-public .login-form .field input::placeholder { color: #a995ba; }
+html[data-theme="dark"] .app-public .login-form .field input:focus { border-color: #cdb3ea; outline-color: #9c7cc0; }
+html[data-theme="dark"] .app-public .login-form-wrap .login-services > span { background: #2c1f39; border-color: #5e4571; color: #e2c9fb; }
