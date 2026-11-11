@@ -8,12 +8,12 @@ La guía de la unidad indica que los pasos 1, 2 y 3 se evalúan durante la prese
 2. **Iniciar el prototipo.** Ejecutar `iniciar.cmd` y esperar el mensaje `Prototipo académico Pluxee Chile: https://127.0.0.1:8443/`. Mantener la ventana abierta: muestra una línea por cada página atendida (hora, método, ruta, estado, tiempo y perfil) y los movimientos registrados, útil para mostrar la actividad durante la presentación. Si aparece «AVISO El navegador rechazó el certificado local», completar el paso 3 y volver a abrir el navegador.
 3. **Confiar en el certificado local** (una sola vez por equipo, para que el navegador no muestre la advertencia «La conexión no es privada»):
    1. Abrir la carpeta `.runtime\security\web_tls\` del proyecto.
-   2. Doble clic en `Pluxee_Prototipo_Local.crt` → **Instalar certificado…** → **Usuario actual** → Siguiente.
-   3. Elegir **Colocar todos los certificados en el siguiente almacén** → **Examinar…** → **Entidades de certificación raíz de confianza** → Aceptar → Siguiente → Finalizar.
+   2. Doble clic en `Pluxee_Prototipo_Local.crt`. Hacer clic en **Instalar certificado…**, elegir **Usuario actual** y presionar **Siguiente**.
+   3. Marcar **Colocar todos los certificados en el siguiente almacén** y presionar **Examinar…**. Elegir **Entidades de certificación raíz de confianza**, aceptar y terminar con **Siguiente** y **Finalizar**.
    4. Aceptar la advertencia de seguridad de Windows y cerrar y volver a abrir el navegador.
    5. Abrir `https://127.0.0.1:8443/`: el candado debe aparecer sin advertencias.
 
-   El certificado solo es válido para `localhost` y `127.0.0.1`. Para retirarlo después: `certmgr.msc` → Entidades de certificación raíz de confianza → Certificados → «Prototipo Pluxee local» → Eliminar.
+   El certificado solo es válido para `localhost` y `127.0.0.1`. Para retirarlo después, abrir `certmgr.msc`, entrar a **Entidades de certificación raíz de confianza** y luego a **Certificados**, y eliminar «Prototipo Pluxee local».
 4. **Comprobar en dos minutos:** `verificar.cmd` (pruebas) y, con el sitio iniciado, `.venv\Scripts\python.exe -X utf8 scripts\verificar_https.py`.
 5. **Navegadores:** una ventana normal para el beneficiario y otra de perfil distinto (o de incógnito) para el administrador, porque las sesiones son independientes.
 
@@ -26,7 +26,7 @@ La guía de la unidad indica que los pasos 1, 2 y 3 se evalúan durante la prese
 
 ## 2. Paso 1: modelo de prototipo (1 minuto)
 
-- Modelo **incremental**: acceso y sesión → consultas de saldo y movimientos → seguimiento administrativo → pagos, comercios, reportes, gestión de usuarios y parámetros. Cada incremento comparte usuarios, permisos y base de datos.
+- Modelo **incremental**: primero el acceso y la sesión; después las consultas de saldo y movimientos; luego el seguimiento administrativo, y al final los pagos, comercios, reportes, la gestión de usuarios y los parámetros. Cada incremento comparte usuarios, permisos y base de datos.
 - Arquitectura: Django (vistas, formularios, ORM, sesiones y CSRF), MySQL con cuentas separadas por nivel de confianza y HTTPS local. Justificación en el README, sección 4.
 
 ## 3. Paso 2: interfaz y experiencia de usuario (3 minutos)
@@ -34,7 +34,7 @@ La guía de la unidad indica que los pasos 1, 2 y 3 se evalúan durante la prese
 | Condición de la pauta | Qué mostrar |
 |---|---|
 | Diseño claro con reglas de estilo | Encabezados, colores y botones coherentes en todas las secciones |
-| Flexible / responsive | Herramientas del navegador → vista móvil: menú inferior, tarjetas y tablas se adaptan |
+| Flexible / responsive | Abrir la vista móvil en las herramientas del navegador: el menú pasa abajo y las tarjetas y tablas se adaptan |
 | Elementos familiares y fáciles | Accesos rápidos de Inicio; buscador con `Ctrl + K` |
 | Eficiencia | Pagar desde un comercio con «Ir al pago»; favoritos que conservan la posición |
 | Jerarquía visual | Saldo destacado, resúmenes y luego el detalle |
@@ -47,17 +47,17 @@ La guía de la unidad indica que los pasos 1, 2 y 3 se evalúan durante la prese
 1. **Consulta de saldo.** Entrada: solicitud del beneficiario. Proceso: el servidor suma abonos y resta compras de la cuenta autenticada. Resultado: saldo con la hora de confirmación.
 2. **Consulta de movimientos.** Entrada: filtros de fecha y tipo. Proceso: validación en el servidor y consulta parametrizada. Resultado: historial agrupado por día y detalle de cada movimiento.
 3. **Pago.** Entrada: comercio (o código QR), monto y PIN. Proceso: verificación del comercio, la tarjeta, el saldo y el monto máximo configurado; un único cargo aunque se repita la confirmación. Resultado: comprobante, descarga en PDF, nuevo movimiento y notificación.
-4. **Interrupción y recuperación** (con las dos ventanas): administrador → Seguimiento → «Inducir interrupción» en Saldo; beneficiario → «Actualizar saldo» muestra «Saldo sin actualizar»; administrador → «Restablecer servicio»; beneficiario → reintenta y recupera el saldo. La interrupción queda en el historial y en la Bitácora.
+4. **Interrupción y recuperación** (con las dos ventanas): el administrador entra a Seguimiento y presiona «Inducir interrupción» en Saldo. El beneficiario presiona «Actualizar saldo» y ve «Saldo sin actualizar». El administrador presiona «Restablecer servicio» y el beneficiario reintenta y recupera el saldo. La interrupción queda en el historial y en la Bitácora.
 
 ## 5. Seguridad y normativa que el docente puede verificar (4 minutos)
 
 | Punto de la pauta | Demostración en vivo |
 |---|---|
-| Rechazo de caracteres peligrosos | Reportar un problema con `El saldo (no) cambió & <b>` → «No se admiten los caracteres…» |
-| Contraseña oculta y compleja | Campo `type=password`; crear usuario con `abc` → rechazada |
-| Bloqueo tras intentos fallidos | 5 ingresos erróneos → el correcto también se rechaza durante 15 minutos (umbral en Parámetros) |
-| Clave temporal | Administrador → Usuarios → ficha → «Restablecer contraseña»; el usuario debe cambiarla al ingresar |
-| Roles y privilegios | Beneficiario abre `https://127.0.0.1:8443/seguimiento/` → «Acceso restringido» (HTTP 403) |
+| Rechazo de caracteres peligrosos | Reportar un problema con `El saldo (no) cambió & <b>`: aparece «No se admiten los caracteres…» |
+| Contraseña oculta y compleja | Campo `type=password`; al crear un usuario con la contraseña `abc`, se rechaza |
+| Bloqueo tras intentos fallidos | Después de 5 ingresos erróneos, incluso la contraseña correcta se rechaza durante 15 minutos (el umbral se ajusta en Parámetros) |
+| Clave temporal | Como administrador, abrir Usuarios, entrar a una ficha y usar «Restablecer contraseña»; el usuario debe cambiarla al ingresar |
+| Roles y privilegios | Con la cuenta del beneficiario, abrir `https://127.0.0.1:8443/seguimiento/`: aparece «Acceso restringido» (HTTP 403) |
 | Sesión | Cierre de sesión en todas las páginas; inactividad configurable; «Cerrar otras sesiones» en Mi perfil |
 | TLS | Candado del navegador; cookies Secure y HttpOnly |
 | Cifrado y credenciales | Campos sensibles cifrados con AES-256-GCM; claves y contraseñas de MySQL fuera del código, protegidas con DPAPI |

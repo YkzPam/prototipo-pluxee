@@ -55,7 +55,7 @@ def admin_parametros(request):
     initial = {name: getattr(active, name) for name in parameters.LIMITS}
     form = ParametersForm(request.POST if request.method == 'POST' else None, initial=initial)
     if request.method == 'POST' and form.is_valid():
-        changes = [f'{AUDIT_LABELS[name]}: {_value(name, initial[name])} → {_value(name, value)}'
+        changes = [f'{AUDIT_LABELS[name]}: de {_value(name, initial[name])} a {_value(name, value)}'
                    for name, value in form.cleaned_data.items() if value != initial[name]]
         if not changes:
             messages.info(request, 'Los parámetros no tenían cambios.')

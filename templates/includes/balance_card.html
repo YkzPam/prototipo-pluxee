@@ -24,9 +24,9 @@
   <div class="balance-card-bottom">
     <span>{{ account.public_label }}<small>Cuenta terminada en {{ account.number_suffix }}</small><span class="card-number" aria-hidden="true">••••&nbsp;••••&nbsp;••••&nbsp;{{ account.number_suffix }}</span></span>
     {% if show_balance_link %}
-      <a href="{% url 'saldo' %}">Ver detalle <span aria-hidden="true">↗</span></a>
+      <a href="{% url 'saldo' %}">Ver detalle</a>
     {% else %}
-      <a href="{% url 'movimientos' %}">Ver movimientos <span aria-hidden="true">→</span></a>
+      <a href="{% url 'movimientos' %}">Ver movimientos</a>
     {% endif %}
   </div>
 </section>

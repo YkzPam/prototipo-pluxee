@@ -296,3 +296,8 @@ html[data-theme="dark"] .weekly-bar-link meter { background: #3a2c48; }
 html[data-theme="dark"] .weekly-bar-link meter::-webkit-meter-bar { background: #3a2c48; }
 html[data-theme="dark"] .weekly-bar-link meter::-webkit-meter-optimum-value { background: linear-gradient(90deg, #9b74c9, #c9a6f5); }
 html[data-theme="dark"] .weekly-bar-link meter::-moz-meter-bar { background: #b48ee0; }
+
+/* Filas del historial: la descripción se subraya al señalarla (reemplaza la flecha anterior). */
+.movement-detail-trigger:is(:hover, :focus-visible) > span:first-child { text-decoration: underline; text-underline-offset: .2em; }
+/* Botón de ingreso sin flecha: el texto va centrado. */
+.login-form .button-full { justify-content: center; text-align: center; }

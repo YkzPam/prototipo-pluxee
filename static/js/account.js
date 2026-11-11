@@ -361,7 +361,7 @@
       type.append(kindLabel);
       const description = element('td', 'movement-entry-description');
       const trigger = detailTrigger(item, 'movement-detail-trigger');
-      trigger.append(element('span', '', item.description), element('span', 'movement-detail-arrow', '↗'));
+      trigger.append(element('span', '', item.description));
       description.append(trigger);
       const occurred = element('time', '', api.dateTime(item.date));
       occurred.dateTime = item.date;

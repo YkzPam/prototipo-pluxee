@@ -26,7 +26,7 @@
           <div class="login-password-row">{{ form.password }}<button class="button button-secondary button-small" type="button" data-password-toggle aria-controls="id_password" hidden>Mostrar</button></div>
           {% if form.password.errors %}<div class="field-errors" role="alert">{{ form.password.errors }}</div>{% endif %}
         </div>
-        <button class="button button-full" type="submit">Ingresar a la cuenta <span aria-hidden="true">→</span></button>
+        <button class="button button-full" type="submit">Ingresar a la cuenta</button>
       </form>
       <div class="login-registration"><span>¿Todavía no tienes cuenta?</span><a class="text-link" href="{% url 'crear_usuario' %}">Crear usuario</a></div>
       <div class="login-help"><span class="help-icon" aria-hidden="true">i</span><p>Usa un alias y una contraseña exclusiva para este portal.</p></div>

@@ -37,8 +37,8 @@ class SystemParametersTests(TestCase):
         self.assertEqual((row.login_max_attempts, row.session_idle_minutes, row.updated_by), (3, 10, self.admin))
         event = AuditEvent.objects.get(event_type=AuditEvent.Type.SETTINGS)
         self.assertEqual(event.actor, self.admin)
-        self.assertEqual(event.detail, 'Abono inicial: $48.000 → $30.000; Intentos de ingreso: 5 → 3; '
-                                       'Inactividad (min): 15 → 10; Máximo por compra: $1.000.000 → $2.000')
+        self.assertEqual(event.detail, 'Abono inicial: de $48.000 a $30.000; Intentos de ingreso: de 5 a 3; '
+                                       'Inactividad (min): de 15 a 10; Máximo por compra: de $1.000.000 a $2.000')
 
         self.client.post(reverse('admin_parametros'), self.values())
         self.assertEqual(AuditEvent.objects.filter(event_type=AuditEvent.Type.SETTINGS).count(), 1)

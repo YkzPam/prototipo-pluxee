@@ -15,7 +15,7 @@
       <dd class="kpi-value">{{ kpi.value }}</dd>
       <dd class="kpi-trend">
         {% if not kpi.spark.empty %}<svg class="kpi-spark" viewBox="0 0 {{ kpi.spark.width }} {{ kpi.spark.height }}" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="kpi-spark-area" d="{{ kpi.spark.area }}"/><polyline class="kpi-spark-line" points="{{ kpi.spark.line }}"/></svg>{% endif %}
-        <span class="kpi-delta">{% if kpi.delta > 0 %}<span aria-hidden="true">▲</span> {{ kpi.delta_abs }} más{% elif kpi.delta < 0 %}<span aria-hidden="true">▼</span> {{ kpi.delta_abs }} menos{% else %}Sin cambios{% endif %} que las 24&nbsp;h anteriores</span>
+        <span class="kpi-delta">{% if kpi.delta > 0 %}{{ kpi.delta_abs }} más{% elif kpi.delta < 0 %}{{ kpi.delta_abs }} menos{% else %}Sin cambios{% endif %} que las 24&nbsp;h anteriores</span>
       </dd>
     </div>
     {% endfor %}
