@@ -33,6 +33,7 @@ TEMPLATES = [{
         'django.contrib.messages.context_processors.messages',
         'beneficios.context_processors.project_context',
         'beneficios.context_processors.notification_context',
+        'beneficios.context_processors.portal_context',
     ]},
 }]
 WSGI_APPLICATION = 'config.wsgi.application'

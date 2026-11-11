@@ -6,7 +6,7 @@
 <a class="text-link user-back" href="{% url 'reportes_admin' %}">Volver a reportes</a>
 <header class="page-heading illustrated-heading">
   <div><span class="eyebrow">GESTIÓN DE INCIDENCIAS</span><h1>{{ report.get_category_display }}</h1><p>Folio {{ report.pk }}</p></div>
-  {% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+  {% include 'includes/motion_scene.html' with scene='img/motion-inbox.svg' only %}
 </header>
 <div class="incident-layout">
   <section class="surface incident-panel" aria-labelledby="incident-details-heading">

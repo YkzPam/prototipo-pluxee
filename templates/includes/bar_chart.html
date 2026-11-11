@@ -10,7 +10,7 @@
     <text class="bar-chart-axis" x="{{ chart.axis_x }}" y="{{ tick.y }}" text-anchor="end" dominant-baseline="middle">{{ tick.text }}</text>
     {% endfor %}
     {% for bar in chart.bars %}
-    <rect class="bar-chart-bar {{ bar.css }}" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="2"><title>{{ bar.title }}</title></rect>
+    <rect class="bar-chart-bar {{ bar.css }}" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="2" data-tip="{{ bar.title }}"><title>{{ bar.title }}</title></rect>
     {% endfor %}
     {% for label in chart.x_labels %}
     <text class="bar-chart-axis" x="{{ label.x }}" y="{{ chart.label_y }}" text-anchor="middle">{{ label.text }}</text>

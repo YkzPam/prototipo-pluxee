@@ -87,3 +87,7 @@ Comprobación posterior sobre MySQL: la preparación aplicó `0012` y `0013` y o
 ## Registro de páginas en la terminal (R-07)
 
 Fecha: 11 de noviembre de 2026. Se agregó `RequestLogMiddleware`, que escribe en la terminal una línea por página atendida con hora, método, ruta, estado, tiempo y perfil (`beneficiario #id`, `administrador #id` o `visitante`). `test_request_log.py` (3 pruebas) comprueba que la línea no incluye parámetros de consulta ni el nombre de usuario, que las redirecciones de visitantes quedan registradas y que los archivos estáticos y las comprobaciones periódicas de sesión no generan líneas. La suite quedó en **140 pruebas correctas de 140** y la cobertura total en **87 %: 2.482 sentencias, 328 sin ejecutar**.
+
+## Identidad visual (datos del servidor)
+
+Fecha: 11 de noviembre de 2026. `test_identidad_visual.py` (9 pruebas) comprueba los datos que alimentan el nuevo diseño: la categoría del comercio de cada compra (desde el pago o, en los datos de demostración anteriores, desde la descripción «Compra en …»), los totales de abonos y compras por día respetando los filtros, la línea de tendencia con punto decimal, la variación de cada indicador del panel respecto de las 24 horas anteriores y si ese cambio es favorable, el saludo según la hora y la sección de cada página. La suite quedó en **149 pruebas correctas de 149** y la cobertura total en **87 %: 2.562 sentencias, 328 sin ejecutar**.

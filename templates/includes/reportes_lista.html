@@ -17,7 +17,7 @@
       </li>
     </ol>
     <dl class="report-meta">
-      <div><dt>Folio</dt><dd><code>{{ report.pk }}</code></dd></div>
+      <div><dt>Folio</dt><dd class="copy-field"><code>{{ report.pk }}</code><button class="copy-button" type="button" data-copy="{{ report.pk }}" aria-label="Copiar folio" hidden><svg class="ui-icon" aria-hidden="true"><use href="#icon-copy"/></svg><span data-copy-label>Copiar</span></button></dd></div>
       <div><dt>Registrado</dt><dd><time datetime="{{ report.created_at|date:'c' }}">{{ report.created_at|date:'d/m/Y H:i' }}</time></dd></div>
       {% if report.status != 'received' %}<div><dt>Última actualización</dt><dd><time datetime="{{ report.updated_at|date:'c' }}">{{ report.updated_at|date:'d/m/Y H:i' }}</time></dd></div>{% endif %}
       {% if admin_actions %}<div><dt>Cuenta</dt><dd>{{ report.reporter.username }}</dd></div>{% endif %}

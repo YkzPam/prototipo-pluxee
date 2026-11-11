@@ -69,7 +69,7 @@ La guía de la unidad indica que los pasos 1, 2 y 3 se evalúan durante la prese
 
 - Mostrar `beneficios/tests/EVIDENCIA_PRUEBAS.md`: cinco hallazgos reales (CF01 a CF05), cada uno con su causa, corrección y prueba.
 - Mostrar `docs/REVISION_CODIGO.md`: lista de verificación y tabla de hallazgos.
-- Ejecutar `verificar.cmd` o mostrar `dist/verificacion_local.txt`: 140 pruebas correctas y 87 % de cobertura.
+- Ejecutar `verificar.cmd` o mostrar `dist/verificacion_local.txt`: 149 pruebas correctas y 87 % de cobertura.
 - Pipeline CI/CD: README sección 5.1. Ejecutar `entregar.py --desplegar` antes de la exposición deja en `dist/despliegue_local.json` la evidencia del despliegue de esta versión (huella del ZIP, verificación del candidato y activación).
 
 ## 7. Preguntas probables

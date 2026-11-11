@@ -8,13 +8,17 @@
 {% resumen_operativo %}
 <section class="followup-summary" aria-labelledby="followup-summary-heading">
   <div class="section-heading"><div><h2 id="followup-summary-heading">Resumen de actividad</h2><p class="muted">Últimas 24 horas. Cada indicador abre los eventos correspondientes en la bitácora.</p></div></div>
-  <dl class="stats-grid">
-    <div class="surface stat"><dt><a href="{% url 'bitacora' %}?period=24h">Eventos registrados</a></dt><dd>{{ stats.total|default:0 }}</dd></div>
-    <div class="surface stat"><dt><a href="{% url 'bitacora' %}?period=24h&amp;outcome=success">Resultados correctos</a></dt><dd>{{ stats.success|default:0 }}</dd></div>
-    <div class="surface stat"><dt><a href="{% url 'bitacora' %}?{{ summary_filters.interrupted }}">Consultas interrumpidas</a></dt><dd>{{ stats.interrupted|default:0 }}</dd></div>
-    <div class="surface stat"><dt><a href="{% url 'bitacora' %}?{{ summary_filters.login_denied }}">Inicios de sesión rechazados</a></dt><dd>{{ stats.login_denied|default:0 }}</dd></div>
-    <div class="surface stat"><dt><a href="{% url 'bitacora' %}?{{ summary_filters.access_denied }}">Accesos sin permiso</a></dt><dd>{{ stats.access_denied|default:0 }}</dd></div>
-    <div class="surface stat"><dt><a href="{% url 'bitacora' %}?{{ summary_filters.expired }}">Sesiones vencidas</a></dt><dd>{{ stats.expired|default:0 }}</dd></div>
+  <dl class="stats-grid kpi-grid">
+    {% for kpi in kpis %}
+    <div class="surface stat kpi-card kpi-{{ kpi.tone }}">
+      <dt><a href="{% url 'bitacora' %}?{{ kpi.query }}">{{ kpi.label }}</a></dt>
+      <dd class="kpi-value">{{ kpi.value }}</dd>
+      <dd class="kpi-trend">
+        {% if not kpi.spark.empty %}<svg class="kpi-spark" viewBox="0 0 {{ kpi.spark.width }} {{ kpi.spark.height }}" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="kpi-spark-area" d="{{ kpi.spark.area }}"/><polyline class="kpi-spark-line" points="{{ kpi.spark.line }}"/></svg>{% endif %}
+        <span class="kpi-delta">{% if kpi.delta > 0 %}<span aria-hidden="true">▲</span> {{ kpi.delta_abs }} más{% elif kpi.delta < 0 %}<span aria-hidden="true">▼</span> {{ kpi.delta_abs }} menos{% else %}Sin cambios{% endif %} que las 24&nbsp;h anteriores</span>
+      </dd>
+    </div>
+    {% endfor %}
   </dl>
 </section>
 <section class="surface events-section" aria-labelledby="hourly-activity">

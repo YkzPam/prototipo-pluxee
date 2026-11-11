@@ -7,7 +7,7 @@
     <h1>Mi perfil</h1>
     <p class="pluxee-profile-name">{{ request.user.get_full_name|default:request.user.username }}</p>
     <span class="status-badge {% if request.user.is_active %}status-success{% else %}status-neutral{% endif %}">{% if request.user.is_active %}Cuenta activa{% else %}Cuenta desactivada{% endif %}</span>
-  </div>{% include 'includes/motion_scene.html' with scene='img/motion-admin.svg' only %}
+  </div>{% include 'includes/motion_scene.html' with scene='img/motion-profile.svg' only %}
   <span class="pluxee-section-symbol pluxee-profile-avatar" data-personal-avatar data-avatar-initial="{{ request.user.get_short_name|default:request.user.username|first|upper }}" aria-hidden="true">{{ request.user.get_short_name|default:request.user.username|first|upper }}</span>
 </header>
 <div class="profile-layout pluxee-profile-layout">

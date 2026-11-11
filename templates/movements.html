@@ -3,7 +3,7 @@
 {% block scripts %}<script src="{% static 'js/account.js' %}" defer></script>{% endblock %}
 {% block content %}
 <div class="movements-page" data-account="{{ account.pk }}" data-view="movements">
-  <div class="page-heading illustrated-heading"><div><span class="eyebrow">MI BENEFICIO</span><h1>Movimientos</h1><p>Historial de operaciones de {{ account.public_label }}.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-wallet.svg' only %}</div>
+  <div class="page-heading illustrated-heading"><div><span class="eyebrow">MI BENEFICIO</span><h1>Movimientos</h1><p>Historial de operaciones de {{ account.public_label }}.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-receipt.svg' only %}</div>
   <section class="surface movements-section movement-history"><div class="section-heading"><div><h2>Historial de la cuenta</h2><p class="muted">Operaciones agrupadas por día. Selecciona una para consultar su detalle.</p></div><button class="button button-secondary button-small" type="button" data-retry-movements>Actualizar</button></div>
     <details class="movement-filter-panel" data-movement-filter-panel>
       <summary>Filtros de movimientos</summary>

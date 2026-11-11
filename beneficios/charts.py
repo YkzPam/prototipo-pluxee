@@ -62,3 +62,18 @@ def bar_chart(labels, series, *, stacked=False, money=False, max_labels=12):
         'legend': [(name, css, sum(values)) for name, css, values in series], 'money': money,
         'empty': not any(totals),
     }
+
+
+def sparkline(values, *, width=120, height=32, pad=3):
+    """Línea de tendencia compacta para un indicador; coordenadas como texto con punto decimal."""
+    if not values:
+        return {'empty': True}
+    top = max(values) or 1
+    step = (width - 2 * pad) / max(len(values) - 1, 1)
+    points = [(pad + index * step, height - pad - (height - 2 * pad) * value / top) for index, value in enumerate(values)]
+    line = ' '.join(f'{_n(x)},{_n(y)}' for x, y in points)
+    area = f'M{_n(points[0][0])},{_n(height - pad)} L' + ' L'.join(f'{_n(x)},{_n(y)}' for x, y in points) + \
+        f' L{_n(points[-1][0])},{_n(height - pad)} Z'
+    last_x, last_y = points[-1]
+    return {'empty': not any(values), 'width': width, 'height': height, 'line': line, 'area': area,
+            'last_x': _n(last_x), 'last_y': _n(last_y)}

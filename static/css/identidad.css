@@ -1,0 +1,298 @@
+/* Identidad visual del portal: tipografía, color por sección, tarjeta de saldo, movimientos,
+   gráficos, indicadores y detalles. Se carga al final para ajustar sin reescribir las hojas anteriores.
+   Toda animación respeta «sin movimiento» (html[data-motion="off"]) y la preferencia del sistema. */
+
+/* 1. Tipografía: Manrope para el texto y Raleway para títulos y montos destacados. */
+@font-face {
+  font-family: Manrope;
+  src: url('../fonts/manrope-variable.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --font-text: Manrope, "Segoe UI", Arial, sans-serif;
+  --font-display: Raleway, Manrope, Arial, sans-serif;
+}
+html { font-family: var(--font-text); }
+:is(button, input, select, textarea) { font-family: inherit; }
+:is(.brand small, .receipt-amount small) { font-family: var(--font-text); }
+/* Cifras de igual ancho: los montos no «saltan» al cambiar ni al alinearse en columnas. */
+:is(.balance-amount, .receipt-amount, .amount-cell, .movement-money, .monthly-metric, .summary-values,
+  .payment-review-amount, .payment-step-amount, .drawer-amount, .admin-user-credit-amount, .admin-report-amount,
+  .admin-report-totals, .weekly-bar-amount, .notification-amount, .kpi-value, .stat dd, .data-table td, .card-number) {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* 2. Color propio por sección (data-section en <body>): franja, punto del antetítulo y halo de la ilustración. */
+body { --accent: #a98dcc; }
+body[data-section="beneficio"], body[data-section="monitoreo"] { --accent: #b9d94a; }
+body[data-section="pagos"], body[data-section="informes"] { --accent: #35c29f; }
+body[data-section="comercios"] { --accent: #ff9a52; }
+body[data-section="cuenta"], body[data-section="usuarios"] { --accent: #e07fc9; }
+body[data-section="ayuda"] { --accent: #4fa8f5; }
+body[data-section="ajustes"] { --accent: #9f7ee0; }
+
+.illustrated-heading::after {
+  position: absolute;
+  inset-block: clamp(1rem, 2.6vw, 1.7rem);
+  inset-inline-start: 0;
+  inline-size: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+  content: '';
+  pointer-events: none;
+}
+.illustrated-heading .eyebrow::before {
+  display: inline-block;
+  inline-size: .5rem;
+  block-size: .5rem;
+  margin-inline-end: .5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+  vertical-align: .08em;
+  content: '';
+}
+.illustrated-heading .scene-art::before {
+  position: absolute;
+  z-index: -1;
+  inset: -22% -12%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 34%, transparent), transparent);
+  content: '';
+}
+/* Páginas internas: encabezado más bajo para que el contenido suba; Inicio conserva el formato amplio. */
+.illustrated-heading:not(.pluxee-home-heading) {
+  min-block-size: clamp(6rem, 11vw, 8.6rem);
+  padding-block: clamp(.85rem, 2.2vw, 1.4rem);
+}
+.illustrated-heading:not(.pluxee-home-heading) h1 { font-size: clamp(1.55rem, 3vw, 2.15rem); margin-bottom: .35rem; }
+.illustrated-heading:not(.pluxee-home-heading) > div:first-child p { margin-bottom: 0; }
+.illustrated-heading:not(.pluxee-home-heading) .scene-art { flex-basis: clamp(4.6rem, 15vw, 10rem); }
+
+/* 3. Tarjeta de saldo con aspecto de tarjeta física (en ambos temas). */
+:root .balance-card-unified[data-tilt] {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid #5d3d86;
+  color: #f6efff;
+  background:
+    radial-gradient(120% 95% at 100% 0%, #7a4fb4 0%, transparent 55%),
+    radial-gradient(70% 60% at 0% 100%, #3d7a4f40 0%, transparent 65%),
+    linear-gradient(140deg, #2a0f4d 0%, #3f1c6e 55%, #552c8c 100%);
+  box-shadow: 0 18px 38px #2a0f4d33, inset 0 1px 0 #ffffff1f;
+}
+:root .balance-card-unified[data-tilt] :is(h2, .balance-amount) { color: #fff; }
+/* #f4edff mantiene 5:1 incluso sobre la esquina más clara del degradado (#7a4fb4). */
+:root .balance-card-unified[data-tilt] :is(.balance-caption, .balance-reference, .balance-detail, .balance-card-bottom, .balance-card-bottom small) { color: #f4edff; }
+:root .balance-card-unified[data-tilt] .balance-card-bottom { border-color: #ffffff2b; }
+:root .balance-card-unified[data-tilt] .balance-card-bottom a { color: #e8f8a8; }
+:root .balance-card-unified[data-tilt] :is(.balance-refresh, .balance-card-bottom a, .privacy-toggle):focus-visible { outline-color: #e8f8a8; }
+:root .balance-card-unified[data-tilt] .privacy-toggle { border-color: #ffffff40; background: #ffffff14; color: #fff; }
+.card-chip {
+  position: relative;
+  flex: none;
+  inline-size: 2.5rem;
+  block-size: 1.9rem;
+  margin-inline-start: auto;
+  border-radius: .45rem;
+  background: linear-gradient(135deg, #f4e6a8, #cfae55 45%, #f2df98 62%, #b8963c);
+  box-shadow: inset 0 0 0 1px #8a6d2a66;
+}
+.card-chip::before {
+  position: absolute;
+  inset: 22% 18%;
+  border: 1px solid #8a6d2a8c;
+  border-radius: .25rem;
+  background: linear-gradient(90deg, transparent 45%, #8a6d2a8c 45% 55%, transparent 55%);
+  content: '';
+}
+.balance-card-unified .card-topline { flex-wrap: nowrap; align-items: center; gap: .6rem; }
+.balance-card-unified .card-topline h2 { margin-inline-end: auto; }
+.balance-card-unified .card-topline .card-chip { margin-inline-start: 0; }
+.card-number {
+  display: block;
+  margin-block-start: .35rem;
+  letter-spacing: .14em;
+  font-size: .82rem;
+  font-weight: 600;
+  color: #f4edff;
+}
+
+/* Inclinación y brillo que sigue al puntero (tarjeta de saldo y tarjeta de beneficio). */
+[data-tilt] {
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform .55s cubic-bezier(.2, .7, .2, 1), box-shadow .3s ease;
+}
+[data-tilt].is-tilting { transition-duration: .12s, .3s; box-shadow: 0 24px 44px #2a0f4d3d; }
+.benefit-card-art[data-tilt] { position: relative; isolation: isolate; overflow: hidden; }
+[data-tilt]::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--glare-x, 30%) var(--glare-y, 0%), #ffffff38, transparent 46%);
+  opacity: 0;
+  transition: opacity .35s ease;
+  content: '';
+  pointer-events: none;
+}
+[data-tilt].is-tilting::after { opacity: 1; }
+html[data-motion="off"] [data-tilt] { transform: none; transition: none; }
+
+/* 4. Movimientos con la identidad de cada comercio. */
+.category-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+  border-radius: .7rem;
+  background: var(--cat-bg);
+  color: var(--cat-fg);
+}
+.category-badge .ui-icon { inline-size: 1.15rem; block-size: 1.15rem; }
+.movement-kind-label .category-badge { inline-size: 1.9rem; block-size: 1.9rem; border-radius: .6rem; }
+.movement-kind-label .category-badge .ui-icon { inline-size: 1rem; block-size: 1rem; }
+.category-cafe { --cat-bg: #fbe7d6; --cat-fg: #8a4a14; }
+.category-restaurant { --cat-bg: #fde1e1; --cat-fg: #9b2c2c; }
+.category-market { --cat-bg: #dff0ff; --cat-fg: #1d5d8f; }
+.category-grocery { --cat-bg: #efe6fb; --cat-fg: #5b3592; }
+.category-bakery { --cat-bg: #fbefd0; --cat-fg: #7a5410; }
+.category-produce { --cat-bg: #e3f4d6; --cat-fg: #356b1c; }
+.category-credit { --cat-bg: #e8f6c6; --cat-fg: #3f5f0e; }
+.category-other { --cat-bg: #efe9f6; --cat-fg: #5b4a6e; }
+html[data-theme="dark"] .category-cafe { --cat-bg: #4a2c17; --cat-fg: #ffc99a; }
+html[data-theme="dark"] .category-restaurant { --cat-bg: #4a1f25; --cat-fg: #ffb8b8; }
+html[data-theme="dark"] .category-market { --cat-bg: #17334a; --cat-fg: #a6d5ff; }
+html[data-theme="dark"] .category-grocery { --cat-bg: #34234d; --cat-fg: #dcc6ff; }
+html[data-theme="dark"] .category-bakery { --cat-bg: #45351a; --cat-fg: #f5d38a; }
+html[data-theme="dark"] .category-produce { --cat-bg: #23401a; --cat-fg: #b8e69d; }
+html[data-theme="dark"] .category-credit { --cat-bg: #34401a; --cat-fg: #dcf37a; }
+html[data-theme="dark"] .category-other { --cat-bg: #2f2540; --cat-fg: #d5c6e3; }
+.movement-money:not(.credit) { color: var(--ink); }
+.movement-money.credit { color: #2f6b1f; }
+html[data-theme="dark"] .movement-money.credit { color: #a8e48a; }
+
+.movement-day-row h3 { display: inline-block; }
+.movement-day-total {
+  float: inline-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem .9rem;
+  margin: 0;
+  font-size: .76rem;
+  font-weight: 700;
+}
+.day-total-debit { color: #8a2f3a; }
+.day-total-credit { color: #2f6b1f; }
+html[data-theme="dark"] .day-total-debit { color: #ffb8c2; }
+html[data-theme="dark"] .day-total-credit { color: #a8e48a; }
+
+/* 5. Gasto por semana: proporción del mes, semana actual y semana con más gasto. */
+.weekly-bar-link { grid-template-columns: 5.4rem minmax(0, 1fr) 5.8rem 5.2rem; }
+.weekly-bar-share { text-align: end; color: var(--muted); font-size: .74rem; font-weight: 600; }
+.weekly-bar-tag {
+  display: block;
+  inline-size: fit-content;
+  margin-block-start: .15rem;
+  padding: .05rem .4rem;
+  border-radius: 999px;
+  background: #e8f6c6;
+  color: #3f5f0e;
+  font-size: .64rem;
+  font-weight: 800;
+}
+.is-current-week .weekly-bar-link { box-shadow: inset 3px 0 0 var(--accent); }
+html[data-theme="dark"] .weekly-bar-tag { background: #34401a; color: #dcf37a; }
+
+/* Gráficos del servidor: resaltar la barra señalada y mostrar su valor. */
+.bar-chart-bar { transition: opacity .15s ease; }
+.bar-chart svg.has-active-bar .bar-chart-bar:not(.is-active) { opacity: .42; }
+.chart-tip {
+  position: fixed;
+  z-index: 60;
+  inset: 0 auto auto 0;
+  max-inline-size: min(20rem, calc(100vw - 1rem));
+  padding: .38rem .6rem;
+  border-radius: .5rem;
+  background: #21182d;
+  color: #fff;
+  box-shadow: 0 8px 20px #0d081b40;
+  font-size: .76rem;
+  font-weight: 700;
+  pointer-events: none;
+  transform: translate(var(--tip-x, 0), var(--tip-y, 0));
+}
+html[data-theme="dark"] .chart-tip { background: #f2e5ff; color: #21182d; }
+
+/* 6. Indicadores del panel con tendencia y variación. */
+.kpi-card { --kpi: #6945a1; display: grid; align-content: start; gap: .35rem; }
+.kpi-card.kpi-good { --kpi: #2f8a55; }
+.kpi-card.kpi-bad { --kpi: #c2414f; }
+.kpi-card .kpi-value { margin: 0; font-family: var(--font-display); font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; line-height: 1.05; }
+.kpi-trend { display: grid; gap: .3rem; margin: 0; }
+.kpi-spark { display: block; inline-size: 100%; block-size: 2rem; overflow: visible; }
+.kpi-spark-area { fill: color-mix(in srgb, var(--kpi) 16%, transparent); }
+.kpi-spark-line { fill: none; stroke: var(--kpi); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.kpi-delta { color: var(--muted); font-size: .74rem; font-weight: 700; }
+.kpi-good .kpi-delta { color: #256346; }
+.kpi-bad .kpi-delta { color: #a53640; }
+/* El primer indicador tiene fondo morado oscuro en ambos temas. */
+.followup-summary .kpi-card:first-child { --kpi: #dcef8d; }
+.followup-summary .kpi-card:first-child .kpi-delta { color: #efe6fa; }
+html[data-theme="dark"] .kpi-card { --kpi: #c9a6f5; }
+html[data-theme="dark"] .kpi-card.kpi-good { --kpi: #8fe0a9; }
+html[data-theme="dark"] .kpi-card.kpi-bad { --kpi: #ff9aa8; }
+html[data-theme="dark"] .kpi-good .kpi-delta { color: #8fe0a9; }
+html[data-theme="dark"] .kpi-bad .kpi-delta { color: #ffb0bb; }
+
+/* Tablas: la fila señalada se resalta para seguirla con la vista. */
+.data-table tbody tr:not(.movement-day-row, .movement-table-placeholder) { transition: background-color .15s ease; }
+.data-table tbody tr:not(.movement-day-row, .movement-table-placeholder):hover { background: #f7f2fb; }
+html[data-theme="dark"] .data-table tbody tr:not(.movement-day-row, .movement-table-placeholder):hover { background: #2a2036; }
+
+/* 7. Detalles: copiar folios y aparición de secciones al hacer scroll. */
+.copy-field { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem; }
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  min-block-size: 28px;
+  padding: .15rem .55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--purple);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.copy-button .ui-icon { inline-size: .9rem; block-size: .9rem; }
+.copy-button:hover { background: #f4eef9; }
+.copy-button.is-copied { border-color: #b9d86a; background: #e8f6c6; color: #3f5f0e; }
+html[data-theme="dark"] .copy-button { border-color: #5e4571; color: #e6d4fa; }
+html[data-theme="dark"] .copy-button:hover { background: #2c1f39; }
+html[data-theme="dark"] .copy-button.is-copied { border-color: #6c7f2c; background: #34401a; color: #dcf37a; }
+
+.reveal-pending { opacity: 0; translate: 0 1.25rem; transition: opacity .5s ease, translate .6s cubic-bezier(.2, .7, .2, 1); }
+.reveal-pending.is-revealed { opacity: 1; translate: 0 0; }
+html[data-motion="off"] .reveal-pending { opacity: 1; translate: none; transition: none; }
+
+/* 8. Pantallas pequeñas. */
+@media (max-width: 700px) {
+  .weekly-bar-link { grid-template-columns: 4.2rem minmax(0, 1fr) 5.2rem; }
+  .weekly-bar-share { grid-column: 2 / -1; text-align: start; font-size: .68rem; }
+  .movement-day-total { float: none; margin-block-start: .2rem; }
+  .card-chip { inline-size: 2.1rem; block-size: 1.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-tilt], .reveal-pending { transform: none; opacity: 1; translate: none; transition: none; }
+}
+
+/* Gráfico semanal en tema oscuro: la pista de cada barra era clara. */
+html[data-theme="dark"] .weekly-bar-link meter { background: #3a2c48; }
+html[data-theme="dark"] .weekly-bar-link meter::-webkit-meter-bar { background: #3a2c48; }
+html[data-theme="dark"] .weekly-bar-link meter::-webkit-meter-optimum-value { background: linear-gradient(90deg, #9b74c9, #c9a6f5); }
+html[data-theme="dark"] .weekly-bar-link meter::-moz-meter-bar { background: #b48ee0; }

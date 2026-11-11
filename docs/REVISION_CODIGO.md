@@ -28,7 +28,7 @@ La guía de construcción del prototipo pide revisar el código regularmente (*c
 | Portabilidad | Las migraciones funcionan en SQLite (pruebas) y en MySQL (presentación) | Corregido en CF05 |
 | Interfaz | Coherencia visual, contraste WCAG en ambos temas, vista móvil | Corregido en R-01, R-05 y R-06 |
 | Registro | Actividad visible en la terminal sin datos personales | Corregido en R-07 |
-| Pruebas | Cobertura sobre 80 % y una prueba por corrección | Cumple: 140 pruebas, 87 % |
+| Pruebas | Cobertura sobre 80 % y una prueba por corrección | Cumple: 149 pruebas, 87 % |
 
 ## Hallazgos y resolución
 
@@ -46,7 +46,7 @@ La guía de construcción del prototipo pide revisar el código regularmente (*c
 | R-06 | Media | En tema oscuro, la variable `--purple` pasa a lavanda claro, pero varios bloques conservaban un fondo claro fijo: respuesta del administrador en reportes, panel de clave dinámica, confirmaciones de desactivación (usuarios y comercios), aviso de ayuda, filtros de movimientos, tarjeta verde, marcadores de pasos y saldo del resumen de pago. Texto claro sobre fondo claro (1:1 a 1,8:1) | `static/css/fluidez.css` (secciones 12 y 13) | Superficies oscuras para esos bloques, texto morado oscuro sobre el verde de marca y grises secundarios ajustados también en tema claro | Auditoría automatizada de contraste en 101 páginas por tema: ningún texto real bajo 4,5:1 (3:1 en texto grande). Los avisos restantes corresponden a texto blanco sobre degradados morados (barra lateral, ingreso, registro), revisados en captura |
 | R-07 | Baja | El servidor HTTPS no mostraba en la terminal las páginas atendidas, y cada conexión rechazada por un navegador sin el certificado instalado imprimía un error | `beneficios/middleware.py`, `servidor_seguro.py` | Una línea por página (hora, método, ruta, estado, tiempo y perfil, sin parámetros ni nombres) y un único aviso por minuto con la instrucción para instalar el certificado | `test_request_log.py` |
 | R-08 | Baja | Al contrastar el README con la *Guía para la construcción del Prototipo Funcional* faltaba explicar los tres servicios (entrada, proceso y resultado), la equivalencia con la estructura de código sugerida, la aplicación de SOLID y Clean Code, los compromisos técnicos y el uso de listas cerradas; además indicaba un repositorio privado que ya es público | `README.md` (secciones 4.1 a 4.4 y 5) | Secciones agregadas con referencias a los archivos reales; cada afirmación se comprobó en el código | Revisión documental |
-| R-09 | Baja | La ejecución del CI del commit `22a2dc0` falló al instalar bibliotecas del sistema (`apt-get`), antes de correr las pruebas, por una caída temporal del repositorio de paquetes | `.github/workflows/verificacion.yml` | El paso reintenta hasta tres veces | Ejecución siguiente de GitHub Actions |
+| R-09 | Media | Las ejecuciones del CI de los commits `22a2dc0`, `47ecb2a` y `3446b36` fallaron al instalar bibliotecas del sistema con `apt-get`, antes de correr las pruebas. Reintentar no bastó: el repositorio de paquetes de Ubuntu del ejecutor siguió fallando | `.github/workflows/verificacion.yml` | El CI ya no depende de `apt-get`: instala las dependencias sin `mysqlclient`, que solo usa el modo de presentación con MySQL; las pruebas usan SQLite | Suite completa en un entorno limpio sin `mysqlclient`: 140 pruebas correctas y 86 % de cobertura |
 
 ## Decisiones registradas
 

@@ -16,7 +16,7 @@
     <div><dt>Fecha y hora</dt><dd>{{ payment.created_at|date:'d/m/Y · H:i:s' }}</dd></div>
     <div><dt>Cuenta</dt><dd>Terminada en {{ account.number_suffix }}</dd></div>
     <div><dt>Saldo después del pago</dt><dd data-private-amount>${{ payment.balance_after|clp }}</dd></div>
-    <div class="receipt-reference"><dt>Referencia</dt><dd>{{ payment.id }}</dd></div>
+    <div class="receipt-reference"><dt>Referencia</dt><dd class="copy-field"><span>{{ payment.id }}</span><button class="copy-button" type="button" data-copy="{{ payment.id }}" aria-label="Copiar referencia" hidden><svg class="ui-icon" aria-hidden="true"><use href="#icon-copy"/></svg><span data-copy-label>Copiar</span></button></dd></div>
   </dl>
   <div class="receipt-notice"><strong>Comprobante sin valor comercial.</strong></div>
   <div class="receipt-actions">

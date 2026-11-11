@@ -42,6 +42,7 @@ La navegación principal utiliza Inicio, Pagar, Comercios y Mi perfil. El saldo 
 - **Notificaciones:** la campana abre los avisos de movimientos nuevos y respuestas de administración. Cada cuenta puede marcar sus propios avisos como leídos.
 - **Revisión del pago:** el formulario permite revisar el comercio, importe y saldo resultante antes de confirmar el cargo. La autorización vence y el servidor vuelve a comprobar el saldo al confirmar.
 - **Movimiento visual:** el pie permite pausar las animaciones. La página respeta la preferencia de movimiento reducido del sistema.
+- **Identidad visual:** texto en Manrope (licencia OFL, servida desde el propio sitio) y títulos en Raleway; cada área (beneficio, pagos, comercios, cuenta, ayuda, monitoreo, usuarios, informes y ajustes) tiene un color y una ilustración propios. La tarjeta de saldo imita una tarjeta física con brillo que sigue al puntero, Inicio saluda según la hora, cada compra muestra el ícono de su comercio y el historial suma las compras y abonos de cada día. El gasto semanal indica la proporción del mes, los gráficos muestran el valor de cada barra y los indicadores del panel incluyen su tendencia por hora y la variación respecto de las 24 horas anteriores. Folios y referencias se copian con un botón. Todo efecto se desactiva con «Pausar animaciones» o con el movimiento reducido del sistema.
 - **Apariencia:** el acceso superior abre los temas claro, oscuro y del sistema, contraste, intensidad de movimiento y avatar. Estas preferencias se guardan en el navegador; el avatar y la privacidad de importes se distinguen por cuenta.
 - **Navegación:** Buscar o Ctrl + K abre las acciones disponibles. El recorrido inicial es opcional y puede abrirse nuevamente desde Apariencia. Los movimientos se agrupan por día y abren un panel de detalle.
 - **Gestión administrativa:** Comercios permite altas, edición y cambios de estado conservando el historial. Las incidencias admiten prioridad, responsable e historial de actualizaciones. Informes permite consultar movimientos por fechas y descargar el CSV con los mismos filtros.
@@ -83,7 +84,7 @@ La guía de la actividad pide al menos tres servicios que reflejen entradas, pro
 | `/src/models` | `beneficios/models.py`, `identidad/models.py` y las migraciones |
 | `/src/services` | `beneficios/services.py` (consultas), `events.py` (auditoría), `responses.py` (respuestas) |
 | `/src/utils` | `validators.py`, `charts.py`, `csv_export.py`, `receipt_pdf.py`, `parameters.py` |
-| `/tests` | `beneficios/tests/` (140 pruebas y evidencia de correcciones) |
+| `/tests` | `beneficios/tests/` (149 pruebas y evidencia de correcciones) |
 | `/docs` | `docs/` (revisión de código y guía de presentación) y este README |
 | `/config` | `config/` (entornos de desarrollo, pruebas y producción, cifrado y TLS) |
 
@@ -112,7 +113,7 @@ Las entradas se validan con listas cerradas cuando es posible (*whitelisting*): 
 
 ## 5. Verificación y entornos
 
-`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio público `YkzPam/prototipo-pluxee`. La primera ejecución terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
+`verificar.cmd` comprueba el proyecto y ejecuta las pruebas con cobertura. `python scripts/entregar.py` ejecuta la verificación, comprueba las migraciones, recopila los recursos y genera el ZIP; detiene el proceso si falla un paso. Los archivos de `beneficios/tests/` conservan casos, salidas y la evidencia de una corrección real. La configuración de integración continua está en `.github/workflows/verificacion.yml`; instala las dependencias sin el cliente de MySQL (las pruebas usan SQLite), comprueba y prepara un paquete en GitHub Actions con cada envío al repositorio público `YkzPam/prototipo-pluxee`. La primera ejecución terminó correctamente el 11 de noviembre de 2026. No existe un despliegue remoto: el despliegue es local (sección 5.1).
 
 La rama `evaluacion-3` contiene la entrega de la Evaluación 3 (prototipo). Las etapas siguientes, como el informe de la Evaluación 4, se publicarán en ramas propias sin sustituir esta. La entrega se identifica con la rama y el hash del commit publicado en GitHub.
 

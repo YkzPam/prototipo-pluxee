@@ -4,7 +4,7 @@
 {% block content %}
 <div class="pluxee-home" data-account="{{ account.pk }}" data-view="dashboard">
   <header class="page-heading pluxee-home-heading illustrated-heading">
-    <div><span class="eyebrow">MI BENEFICIO JUNAEB</span><h1>Hola, {{ request.user.get_short_name|default:request.user.username }}<span class="greeting-dot">.</span></h1><p>Consulta tu saldo y accede a tus opciones de pago.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-wallet.svg' only %}
+    <div><span class="eyebrow">MI BENEFICIO JUNAEB</span><h1>{{ portal_greeting }}, {{ request.user.get_short_name|default:request.user.username }}<span class="greeting-dot">.</span></h1><p>Consulta tu saldo y accede a tus opciones de pago.</p></div>{% include 'includes/motion_scene.html' with scene='img/motion-wallet.svg' only %}
     <a class="help-shortcut" href="{% url 'ayuda' %}" aria-label="Abrir ayuda"><svg class="ui-icon" aria-hidden="true"><use href="#icon-help"/></svg></a>
   </header>
   <section class="notice notice-warning query-status" aria-labelledby="query-status-heading" data-query-status data-status-url="{% url 'estado_consultas' %}"{% if not interrupted_queries %} hidden{% endif %}>

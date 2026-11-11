@@ -18,15 +18,16 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .balance_snapshot import last_confirmed_balance, remember_balance, snapshot_key
-from .charts import bar_chart
+from .charts import bar_chart, sparkline
 from .database_access import read_alias
 from .events import record
 from .forms import LoginForm, MovementFilterForm, ServiceStateForm
-from .models import AuditEvent, BenefitAccount, Movement, ServiceInterruption, ServiceState, SERVICE_CODES
+from .models import AuditEvent, BenefitAccount, Merchant, Movement, Payment, ServiceInterruption, ServiceState, SERVICE_CODES
 from .policies import session_policy, session_return_path
 from .responses import UpdatedResponseCreator, PendingResponseCreator, RejectedResponseCreator
 from .security import protected, login_blocked, login_failed, clear_login_failures
 from .services import MockDataServiceAdapter, SourceUnavailable
+from .templatetags.merchant_visuals import merchant_slug
 
 
 @require_http_methods(['GET', 'POST'])
@@ -211,9 +212,12 @@ def api_movimientos(request, account_id):
         query = adapter.movements(account, form.cleaned_data)
         paginator = Paginator(query, 20)
         page = paginator.get_page(form.cleaned_data.get('page') or 1)
+        items = list(page)
         result = {'items': [{'id': item.pk, 'date': timezone.localtime(item.occurred_at).isoformat(),
                            'description': item.description, 'kind': item.kind, 'amount': item.amount}
-                          for item in page], 'page': page.number, 'pages': paginator.num_pages, 'total': paginator.count}
+                          for item in items], 'page': page.number, 'pages': paginator.num_pages, 'total': paginator.count}
+        _add_categories(result['items'])
+        result['day_totals'] = _day_totals(query, items)
         if request.GET.get('resumen') == 'mensual':
             result['monthly'] = adapter.monthly_summary(account, month=month, periods=periods)
         return result
@@ -338,6 +342,91 @@ def _with_readable_details(events):
     return events
 
 
+def _add_categories(items):
+    """Categoría del comercio de cada compra, para mostrar su ícono.
+
+    Se consulta con la cuenta de la aplicación: la cuenta de solo lectura no tiene acceso a pagos ni comercios.
+    """
+    purchases = {item['id'] for item in items if item['kind'] == Movement.Kind.DEBIT}
+    categories = dict(Payment.objects.using('default').filter(movement_id__in=purchases)
+                      .values_list('movement_id', 'merchant__category')) if purchases else {}
+    # Las compras de demostración anteriores a los pagos solo tienen la descripción «Compra en <comercio>».
+    by_name = dict(Merchant.objects.using('default').values_list('name', 'category')) if purchases else {}
+    for item in items:
+        if item['kind'] == Movement.Kind.CREDIT:
+            item['category'] = 'credit'
+            continue
+        category = categories.get(item['id']) or by_name.get(item['description'].removeprefix('Compra en ').strip())
+        item['category'] = merchant_slug(category) if category else 'other'
+
+
+def _day_totals(query, items):
+    """Abonos y compras de cada día visible, con todos los movimientos filtrados de ese día (no solo la página)."""
+    if not items:
+        return {}
+    days = [timezone.localtime(item.occurred_at) for item in items]
+    start = min(days).replace(hour=0, minute=0, second=0, microsecond=0)
+    end = max(days).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    totals = {}
+    for kind, amount, occurred_at in query.filter(occurred_at__gte=start, occurred_at__lt=end).order_by().values_list(
+            'kind', 'amount', 'occurred_at').iterator():
+        day = totals.setdefault(timezone.localtime(occurred_at).date().isoformat(), {'credit': 0, 'debit': 0})
+        day['credit' if kind == Movement.Kind.CREDIT else 'debit'] += amount
+    return totals
+
+
+KPI_CARDS = (
+    # clave, etiqueta, filtro de la bitácora, dirección deseada (None: neutral)
+    ('total', 'Eventos registrados', 'period=24h', None),
+    ('success', 'Resultados correctos', 'period=24h&outcome=success', 'up'),
+    ('interrupted', 'Consultas interrumpidas', None, 'down'),
+    ('login_denied', 'Inicios de sesión rechazados', None, 'down'),
+    ('access_denied', 'Accesos sin permiso', None, 'down'),
+    ('expired', 'Sesiones vencidas', None, 'down'),
+)
+
+
+def _kpi_matches(key, event_type, outcome):
+    if key == 'total':
+        return True
+    if key == 'success':
+        return outcome == AuditEvent.Outcome.SUCCESS
+    rule = SUMMARY_FILTERS[key]
+    types = QUERY_EVENT_TYPES if rule['event_type'] == 'queries' else (rule['event_type'],)
+    return event_type in types and outcome == rule['outcome']
+
+
+def _kpi_cards(stats, now):
+    """Indicadores con su tendencia por hora y la variación respecto de las 24 horas anteriores."""
+    first_hour = timezone.localtime(now).replace(minute=0, second=0, microsecond=0) - timedelta(hours=23)
+    day_start, previous_start = now - timedelta(hours=24), now - timedelta(hours=48)
+    hourly = {key: [0] * 24 for key, *_ in KPI_CARDS}
+    previous = {key: 0 for key, *_ in KPI_CARDS}
+    for created_at, event_type, outcome in AuditEvent.objects.filter(created_at__gte=previous_start).order_by().values_list(
+            'created_at', 'event_type', 'outcome').iterator():
+        for key, *_ in KPI_CARDS:
+            if not _kpi_matches(key, event_type, outcome):
+                continue
+            if created_at < day_start:
+                previous[key] += 1
+            elif created_at >= first_hour:
+                hourly[key][min(23, int((created_at - first_hour).total_seconds() // 3600))] += 1
+    cards = []
+    for key, label, query, desired in KPI_CARDS:
+        value = stats.get(key) or 0
+        delta = value - previous[key]
+        if delta == 0 or desired is None:
+            tone = 'neutral'
+        else:
+            tone = 'good' if (delta > 0) == (desired == 'up') else 'bad'
+        cards.append({
+            'key': key, 'label': label, 'value': value, 'delta': delta, 'delta_abs': abs(delta), 'tone': tone,
+            'query': query or urlencode({'period': '24h', **SUMMARY_FILTERS[key]}),
+            'spark': sparkline(hourly[key]),
+        })
+    return cards
+
+
 @require_GET
 @protected(administrator=True)
 def seguimiento(request):
@@ -361,6 +450,7 @@ def seguimiento(request):
     return render(request, 'seguimiento.html', {
         'stats': stats, 'services': ServiceState.objects.order_by('code'), 'active_page': 'seguimiento',
         'interruptions': interruptions, 'recent_events': recent_events, 'hourly_chart': _hourly_chart(now),
+        'kpis': _kpi_cards(stats, now),
         'summary_filters': {key: urlencode({'period': '24h', **value}) for key, value in SUMMARY_FILTERS.items()},
     })
 

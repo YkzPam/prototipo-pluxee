@@ -275,6 +275,29 @@
     return button;
   }
 
+  const CATEGORY_ICONS = {
+    cafe: 'icon-cafe', restaurant: 'icon-food', market: 'icon-cart', grocery: 'icon-shop',
+    bakery: 'icon-bread', produce: 'icon-leaf', credit: 'icon-plus', other: 'icon-pay',
+  };
+  const CATEGORY_NAMES = {
+    cafe: 'Cafetería', restaurant: 'Restaurante', market: 'Supermercado', grocery: 'Almacén',
+    bakery: 'Panadería', produce: 'Verdulería', credit: 'Abono', other: 'Compra',
+  };
+
+  function categoryIcon(item) {
+    const category = CATEGORY_ICONS[item.category] ? item.category : (item.kind === 'abono' ? 'credit' : 'other');
+    const badge = element('span', 'category-badge category-' + category);
+    badge.setAttribute('aria-hidden', 'true');
+    badge.title = CATEGORY_NAMES[category];
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'ui-icon');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', '#' + CATEGORY_ICONS[category]);
+    svg.append(use);
+    badge.append(svg);
+    return badge;
+  }
+
   function amountsUpdated() {
     document.dispatchEvent(new CustomEvent('portal:amounts-updated'));
   }
@@ -290,8 +313,7 @@
     items.slice(0, 3).forEach(item => {
       const row = detailTrigger(item, 'movement-row movement-recent-trigger');
       const credit = item.kind === 'abono';
-      const icon = element('span', 'movement-symbol' + (credit ? ' credit' : ''), credit ? '↓' : '↑');
-      icon.setAttribute('aria-hidden', 'true');
+      const icon = categoryIcon(item);
       const description = element('div', 'movement-description');
       description.append(element('strong', '', item.description), element('small', '', api.date(item.date)));
       row.append(icon, description, privateMoney('span', 'movement-money' + (credit ? ' credit' : ''), (credit ? '+ ' : '− ') + api.money(item.amount)));
@@ -300,7 +322,7 @@
     amountsUpdated();
   }
 
-  function tableRows(items) {
+  function tableRows(items, dayTotals = {}) {
     const holder = app.querySelector('[data-movement-rows]');
     if (!holder) return;
     holder.replaceChildren();
@@ -319,6 +341,13 @@
         headingCell.setAttribute('role', 'cell');
         const heading = element('h3', '', api.date(day));
         headingCell.append(heading);
+        const totals = dayTotals[day];
+        if (totals) {
+          const summary = element('p', 'movement-day-total');
+          if (totals.debit) summary.append(privateMoney('span', 'day-total-debit', 'Compras − ' + api.money(totals.debit)));
+          if (totals.credit) summary.append(privateMoney('span', 'day-total-credit', 'Abonos + ' + api.money(totals.credit)));
+          headingCell.append(summary);
+        }
         headingRow.append(headingCell);
         holder.append(headingRow);
         previousDay = day;
@@ -328,9 +357,7 @@
       const credit = item.kind === 'abono';
       const type = element('td', 'movement-entry-kind');
       const kindLabel = element('span', 'movement-kind-label' + (credit ? ' is-credit' : ''));
-      const icon = element('span', 'movement-kind-icon', credit ? '↓' : '↑');
-      icon.setAttribute('aria-hidden', 'true');
-      kindLabel.append(icon, element('span', '', credit ? 'Abono' : 'Compra'));
+      kindLabel.append(categoryIcon(item), element('span', '', credit ? 'Abono' : 'Compra'));
       type.append(kindLabel);
       const description = element('td', 'movement-entry-description');
       const trigger = detailTrigger(item, 'movement-detail-trigger');
@@ -424,8 +451,14 @@
     bars.replaceChildren();
     if (!weeks) return;
     const max = Math.max(1, ...weeks.map(week => week.amount));
+    const total = weeks.reduce((sum, week) => sum + week.amount, 0);
+    const today = new Date();
+    const todayIso = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-');
     weeks.forEach(week => {
       const item = element('li');
+      if (week.amount && week.amount === max) item.classList.add('is-top-week');
+      if (week.from_date <= todayIso && todayIso <= week.to_date) item.classList.add('is-current-week');
+      item.style.setProperty('--week-share', String(Math.round(week.amount / max * 100)));
       const link = element('a', 'weekly-bar-link');
       const query = new URLSearchParams({desde: week.from_date, hasta: week.to_date, tipo: 'cargo'});
       link.href = '/movimientos/?' + query.toString();
@@ -435,8 +468,12 @@
       meter.max = max;
       meter.value = week.amount;
       meter.setAttribute('aria-hidden', 'true');
-      link.append(element('span', 'weekly-bar-label', 'Días ' + week.label),
-        meter, privateMoney('strong', 'weekly-bar-amount', api.money(week.amount)));
+      const share = total ? Math.round(week.amount / total * 100) : 0;
+      const label = element('span', 'weekly-bar-label', 'Días ' + week.label);
+      if (item.classList.contains('is-current-week')) label.append(element('span', 'weekly-bar-tag', 'Esta semana'));
+      link.append(label,
+        meter, privateMoney('strong', 'weekly-bar-amount', api.money(week.amount)),
+        element('span', 'weekly-bar-share', share + ' % del mes'));
       item.append(link);
       bars.append(item);
     });
@@ -480,7 +517,7 @@
         recentRows(items);
         if (result.data.monthly) showMonthly('ready', result.data.monthly);
         else showMonthly('error');
-      } else tableRows(items);
+      } else tableRows(items, result.data.day_totals || {});
       currentPage = result.data.page || 1;
       totalPages = result.data.pages || 1;
       if (form && currentPage !== page) {
