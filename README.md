@@ -209,7 +209,7 @@ Además, siempre que se puede, el sistema solo acepta valores de una **lista cer
 
 `verificar.cmd` revisa el proyecto y corre las pruebas con su cobertura. `.venv\Scripts\python.exe scripts\entregar.py` hace eso mismo y además revisa las migraciones, prepara los archivos del sitio y arma el ZIP; si un paso falla, se detiene ahí. En `beneficios/tests/` están las pruebas, sus resultados y la evidencia de cada corrección.
 
-Cada vez que subimos cambios a GitHub, **GitHub Actions** repite esta verificación automáticamente (`.github/workflows/verificacion.yml`). Ahí no se instala el cliente de MySQL porque las pruebas usan SQLite. El historial completo está en la pestaña **Actions** del repositorio público `YkzPam/prototipo-pluxee`, y la primera ejecución exitosa fue el 11 de noviembre de 2026.
+Cada vez que subimos cambios a GitHub, **GitHub Actions** repite esta verificación automáticamente (`.github/workflows/verificacion.yml`). Ahí no se instala el cliente de MySQL porque las pruebas usan SQLite. El resultado de cada ejecución se puede ver en la pestaña **Actions** del repositorio público `YkzPam/prototipo-pluxee`.
 
 La rama **`evaluacion-3`** es la entrega del prototipo. El informe de la Evaluación 4 irá en su propia rama, sin reemplazar esta. Para identificar exactamente lo entregado basta con la rama y el código (hash) del último commit.
 
