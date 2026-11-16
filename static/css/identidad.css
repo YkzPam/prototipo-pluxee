@@ -301,3 +301,15 @@ html[data-theme="dark"] .weekly-bar-link meter::-moz-meter-bar { background: #b4
 .movement-detail-trigger:is(:hover, :focus-visible) > span:first-child { text-decoration: underline; text-underline-offset: .2em; }
 /* Botón de ingreso sin flecha: el texto va centrado. */
 .login-form .button-full { justify-content: center; text-align: center; }
+
+/* Menú deslizable en móvil: difuminado en el borde donde quedan más opciones (lo marca identidad.js). */
+@media (max-width: 700px) {
+  .sidebar .nav-links[data-scroll-more] {
+    --fade-left: 0px;
+    --fade-right: 0px;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent 100%);
+  }
+  .sidebar .nav-links[data-scroll-more~="left"] { --fade-left: 2.5rem; }
+  .sidebar .nav-links[data-scroll-more~="right"] { --fade-right: 2.5rem; }
+}

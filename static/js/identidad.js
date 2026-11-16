@@ -33,6 +33,26 @@
     card.addEventListener('focusin', reset);
   });
 
+  // Menú deslizable en móvil: indica si quedan opciones a cada lado y muestra la sección actual.
+  document.querySelectorAll('.sidebar .nav-links').forEach(nav => {
+    const update = () => {
+      const sides = [];
+      if (nav.scrollLeft > 2) sides.push('left');
+      if (nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2) sides.push('right');
+      if (sides.length) nav.dataset.scrollMore = sides.join(' ');
+      else delete nav.dataset.scrollMore;
+    };
+    const active = nav.querySelector('[aria-current="page"], a.active');
+    if (active && nav.scrollWidth > nav.clientWidth) {
+      const link = active.getBoundingClientRect();
+      const box = nav.getBoundingClientRect();
+      nav.scrollLeft = Math.max(0, nav.scrollLeft + link.left - box.left - (nav.clientWidth - link.width) / 2);
+    }
+    update();
+    nav.addEventListener('scroll', update, {passive: true});
+    window.addEventListener('resize', update);
+  });
+
   // Copiar folios y referencias. El botón solo aparece si el navegador permite copiar.
   const live = document.createElement('p');
   live.className = 'sr-only';
