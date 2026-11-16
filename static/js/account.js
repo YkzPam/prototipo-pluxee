@@ -90,7 +90,7 @@
   function motionAllowed() {
     const root = document.documentElement;
     return root.dataset.motion !== 'off' && root.dataset.motionLevel !== 'none'
-      && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      && !(window.PortalMotion ? window.PortalMotion.systemReduced() : matchMedia('(prefers-reduced-motion: reduce)').matches);
   }
 
   // El importe sube desde el valor mostrado antes; con importes ocultos o movimiento reducido se muestra directo.

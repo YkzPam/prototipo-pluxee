@@ -1,0 +1,126 @@
+/* Generado por scripts/generar_movimiento_forzado.py. No editar a mano.
+   Repite las animaciones del portal bajo html[data-motion-force="on"], para mostrarlas aunque el
+   sistema pida reducir el movimiento (opción de Apariencia, desactivada por defecto). */
+/* fluidez.css */
+@view-transition { navigation: auto; }
+html[data-motion-force="on"]:not([data-motion-level="none"], [data-motion="off"]) [data-balance-state="loading"][data-balance-empty="true"] .balance-amount {animation: skeleton-shimmer 1.2s linear infinite;}
+html[data-motion-force="on"] .merchant-card {transition: translate .2s ease, box-shadow .2s ease;}
+html[data-motion-force="on"] .favorite-button.just-toggled .ui-icon {animation: heart-pop .38s cubic-bezier(.3, 1.6, .5, 1);}
+@media (hover: hover) and (pointer: fine) {
+html[data-motion-force="on"] .merchant-card:hover {translate: 0 -3px;}
+}
+html[data-motion-force="on"]:not([data-motion-level="none"], [data-motion="off"]) .bar-chart-bar {animation: bar-rise .5s cubic-bezier(.2, .7, .3, 1) both; transform-box: fill-box; transform-origin: bottom;}
+html[data-motion-force="on"]:not([data-motion-level="none"], [data-motion="off"]) .toast-stack .toast {animation: toast-in .28s cubic-bezier(.2, .7, .3, 1) both;}
+html[data-motion-force="on"]:not([data-motion-level="none"], [data-motion="off"]) .toast-stack .toast[data-leaving] {animation: toast-out .22s ease-in both;}
+
+/* history-graph.css */
+html[data-motion-force="on"] .movement-detail-arrow {transition: translate 160ms ease;}
+html[data-motion-force="on"] .movement-detail-trigger:hover .movement-detail-arrow {translate: 2px -2px;}
+html[data-motion-force="on"] .weekly-chart-bars {animation: content-enter 220ms ease-out;}
+
+/* ingreso-seguimiento.css */
+html[data-motion-force="on"] .followup-milestone[aria-current="step"] .followup-milestone-marker {animation: followup-milestone-enter 260ms ease-out;}
+
+/* interacciones.css */
+html[data-motion-force="on"] .query-status:not([hidden]),
+html[data-motion-force="on"] .session-alert:not([hidden]),
+html[data-motion-force="on"] .messages > .notice {animation: notice-enter 200ms ease-out;}
+html[data-motion-force="on"] .login-story-copy,
+html[data-motion-force="on"] .login-heading {animation: content-enter 260ms ease-out;}
+html[data-motion-force="on"] .faq-item[open] > p,
+html[data-motion-force="on"] .movement-filter-panel[open] > .movement-filters,
+html[data-motion-force="on"] .followup-event-reference[open] > code {animation: content-enter 180ms ease-out;}
+html[data-motion-force="on"] :is(.desktop-nav, .bottom-nav) > a[aria-current="page"] > .ui-icon {animation: nav-icon-select 200ms ease-out;}
+html[data-motion-force="on"] [data-balance-state="current"] .balance-status {animation: balance-confirm 220ms ease-out;}
+html[data-motion-force="on"] .button[data-retry-waiting] {animation: balance-confirm 180ms ease-out;}
+html[data-motion-force="on"] [data-balance-state="loading"] .balance-status::before,
+html[data-motion-force="on"] [data-movements-busy="true"] .movements-section .section-heading h2::after {animation: query-spin 750ms linear infinite;}
+html[data-motion-force="on"] .receipt-success .ui-icon {stroke-dasharray: 24;
+    animation: receipt-check 320ms ease-out both;}
+html[data-motion-force="on"] .page-content :is(.button, .home-action, .help-shortcut, .favorite-button),
+html[data-motion-force="on"] .login-form .button,
+html[data-motion-force="on"] :is(.desktop-nav, .bottom-nav) > a {transition: transform 140ms ease-out, background-color 140ms ease-out, border-color 140ms ease-out;}
+html[data-motion-force="on"] .home-action .action-arrow {transition: transform 140ms ease-out;}
+html[data-motion-force="on"] .home-action:focus-visible .action-arrow {transform: translateX(3px);}
+@media (hover: hover) and (pointer: fine) {
+html[data-motion-force="on"] .page-content :is(.button, .home-action, .help-shortcut, .favorite-button):not(:disabled, [aria-disabled="true"]):hover {transform: translateY(-1px);}
+html[data-motion-force="on"] .home-action:hover .action-arrow {transform: translateX(3px);}
+}
+html[data-motion-force="on"] .page-content :is(.button, .home-action, .help-shortcut, .favorite-button):not(:disabled, [aria-disabled="true"]):active,
+html[data-motion-force="on"] .login-form .button:active,
+html[data-motion-force="on"] .bottom-nav > a:active {transform: translateY(1px);}
+
+/* interface.css */
+html[data-motion-force="on"] .movement-drawer[open] {animation: drawer-in .24s ease-out;}
+html[data-motion-force="on"] .action-search[open],
+html[data-motion-force="on"] .tour-dialog[open] {animation: content-enter .2s ease-out;}
+
+/* notificaciones.css */
+html[data-motion-force="on"] .notification-access {transition: background-color 160ms ease, border-color 160ms ease;}
+html[data-motion-force="on"] .notification-item {transition: background-color 200ms ease, border-color 200ms ease;}
+
+/* pagos.css */
+html[data-motion-force="on"] .payment-method-link {transition: transform 140ms ease-out, border-color 140ms ease-out, background-color 140ms ease-out;}
+html[data-motion-force="on"] .payment-method-link:active {transform: scale(.98);}
+html[data-motion-force="on"] [data-payment-change] .payment-method-link[aria-current="page"]::after {transform-origin: left;
+    animation: payment-selection 240ms ease-out;}
+html[data-motion-force="on"] [data-payment-change] .payment-method-link[aria-current="page"] .payment-method-icon {animation: payment-icon-select 240ms ease-out;}
+html[data-motion-force="on"] [data-payment-change] .payment-form-card {animation: payment-form-enter 280ms ease-out;}
+
+/* payment-journey.css */
+html[data-motion-force="on"] .receipt-journey-card {animation: receipt-unfold .48s cubic-bezier(.2,.65,.3,1) both;}
+html[data-motion-force="on"] .receipt-journey-card .receipt-details {animation: receipt-details-enter .38s .13s ease-out both;}
+html[data-motion-force="on"] .payment-journey-step.is-current .payment-journey-number {animation: journey-current .28s ease-out both;}
+
+/* pluxee_app.css */
+html[data-motion-force="on"] [data-section-transition] :is(.pluxee-home-heading, .pluxee-section-hero) {animation: main-section-enter 320ms cubic-bezier(.2, .75, .3, 1);}
+html[data-motion-force="on"] [data-section-transition="inicio"] .balance-card-unified,
+html[data-motion-force="on"] [data-section-transition="pagar"] .payment-methods,
+html[data-motion-force="on"] [data-section-transition="comercios"] .pluxee-merchant-search,
+html[data-motion-force="on"] [data-section-transition="perfil"] .pluxee-profile-layout {animation: main-section-content-enter 360ms cubic-bezier(.2, .75, .3, 1);}
+
+/* portal-content.css */
+html[data-motion-force="on"] [data-ui-state="loading"] .ui-state-notice p::before {animation: query-spin .75s linear infinite;}
+html[data-motion-force="on"] [data-ui-state="ready"] .monthly-grid {animation: content-enter .24s ease-out;}
+
+/* portal-motion.css */
+html[data-motion-force="on"] .scene-art img {animation: scene-breathe 7.5s ease-in-out infinite;}
+html[data-motion-force="on"] .virtual-card-shine {animation: card-sheen 8s ease-in-out infinite;}
+html[data-motion-force="on"] .is-submitting::after {animation: query-spin .75s linear infinite;}
+html[data-motion-force="on"] :is(.home-action, .payment-method-link, .profile-option, .user-list > li, .weekly-bar-link) {transition: background-color .2s ease, box-shadow .2s ease, translate .2s ease;}
+html[data-motion-force="on"] :is(.button, .favorite-button):active {scale: .97;}
+html[data-motion-force="on"] .weekly-bar-link meter::-webkit-meter-optimum-value {animation: chart-grow .65s ease-out both; transform-origin: left;}
+html[data-motion-force="on"] .weekly-bar-link:hover meter::-webkit-meter-optimum-value {filter: brightness(1.12);}
+@media (hover: hover) and (pointer: fine) {
+html[data-motion-force="on"] :is(.home-action, .profile-option):hover .ui-icon:first-child {rotate: -7deg; scale: 1.08;}
+html[data-motion-force="on"] :is(.merchant-card, .home-quick-panel):hover {box-shadow: 0 12px 22px #32104b13;}
+html[data-motion-force="on"] .payment-method-link:hover {translate: 0 -2px;}
+}
+
+/* portal-shell.css */
+html[data-motion-force="on"] .sidebar .nav-links > a {transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;}
+html[data-motion-force="on"] .app-public .login-layout .login-form-wrap {animation: portal-form-in 380ms cubic-bezier(.2, .75, .25, 1) both;}
+
+/* presentacion.css */
+html[data-motion-force="on"] .scene-art img {animation: scene-float 4.6s cubic-bezier(.25, .6, .35, 1) both;}
+@media (hover: hover) and (pointer: fine) {
+html[data-motion-force="on"] .scene-art img {transition: translate .25s ease;}
+html[data-motion-force="on"] :is(.illustrated-heading, .login-story, .registration-intro):hover .scene-art img {translate: 0 -4px;}
+html[data-motion-force="on"] .user-list > li {transition: background-color .18s ease;}
+html[data-motion-force="on"] .user-list > li:hover {background: #fbf7fd;}
+}
+
+/* reportes.css */
+html[data-motion-force="on"] .report-step[aria-current="step"] .report-step-marker {animation: report-step-selected 260ms ease-out;}
+html[data-motion-force="on"] .report-reply {animation: report-reply-reveal 220ms ease-out;}
+
+/* section-art.css */
+html[data-motion-force="on"] .merchant-cover img {transition: transform .4s cubic-bezier(.2,.7,.3,1);}
+html[data-motion-force="on"] .login-layer-scene .login-layer-backdrop {animation: layer-orbit 9s ease-in-out infinite;}
+html[data-motion-force="on"] .login-layer-scene .login-layer-card {animation: layer-card 7s ease-in-out infinite;}
+html[data-motion-force="on"] .login-layer-scene .login-layer-wallet {animation: layer-wallet 7s ease-in-out infinite;}
+html[data-motion-force="on"] .login-layer-scene .login-layer-sparks {animation: layer-sparks 4.5s ease-in-out infinite;}
+html[data-motion-force="on"] .section-empty-art img {animation: empty-arrive .35s ease-out both;}
+@media (hover: hover) and (pointer: fine) {
+html[data-motion-force="on"] .merchant-card:hover .merchant-cover img {transform: scale(1.035) translateY(-2px);}
+}

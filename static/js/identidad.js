@@ -4,7 +4,7 @@
   'use strict';
   const root = document.documentElement;
   const motionAllowed = () => root.dataset.motion !== 'off'
-    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    && !(window.PortalMotion ? window.PortalMotion.systemReduced() : window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   // Tarjetas con inclinación leve y un brillo que sigue al puntero (solo mouse o lápiz).
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');

@@ -13,7 +13,7 @@
     const remove = () => toast.remove();
     const root = document.documentElement;
     if (root.dataset.motion === 'off' || root.dataset.motionLevel === 'none'
-        || matchMedia('(prefers-reduced-motion: reduce)').matches) remove();
+        || (window.PortalMotion ? window.PortalMotion.systemReduced() : matchMedia('(prefers-reduced-motion: reduce)').matches)) remove();
     else toast.addEventListener('animationend', remove, {once: true});
   }
 

@@ -28,7 +28,7 @@ La guía de construcción del prototipo pide revisar el código regularmente (*c
 | Portabilidad | Las migraciones funcionan en SQLite (pruebas) y en MySQL (presentación) | Corregido en CF05 |
 | Interfaz | Coherencia visual, contraste WCAG en ambos temas, vista móvil | Corregido en R-01, R-05 y R-06 |
 | Registro | Actividad visible en la terminal sin datos personales | Corregido en R-07 |
-| Pruebas | Cobertura sobre 80 % y una prueba por corrección | Cumple: 149 pruebas, 87 % |
+| Pruebas | Cobertura sobre 80 % y una prueba por corrección | Cumple: 153 pruebas, 87 % |
 
 ## Hallazgos y resolución
 

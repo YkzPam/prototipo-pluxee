@@ -7,6 +7,12 @@
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.dataset.contrast = saved.contrast === true ? 'high' : 'normal';
   document.documentElement.dataset.motionLevel = ['full','soft','none'].includes(saved.motion) ? saved.motion : 'full';
+  // Opción de Apariencia para equipos compartidos con las animaciones del sistema desactivadas.
+  document.documentElement.dataset.motionForce = saved.forceMotion === true ? 'on' : 'off';
+  window.PortalMotion = {
+    systemReduced: () => document.documentElement.dataset.motionForce !== 'on'
+      && matchMedia('(prefers-reduced-motion: reduce)').matches,
+  };
   // Antes del primer cuadro, para que la transición entre páginas respete la pausa de animaciones.
   try { if (localStorage.getItem('portal_motion') === 'off') document.documentElement.dataset.motion = 'off'; } catch {}
   // Una transición omitida (pestaña en segundo plano, clic rápido) no es un error de la página.

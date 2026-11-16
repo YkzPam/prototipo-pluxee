@@ -75,7 +75,7 @@ El **PIN para pagar es `4826`**. Estas claves son públicas a propósito: son pa
 
 ### Paso 6 (opcional). Comprueba que todo esté bien
 
-Haz doble clic en **`verificar.cmd`**. Corre las 149 pruebas automáticas y te avisa si la cobertura baja de 80 %.
+Haz doble clic en **`verificar.cmd`**. Corre las 153 pruebas automáticas y te avisa si la cobertura baja de 80 %.
 
 ### Las próximas veces
 
@@ -91,6 +91,7 @@ Solo abre `iniciar.cmd`: arranca en segundos y tus datos siguen ahí. Para apaga
 | «Los puertos locales 3307 y 13306 están ocupados» | Hay otro MySQL corriendo en tu computador. Ciérralo y vuelve a intentar. |
 | Un error al abrir el puerto 8443 | Seguramente ya tienes otra ventana de `iniciar.cmd` abierta. Ciérrala (o reinicia el computador). |
 | «La conexión no es privada», o en la ventana aparece «AVISO El navegador rechazó el certificado local» | Te falta el paso 4. Hazlo y vuelve a abrir el navegador. |
+| La página se ve sin ningún movimiento y el pie dice «Movimiento reducido» | Ese computador tiene las animaciones de Windows desactivadas. Entra a **Apariencia** y marca «Mostrar animaciones aunque el sistema pida reducir el movimiento». |
 
 ¿Quieres comprobar la conexión cifrada sin instalar el certificado? Puedes usar: `curl.exe --cacert .runtime/security/web_tls/Pluxee_Prototipo_Local.crt https://127.0.0.1:8443/ingresar/`.
 
@@ -127,6 +128,7 @@ Todo lo que ves sale de la base de datos MySQL, y el servidor revisa cada filtro
 - **Pequeños gestos.** Inicio te saluda según la hora del día, la tarjeta de saldo brilla y se inclina levemente al pasar el mouse y los gráficos muestran el valor exacto de cada barra.
 - **Atajos.** `Ctrl + K` abre un buscador de opciones, y hay un recorrido guiado opcional que puedes volver a abrir desde Apariencia.
 - **Sin mareos.** Si prefieres menos movimiento, el botón «Pausar animaciones» del pie de página (o la opción de movimiento reducido de tu sistema) apaga todos los efectos.
+- **Computadores compartidos.** Muchos equipos de laboratorio traen las animaciones de Windows desactivadas, y la página lo respeta. Si quieres verlas igual, en **Apariencia** marca «Mostrar animaciones aunque el sistema pida reducir el movimiento». Viene desmarcada para no afectar a quien necesita menos movimiento.
 - **Avisos que se entienden.** Los mensajes de éxito aparecen flotando y se van solos; los errores se quedan en la página hasta que los resuelvas.
 
 ---
@@ -174,7 +176,7 @@ La guía propone una estructura de carpetas de ejemplo. Django organiza las cosa
 | `/src/models` | `beneficios/models.py`, `identidad/models.py` y las migraciones |
 | `/src/services` | `beneficios/services.py` (consultas), `events.py` (bitácora), `responses.py` (respuestas) |
 | `/src/utils` | `validators.py`, `charts.py`, `csv_export.py`, `receipt_pdf.py`, `parameters.py` |
-| `/tests` | `beneficios/tests/`: 149 pruebas y la evidencia de cada corrección |
+| `/tests` | `beneficios/tests/`: 153 pruebas y la evidencia de cada corrección |
 | `/docs` | `docs/` (revisión de código y guía de presentación) y este README |
 | `/config` | `config/`: entornos de desarrollo, pruebas y producción, cifrado y HTTPS |
 

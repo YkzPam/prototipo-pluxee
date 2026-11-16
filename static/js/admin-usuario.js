@@ -9,7 +9,8 @@
     });
   }
 
-  if (!window.matchMedia('(prefers-reduced-motion: no-preference)').matches || !document.referrer) return;
+  const reduced = window.PortalMotion ? window.PortalMotion.systemReduced() : window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || !document.referrer) return;
   const navigation = performance.getEntriesByType('navigation')[0];
   if (navigation?.type !== 'navigate') return;
 

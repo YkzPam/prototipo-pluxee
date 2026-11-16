@@ -288,7 +288,7 @@ html[data-motion="off"] .reveal-pending { opacity: 1; translate: none; transitio
   .card-chip { inline-size: 2.1rem; block-size: 1.6rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-tilt], .reveal-pending { transform: none; opacity: 1; translate: none; transition: none; }
+  html:not([data-motion-force="on"]) :is([data-tilt], .reveal-pending) { transform: none; opacity: 1; translate: none; transition: none; }
 }
 
 /* Gráfico semanal en tema oscuro: la pista de cada barra era clara. */

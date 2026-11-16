@@ -1,23 +1,24 @@
 (() => {
   'use strict';
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const systemReduced = () => window.PortalMotion ? window.PortalMotion.systemReduced() : reduced.matches;
   const storageKey = 'portal_motion';
   const toggle = document.querySelector('[data-motion-toggle]');
   let paused = false;
   try { paused = localStorage.getItem(storageKey) === 'off'; } catch {}
 
   function motionAllowed() {
-    return !paused && !reduced.matches && document.documentElement.dataset.motionLevel !== 'none';
+    return !paused && !systemReduced() && document.documentElement.dataset.motionLevel !== 'none';
   }
 
   function applyPreference() {
     document.documentElement.dataset.motion = motionAllowed() ? 'on' : 'off';
     if (toggle) {
       toggle.hidden = false;
-      toggle.disabled = reduced.matches || document.documentElement.dataset.motionLevel === 'none';
-      toggle.textContent = reduced.matches || document.documentElement.dataset.motionLevel === 'none' ? 'Movimiento reducido'
+      toggle.disabled = systemReduced() || document.documentElement.dataset.motionLevel === 'none';
+      toggle.textContent = systemReduced() || document.documentElement.dataset.motionLevel === 'none' ? 'Movimiento reducido'
         : paused ? 'Activar animaciones' : 'Pausar animaciones';
-      toggle.setAttribute('aria-pressed', String(paused || reduced.matches));
+      toggle.setAttribute('aria-pressed', String(paused || systemReduced()));
     }
     if (!motionAllowed()) document.getAnimations().forEach(animation => animation.cancel());
   }

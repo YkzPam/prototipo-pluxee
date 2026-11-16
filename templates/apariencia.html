@@ -16,7 +16,9 @@
     <h2>Movimiento</h2>
     <label for="motion-level">Intensidad de las animaciones</label>
     <select id="motion-level" name="motion"><option value="full">Completa</option><option value="soft">Suave</option><option value="none">Sin animaciones</option></select>
-    <p class="muted">La preferencia de movimiento reducido del sistema tiene prioridad.</p>
+    <p class="muted">Por defecto se respeta la opción del sistema que pide reducir el movimiento.</p>
+    <label class="preference-check"><input type="checkbox" name="forceMotion"> Mostrar animaciones aunque el sistema pida reducir el movimiento</label>
+    <p class="muted">Útil en computadores compartidos que traen las animaciones de Windows desactivadas. Desmárcala si el movimiento te incomoda.</p>
     <label class="preference-check"><input type="checkbox" name="private"> Ocultar importes al consultar</label>
   </section>
   <section class="surface appearance-panel">

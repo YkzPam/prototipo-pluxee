@@ -60,6 +60,7 @@
     root.dataset.theme = theme === 'dark' || (theme === 'system' && themeQuery.matches) ? 'dark' : 'light';
     root.dataset.contrast = preferences.contrast === true ? 'high' : 'normal';
     root.dataset.motionLevel = ['full','soft','none'].includes(preferences.motion) ? preferences.motion : 'full';
+    root.dataset.motionForce = preferences.forceMotion === true ? 'on' : 'off';
     avatars();
     amounts();
     document.dispatchEvent(new Event('portal:preferences-updated'));
@@ -84,6 +85,7 @@
       preferences.theme = form.elements.theme.value;
       preferences.motion = form.elements.motion.value;
       preferences.contrast = form.elements.contrast.checked;
+      preferences.forceMotion = form.elements.forceMotion ? form.elements.forceMotion.checked : false;
       account.private = form.elements.private.checked;
       account.avatar = form.elements.avatar.value;
       account.avatarColor = form.elements.avatarColor.value;
